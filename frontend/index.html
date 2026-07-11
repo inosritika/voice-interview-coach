@@ -1,0 +1,1160 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Voice Interview Coach</title>
+    <style>
+      :root {
+        --bg: #0b0e14;
+        --bg-2: #121722;
+        --card: #161c28;
+        --card-2: #1c2432;
+        --border: #263042;
+        --border-soft: #1e2735;
+        --text: #e6ebf2;
+        --muted: #8a94a6;
+        --faint: #5c6678;
+        --accent: #5b8cff;
+        --accent-2: #7aa2ff;
+        --green: #29c46a;
+        --amber: #f2b23e;
+        --red: #ef4f5a;
+        --violet: #9a7cff;
+        --radius: 14px;
+        --shadow: 0 10px 40px rgba(0,0,0,0.35);
+        color-scheme: dark;
+      }
+      * { box-sizing: border-box; }
+      html, body { height: 100%; }
+      body {
+        margin: 0;
+        font-family: "Inter", system-ui, -apple-system, sans-serif;
+        background: radial-gradient(1200px 600px at 70% -10%, #16203a 0%, var(--bg) 55%);
+        color: var(--text);
+        line-height: 1.5;
+        min-height: 100vh;
+      }
+      button { font: inherit; cursor: pointer; border: none; }
+      a { color: var(--accent-2); }
+
+      /* ---------- top brand bar ---------- */
+      .appbar {
+        display: flex; align-items: center; justify-content: space-between;
+        padding: 0.9rem 1.4rem; border-bottom: 1px solid var(--border-soft);
+        background: rgba(11,14,20,0.6); backdrop-filter: blur(8px);
+        position: sticky; top: 0; z-index: 20;
+      }
+      .brand { display: flex; align-items: center; gap: 0.6rem; font-weight: 650; letter-spacing: -0.01em; }
+      .brand .logo {
+        width: 30px; height: 30px; border-radius: 9px; display: grid; place-items: center;
+        background: linear-gradient(135deg, var(--accent), var(--violet)); color: #fff; font-size: 1rem;
+        box-shadow: 0 4px 14px rgba(91,140,255,0.4);
+      }
+      .brand small { color: var(--muted); font-weight: 500; margin-left: 0.2rem; }
+      .appbar .pillbadge {
+        font-size: 0.72rem; color: var(--muted); border: 1px solid var(--border);
+        padding: 0.25rem 0.6rem; border-radius: 999px; background: var(--card);
+      }
+
+      .wrap { max-width: 1080px; margin: 0 auto; padding: 1.6rem 1.4rem 3rem; }
+
+      /* ================= LOBBY ================= */
+      .lobby-head { text-align: center; margin: 0.6rem 0 2rem; }
+      .lobby-head h1 { font-size: 1.9rem; margin: 0 0 0.4rem; letter-spacing: -0.02em; }
+      .lobby-head p { color: var(--muted); margin: 0; }
+
+      .grid { display: grid; grid-template-columns: 1.4fr 1fr; gap: 1.2rem; align-items: start; }
+      @media (max-width: 860px) { .grid { grid-template-columns: 1fr; } }
+
+      .card {
+        background: linear-gradient(180deg, var(--card), var(--bg-2));
+        border: 1px solid var(--border); border-radius: var(--radius);
+        padding: 1.3rem 1.3rem; box-shadow: var(--shadow);
+      }
+      .card h2 { font-size: 0.82rem; text-transform: uppercase; letter-spacing: 0.08em;
+        color: var(--muted); margin: 0 0 1rem; font-weight: 600; }
+      .field { margin-bottom: 1rem; }
+      .field:last-child { margin-bottom: 0; }
+      label.lbl { display: block; font-size: 0.82rem; color: var(--muted); margin-bottom: 0.35rem; }
+      input[type="text"], textarea, select {
+        width: 100%; font: inherit; color: var(--text); background: var(--bg);
+        border: 1px solid var(--border); border-radius: 10px; padding: 0.6rem 0.7rem;
+        outline: none; transition: border-color 0.15s, box-shadow 0.15s;
+      }
+      input[type="text"]:focus, textarea:focus, select:focus {
+        border-color: var(--accent); box-shadow: 0 0 0 3px rgba(91,140,255,0.18);
+      }
+      textarea { min-height: 5.5rem; resize: vertical; }
+      .upl {
+        background: none; border: 1px solid var(--border); color: var(--accent-2);
+        font-size: 0.72rem; padding: 0.1rem 0.5rem; border-radius: 999px;
+        margin-left: 0.5rem; vertical-align: 1px;
+      }
+      .upl:hover { border-color: var(--accent); }
+      .upl-note { font-size: 0.72rem; color: var(--faint); margin-left: 0.5rem; }
+      .upl-note.ok { color: var(--green); }
+      .upl-note.err { color: var(--red); }
+      .two { display: grid; grid-template-columns: 1fr 1fr; gap: 0.9rem; }
+
+      /* interview type cards */
+      .types { display: grid; grid-template-columns: 1fr 1fr; gap: 0.7rem; }
+      .type {
+        position: relative; text-align: left; border: 1px solid var(--border);
+        background: var(--card-2); border-radius: 12px; padding: 0.8rem 0.85rem; color: var(--text);
+        transition: border-color 0.15s, transform 0.05s, background 0.15s; display: block;
+      }
+      .type .t-name { font-weight: 600; font-size: 0.95rem; }
+      .type .t-desc { font-size: 0.78rem; color: var(--muted); margin-top: 0.15rem; }
+      .type.sel { border-color: var(--accent); background: rgba(91,140,255,0.12); }
+      .type.sel::after {
+        content: "✓"; position: absolute; top: 0.55rem; right: 0.65rem;
+        color: var(--accent-2); font-weight: 700;
+      }
+      .type.soon { cursor: not-allowed; opacity: 0.6; }
+      .soon-badge {
+        position: absolute; top: 0.55rem; right: 0.6rem; font-size: 0.62rem; font-weight: 600;
+        text-transform: uppercase; letter-spacing: 0.04em; color: var(--amber);
+        border: 1px solid rgba(242,178,62,0.4); border-radius: 999px; padding: 0.1rem 0.45rem;
+        background: rgba(242,178,62,0.1);
+      }
+
+      /* mic check */
+      .miccheck { display: flex; align-items: center; gap: 0.8rem; margin-top: 0.2rem; }
+      .meter { flex: 1; height: 10px; border-radius: 999px; background: var(--bg); overflow: hidden; border: 1px solid var(--border); }
+      .meter > span { display: block; height: 100%; width: 0%; border-radius: 999px;
+        background: linear-gradient(90deg, var(--green), var(--amber)); transition: width 0.08s linear; }
+      .ghost {
+        background: var(--card-2); color: var(--text); border: 1px solid var(--border);
+        padding: 0.5rem 0.9rem; border-radius: 9px; font-size: 0.85rem; white-space: nowrap;
+      }
+      .ghost:hover { border-color: var(--accent); }
+
+      .cta {
+        width: 100%; margin-top: 0.4rem; padding: 0.85rem 1rem; border-radius: 11px;
+        font-weight: 650; font-size: 1rem; color: #fff;
+        background: linear-gradient(135deg, var(--accent), var(--violet));
+        box-shadow: 0 8px 24px rgba(91,140,255,0.35); transition: transform 0.05s, filter 0.15s;
+      }
+      .cta:hover { filter: brightness(1.06); }
+      .cta:active { transform: translateY(1px); }
+      .cta:disabled { filter: grayscale(0.5) brightness(0.8); cursor: not-allowed; box-shadow: none; }
+
+      .feat-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 0.55rem; }
+      .feat-list li { display: flex; align-items: center; gap: 0.6rem; font-size: 0.88rem; color: var(--muted); }
+      .feat-list li .ic { width: 26px; height: 26px; border-radius: 8px; display: grid; place-items: center;
+        background: var(--card-2); border: 1px solid var(--border); flex: none; font-size: 0.85rem; }
+      .feat-list li.live .ic { color: var(--green); border-color: rgba(41,196,106,0.4); }
+      .feat-list li .tag { margin-left: auto; font-size: 0.62rem; font-weight: 600; text-transform: uppercase;
+        letter-spacing: 0.04em; padding: 0.12rem 0.45rem; border-radius: 999px; }
+      .feat-list li .tag.live { color: var(--green); background: rgba(41,196,106,0.12); border: 1px solid rgba(41,196,106,0.3); }
+      .feat-list li .tag.soon { color: var(--amber); background: rgba(242,178,62,0.1); border: 1px solid rgba(242,178,62,0.3); }
+
+      /* ================= LIVE STAGE ================= */
+      #liveView { display: none; }
+      .stage-bar {
+        display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;
+        margin-bottom: 1.1rem;
+      }
+      .stage-meta { display: flex; align-items: center; gap: 0.6rem; }
+      .chip {
+        display: inline-flex; align-items: center; gap: 0.4rem; font-size: 0.8rem;
+        background: var(--card); border: 1px solid var(--border); border-radius: 999px;
+        padding: 0.35rem 0.75rem; color: var(--muted);
+      }
+      .chip b { color: var(--text); font-weight: 600; }
+      .chip .con-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--faint); }
+      .chip.con.ok .con-dot { background: var(--green); }
+      .chip.con.bad .con-dot { background: var(--red); }
+      .timer { font-variant-numeric: tabular-nums; }
+      .spacer { flex: 1; }
+      .danger {
+        background: rgba(239,79,90,0.12); color: #ff9aa1; border: 1px solid rgba(239,79,90,0.35);
+        padding: 0.5rem 0.95rem; border-radius: 10px; font-weight: 600; font-size: 0.88rem;
+      }
+      .danger:hover { background: rgba(239,79,90,0.2); }
+
+      .stage-grid { display: grid; grid-template-columns: 300px 1fr; gap: 1.2rem; align-items: start; }
+      @media (max-width: 820px) { .stage-grid { grid-template-columns: 1fr; } }
+
+      /* interviewer presence */
+      .presence { text-align: center; }
+      .avatar {
+        width: 108px; height: 108px; margin: 0.4rem auto 0.9rem; border-radius: 50%;
+        display: grid; place-items: center; font-size: 2.4rem;
+        background: radial-gradient(circle at 40% 35%, #2a3550, #141a26);
+        border: 2px solid var(--border); position: relative; transition: border-color 0.2s;
+      }
+      .avatar .ring { position: absolute; inset: -6px; border-radius: 50%; border: 2px solid transparent; }
+      #liveView.ai .avatar { border-color: var(--accent); }
+      #liveView.ai .avatar .ring { border-color: var(--accent); animation: ripple 1.4s infinite; }
+      #liveView.user .avatar { border-color: var(--green); }
+      @keyframes ripple { 0% { transform: scale(1); opacity: 0.7; } 100% { transform: scale(1.28); opacity: 0; } }
+      .presence .who-name { font-weight: 650; }
+      .presence .role-line { font-size: 0.82rem; color: var(--muted); }
+
+      .statepill {
+        display: flex; align-items: center; justify-content: center; gap: 0.55rem;
+        padding: 0.6rem 0.9rem; border-radius: 10px; margin: 1rem 0 0.9rem;
+        background: var(--card-2); border: 1px solid var(--border); font-size: 0.9rem;
+      }
+      #dot { width: 11px; height: 11px; border-radius: 50%; background: var(--faint); flex: none; }
+      #state.listening #dot { background: var(--green); }
+      #state.speaking-user #dot { background: var(--green); animation: pulse 1s infinite; }
+      #state.thinking #dot { background: var(--amber); animation: pulse 1s infinite; }
+      #state.speaking-ai #dot { background: var(--accent); animation: pulse 1s infinite; }
+      @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.25; } }
+
+      .mic-row { display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.8rem; }
+      .mic-row .micico { font-size: 1rem; }
+
+      .controls { display: flex; gap: 0.6rem; }
+      .controls button { flex: 1; padding: 0.6rem; border-radius: 10px; font-size: 0.85rem; font-weight: 600;
+        background: var(--card-2); border: 1px solid var(--border); color: var(--text); }
+      .controls button:hover { border-color: var(--accent); }
+      .controls button.muted { background: rgba(239,79,90,0.14); border-color: rgba(239,79,90,0.4); color: #ff9aa1; }
+
+      .bargein-hint { margin-top: 0.9rem; font-size: 0.76rem; color: var(--faint); text-align: center; line-height: 1.4; }
+      .bargein-hint b { color: var(--muted); }
+
+      /* transcript */
+      .transcript-card { min-height: 60vh; display: flex; flex-direction: column; }
+      .transcript-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.6rem; }
+      .transcript-head h2 { margin: 0; }
+      #log { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 0.7rem; padding-right: 0.3rem; }
+      .empty-note { color: var(--faint); font-size: 0.9rem; text-align: center; margin: auto; padding: 2rem; }
+      .turn { padding: 0.7rem 0.9rem; border-radius: 12px; max-width: 88%; }
+      .turn.you { background: var(--card-2); border: 1px solid var(--border); align-self: flex-end; }
+      .turn.ai { background: rgba(91,140,255,0.1); border: 1px solid rgba(91,140,255,0.25); align-self: flex-start; }
+      .who { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.06em; opacity: 0.6; margin-bottom: 0.2rem; }
+
+      .stage-soon { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 0.9rem; }
+      .stage-soon .s {
+        font-size: 0.72rem; color: var(--faint); border: 1px dashed var(--border); border-radius: 8px;
+        padding: 0.3rem 0.55rem; display: inline-flex; gap: 0.35rem; align-items: center;
+      }
+
+      /* ---------- dev panel ---------- */
+      details.dev { margin-top: 1.4rem; border: 1px solid var(--border-soft); border-radius: 12px;
+        background: var(--bg-2); overflow: hidden; }
+      details.dev > summary { cursor: pointer; padding: 0.7rem 1rem; font-size: 0.82rem; color: var(--muted);
+        list-style: none; display: flex; align-items: center; gap: 0.5rem; user-select: none; }
+      details.dev > summary::-webkit-details-marker { display: none; }
+      details.dev > summary::before { content: "▸"; transition: transform 0.15s; color: var(--faint); }
+      details.dev[open] > summary::before { transform: rotate(90deg); }
+      .dev-body { padding: 0.4rem 1rem 1.1rem; }
+      #hud { display: flex; gap: 1.4rem; align-items: baseline; flex-wrap: wrap;
+             padding: 0.7rem 0; font-variant-numeric: tabular-nums; }
+      #hud .big { font-size: 1.5rem; font-weight: 650; }
+      #hud .big small, #hud .mini small { font-size: 0.72rem; font-weight: 400; opacity: 0.6; }
+      #hud .mini { font-size: 0.85rem; color: var(--muted); }
+      #hud .mini b { font-weight: 650; color: var(--text); }
+      .dev-kv { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 0.5rem 1.2rem;
+        font-size: 0.8rem; color: var(--muted); border-top: 1px solid var(--border-soft); padding-top: 0.8rem; }
+      .dev-kv div b { color: var(--text); font-weight: 600; }
+      .dev-note { font-size: 0.74rem; color: var(--faint); margin-top: 0.8rem; }
+
+      /* director action log (dev panel) */
+      .dev-director { border-top: 1px solid var(--border-soft); margin-top: 0.8rem; padding-top: 0.8rem; }
+      .dd-title { font-size: 0.8rem; color: var(--muted); font-weight: 600; margin-bottom: 0.4rem; }
+      .dd-hint { font-weight: 400; color: var(--faint); font-size: 0.72rem; margin-left: 0.4rem; }
+      .dd-log { display: flex; flex-direction: column; gap: 0.25rem; max-height: 9rem; overflow-y: auto;
+        font-size: 0.78rem; font-family: ui-monospace, "SF Mono", Menlo, monospace; }
+      .dd-log .dd-empty { color: var(--faint); font-family: inherit; }
+      .dd-act { color: var(--muted); }
+      .dd-act .dd-kind { color: var(--violet); font-weight: 600; }
+      .dd-act.dd-move .dd-kind { color: var(--accent-2); }
+
+      /* ---------- debrief ---------- */
+      #debriefView { display: none; }
+      .spinner { width: 34px; height: 34px; margin: 0 auto; border-radius: 50%;
+        border: 3px solid var(--border); border-top-color: var(--accent); animation: spin 0.8s linear infinite; }
+      @keyframes spin { to { transform: rotate(360deg); } }
+      .overall-row { display: flex; align-items: center; gap: 1rem; }
+      .score-badge { width: 84px; height: 84px; border-radius: 20px; display: grid; place-items: center;
+        font-size: 2rem; font-weight: 700; color: #fff; background: linear-gradient(135deg, var(--accent), var(--violet)); }
+      .score-badge.low { background: linear-gradient(135deg, #ef4f5a, #b23b5e); }
+      .score-badge.mid { background: linear-gradient(135deg, #f2b23e, #e07b3e); }
+      .score-badge.high { background: linear-gradient(135deg, #29c46a, #2b9ad6); }
+      .dim { margin-bottom: 0.9rem; }
+      .dim:last-child { margin-bottom: 0; }
+      .dim-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 0.3rem; }
+      .dim-head .n { font-weight: 600; font-size: 0.9rem; }
+      .dim-head .s { font-variant-numeric: tabular-nums; color: var(--muted); font-size: 0.82rem; }
+      .dim-bar { height: 8px; border-radius: 999px; background: var(--bg); overflow: hidden; border: 1px solid var(--border); }
+      .dim-bar > span { display: block; height: 100%; border-radius: 999px; background: linear-gradient(90deg, var(--accent), var(--violet)); }
+      .dim-comment { font-size: 0.8rem; color: var(--muted); margin-top: 0.3rem; }
+      .fb-title { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600; margin-bottom: 0.4rem; }
+      .fb-title.good { color: var(--green); }
+      .fb-title.work { color: var(--amber); }
+      .fb-list { margin: 0; padding-left: 1.1rem; display: flex; flex-direction: column; gap: 0.35rem; }
+      .fb-list li { font-size: 0.9rem; }
+      .metric-item b { font-size: 1.1rem; }
+      /* debrief: interpreted delivery */
+      .coach { border-left: 3px solid var(--accent); background: rgba(91,140,255,0.06); }
+      .coach h2 { margin: 0 0 0.4rem; }
+      .coach p { color: var(--text); font-size: 1.05rem; line-height: 1.55; margin: 0; }
+      .metrics-list { display: flex; flex-direction: column; gap: 0.65rem; }
+      .metric { display: grid; grid-template-columns: 5rem 1fr; gap: 0.15rem 0.9rem; align-items: baseline;
+        padding: 0.75rem 0.9rem; border: 1px solid var(--border); border-left: 3px solid var(--faint);
+        border-radius: 12px; background: var(--bg); }
+      .metric.good { border-left-color: var(--green); }
+      .metric.warn { border-left-color: var(--amber); }
+      .metric.bad  { border-left-color: var(--red); }
+      .metric .mv { font-size: 1.3rem; font-weight: 700; font-variant-numeric: tabular-nums;
+        grid-row: span 2; align-self: center; }
+      .metric.good .mv { color: var(--green); }
+      .metric.warn .mv { color: var(--amber); }
+      .metric.bad  .mv { color: var(--red); }
+      .metric .mk { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--faint); }
+      .metric .mverdict { font-size: 0.9rem; color: var(--muted); line-height: 1.4; }
+      .review-note { color: var(--faint); font-size: 0.86rem; line-height: 1.5; }
+    </style>
+  </head>
+  <body>
+    <div class="appbar">
+      <div class="brand">
+        <span class="logo">🎙️</span> Voice Interview Coach
+        <small>Multi-topic · v1</small>
+      </div>
+      <span class="pillbadge" id="topStatus">Ready</span>
+    </div>
+
+    <div class="wrap">
+      <!-- ==================== LOBBY ==================== -->
+      <div id="setupView">
+        <div class="lobby-head">
+          <h1>Set up your mock interview</h1>
+          <p>Hands-free and real-time. Speak naturally — you can even interrupt the interviewer mid-sentence.</p>
+        </div>
+
+        <div class="grid">
+          <!-- left: the form -->
+          <div style="display:flex; flex-direction:column; gap:1.2rem;">
+            <div class="card">
+              <h2>Candidate</h2>
+              <div class="two">
+                <div class="field">
+                  <label class="lbl" for="candidateName">Your name</label>
+                  <input type="text" id="candidateName" placeholder="e.g. Ritika" />
+                </div>
+                <div class="field">
+                  <label class="lbl" for="targetRole">Target role</label>
+                  <input type="text" id="targetRole" placeholder="e.g. Senior Backend Engineer" />
+                </div>
+              </div>
+              <div class="field">
+                <label class="lbl" for="jd">Job description
+                  <button type="button" class="upl" data-target="jd">⤴ upload PDF</button>
+                  <span class="upl-note" id="jd-note"></span>
+                </label>
+                <textarea id="jd" placeholder="Paste the JD, or upload a PDF — used to pick relevant topics…"></textarea>
+              </div>
+              <div class="field">
+                <label class="lbl" for="resume">Your resume
+                  <button type="button" class="upl" data-target="resume">⤴ upload PDF</button>
+                  <span class="upl-note" id="resume-note"></span>
+                </label>
+                <textarea id="resume" placeholder="Paste your resume, or upload a PDF — used to ground the questions…"></textarea>
+              </div>
+            </div>
+
+            <div class="card">
+              <h2>Interview type</h2>
+              <div class="types" id="types">
+                <button class="type sel" data-type="behavioral">
+                  <div class="t-name">Behavioral</div>
+                  <div class="t-desc">STAR stories, ownership, conflict</div>
+                </button>
+                <button class="type" data-type="dsa">
+                  <div class="t-name">DSA</div>
+                  <div class="t-desc">Algorithms, data structures, complexity</div>
+                </button>
+                <button class="type" data-type="ml">
+                  <div class="t-name">Machine Learning</div>
+                  <div class="t-desc">Modeling, evaluation, trade-offs</div>
+                </button>
+                <button class="type" data-type="system_design">
+                  <div class="t-name">System Design</div>
+                  <div class="t-desc">Scoping, architecture, trade-offs</div>
+                </button>
+              </div>
+
+              <div class="two" style="margin-top:1rem;">
+                <div class="field">
+                  <label class="lbl" for="difficulty">Difficulty</label>
+                  <select id="difficulty">
+                    <option value="warmup">Warm-up</option>
+                    <option value="standard" selected>Standard</option>
+                    <option value="senior">Senior / stretch</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label class="lbl" for="duration">Planned length</label>
+                  <select id="duration">
+                    <option value="10">~10 min (quick)</option>
+                    <option value="20" selected>~20 min</option>
+                    <option value="30">~30 min</option>
+                  </select>
+                </div>
+              </div>
+              <div class="two" style="margin-top:1rem;">
+                <div class="field">
+                  <label class="lbl" for="company">Company</label>
+                  <select id="company">
+                    <option value="generic" selected>Generic</option>
+                    <option value="openai">OpenAI</option>
+                    <option value="anthropic">Anthropic</option>
+                    <option value="google">Google</option>
+                    <option value="meta">Meta</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <div class="card">
+              <h2>Device check</h2>
+              <label class="lbl">Microphone input level</label>
+              <div class="miccheck">
+                <div class="meter"><span id="setupMeter"></span></div>
+                <button class="ghost" id="micCheckBtn">Test mic</button>
+              </div>
+              <p class="dev-note" style="margin-top:0.7rem;">Use headphones for the most reliable interruptions — it keeps the interviewer's voice out of your mic.</p>
+            </div>
+          </div>
+
+          <!-- right: what to expect -->
+          <div style="display:flex; flex-direction:column; gap:1.2rem;">
+            <div class="card">
+              <h2>What's in this interview</h2>
+              <ul class="feat-list">
+                <li class="live"><span class="ic">🎧</span> Hands-free voice conversation <span class="tag live">Live</span></li>
+                <li class="live"><span class="ic">✋</span> Interrupt mid-sentence (barge-in) <span class="tag live">Live</span></li>
+                <li class="live"><span class="ic">📝</span> Live transcript <span class="tag live">Live</span></li>
+                <li class="live"><span class="ic">⚡</span> Latency &amp; debug panel <span class="tag live">Live</span></li>
+                <li class="live"><span class="ic">📊</span> Scored debrief &amp; feedback <span class="tag live">Live</span></li>
+                <li class="live"><span class="ic">🗣️</span> Delivery metrics (pace, fillers) <span class="tag live">Live</span></li>
+                <li><span class="ic">💾</span> Session recording &amp; export <span class="tag soon">Soon</span></li>
+                <li><span class="ic">🎥</span> Video presence <span class="tag soon">Soon</span></li>
+              </ul>
+            </div>
+
+            <div class="card">
+              <h2>Before you start</h2>
+              <ul class="feat-list">
+                <li><span class="ic">1</span> Find a quiet spot</li>
+                <li><span class="ic">2</span> Allow microphone access</li>
+                <li><span class="ic">3</span> Answer out loud, like a real interview</li>
+              </ul>
+              <button class="cta" id="startBtn" style="margin-top:1.2rem;">Start interview →</button>
+              <p class="dev-note" style="text-align:center; margin-top:0.7rem;">Your browser will ask for microphone permission.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ==================== LIVE STAGE ==================== -->
+      <div id="liveView">
+        <div class="stage-bar">
+          <div class="stage-meta">
+            <span class="chip"><b id="metaType">Behavioral</b></span>
+            <span class="chip" id="metaRole" style="display:none;">for <b id="metaRoleVal"></b></span>
+            <span class="chip timer">⏱ <b id="timer">00:00</b></span>
+            <span class="chip">Q<b id="qCount" style="margin-left:0.15rem;">0</b></span>
+          </div>
+          <div class="spacer"></div>
+          <span class="chip con" id="conChip"><span class="con-dot"></span><span id="conText">connecting…</span></span>
+          <button class="danger" id="endBtn">End interview</button>
+        </div>
+
+        <div class="stage-grid">
+          <!-- interviewer + controls -->
+          <div class="card presence">
+            <div class="avatar"><span class="ring"></span>🤖</div>
+            <div class="who-name">AI Interviewer</div>
+            <div class="role-line" id="presenceRole">Behavioral round</div>
+
+            <div id="state" class="statepill"><span id="dot"></span><span id="stateText">Connecting…</span></div>
+
+            <div class="mic-row">
+              <span class="micico" id="micIco">🎤</span>
+              <div class="meter"><span id="micLevel"></span></div>
+            </div>
+
+            <div class="controls">
+              <button id="muteBtn">Mute</button>
+              <button id="pauseBtn" disabled title="Coming soon">Pause · Soon</button>
+            </div>
+
+            <div class="bargein-hint">
+              <b>Just talk to answer.</b><br />
+              Start speaking any time — even while the interviewer is talking — to cut in.
+            </div>
+
+            <div class="stage-soon">
+              <span class="s">🎥 Video · soon</span>
+              <span class="s">💾 Recording · soon</span>
+            </div>
+          </div>
+
+          <!-- transcript -->
+          <div class="card transcript-card">
+            <div class="transcript-head">
+              <h2>Live transcript</h2>
+              <span class="chip" style="font-size:0.72rem;">auto-scrolling</span>
+            </div>
+            <div id="log">
+              <div class="empty-note" id="emptyNote">The interviewer will greet you in a moment. Your conversation will appear here.</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- developer / debug panel -->
+        <details class="dev">
+          <summary>Developer &amp; latency panel</summary>
+          <div class="dev-body">
+            <div id="hud">
+              <div class="big" id="m-audio">–<small> to first audio</small></div>
+              <div class="mini">STT <b id="m-stt">–</b></div>
+              <div class="mini">first text <b id="m-text">–</b></div>
+            </div>
+            <div class="dev-kv">
+              <div>Connection: <b id="kv-con">–</b></div>
+              <div>Floor state: <b id="kv-floor">–</b></div>
+              <div>VAD: <b id="kv-vad">–</b></div>
+              <div>Frames sent: <b id="kv-frames">0</b></div>
+              <div>Mic: <b id="kv-mic">live</b></div>
+              <div>Turns: <b id="kv-turns">0</b></div>
+            </div>
+            <div class="dev-director">
+              <div class="dd-title">Director actions <span class="dd-hint">the agent's moves, live — never spoken</span></div>
+              <div id="directorLog" class="dd-log"><span class="dd-empty">no actions yet</span></div>
+            </div>
+            <p class="dev-note">
+              Time-to-first-audio is the latency that matters for feel. STT and first-text break down where those milliseconds go.
+              Barge-in stays armed for the whole time the interviewer is audibly speaking, not just while the server is sending audio.
+            </p>
+          </div>
+        </details>
+      </div>
+
+      <!-- ==================== DEBRIEF ==================== -->
+      <div id="debriefView">
+        <div class="lobby-head">
+          <h1>Your debrief</h1>
+          <p id="debriefHeadline">Scoring your interview…</p>
+        </div>
+
+        <div id="debriefLoading" class="card" style="text-align:center; padding:2.4rem;">
+          <div class="spinner"></div>
+          <p style="color:var(--muted); margin:0.8rem 0 0;">Reviewing your answers against the rubric…</p>
+        </div>
+
+        <div id="debriefContent" style="display:none;">
+          <!-- coaching summary: the plain-English headline, always shown -->
+          <div class="card coach" style="margin-bottom:1.2rem;">
+            <h2>The read on your delivery</h2>
+            <p id="coachSummary">–</p>
+          </div>
+
+          <div class="grid">
+            <!-- left (wider): how you came across — interpreted, always present -->
+            <div style="display:flex; flex-direction:column; gap:1.2rem;">
+              <div class="card">
+                <h2>How you came across</h2>
+                <p class="dev-note" style="margin:-0.2rem 0 0.9rem;">Measured from your own speech — and what each number means for you.</p>
+                <div class="metrics-list" id="deliveryList"></div>
+                <p class="dev-note" id="deliveryContext" style="margin-top:0.8rem;"></p>
+              </div>
+            </div>
+
+            <!-- right: scored review (hidden if the model couldn't produce it) + actions -->
+            <div style="display:flex; flex-direction:column; gap:1.2rem;">
+              <div class="card" id="overallCard">
+                <h2>Interviewer's scored review</h2>
+                <div class="overall-row">
+                  <div class="score-badge" id="overallScore">–</div>
+                  <div class="score-sub">
+                    <div id="overallLabel" style="font-weight:600;">–</div>
+                    <div style="color:var(--muted); font-size:0.85rem;">out of 100</div>
+                  </div>
+                </div>
+                <div id="rubricWrap" style="margin-top:1.2rem;">
+                  <div class="fb-title" style="color:var(--muted); margin-bottom:0.7rem;">Rubric</div>
+                  <div id="dimensions"></div>
+                </div>
+              </div>
+
+              <div class="card" id="reviewMissing" style="display:none;">
+                <h2>Scored review</h2>
+                <p class="review-note">The detailed rubric scoring didn't come back this round — it's generated by the local model and occasionally fails. Your delivery read on the left is computed directly and always reliable.</p>
+              </div>
+
+              <div class="card" id="feedbackCard">
+                <h2>Feedback</h2>
+                <div class="fb-block">
+                  <div class="fb-title good">Strengths</div>
+                  <ul id="strengths" class="fb-list"></ul>
+                </div>
+                <div class="fb-block" style="margin-top:1rem;">
+                  <div class="fb-title work">To work on</div>
+                  <ul id="improvements" class="fb-list"></ul>
+                </div>
+              </div>
+
+              <div class="card" style="display:flex; gap:0.7rem;">
+                <button class="cta" id="newInterviewBtn" style="margin:0;">New interview</button>
+                <button class="ghost" id="exportBtn" style="padding:0.85rem 1rem;">Export transcript</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const $ = (id) => document.getElementById(id);
+      const setupView = $("setupView"), liveView = $("liveView");
+      const stateEl = $("state"), stateText = $("stateText"), logEl = $("log");
+      const startBtn = $("startBtn"), endBtn = $("endBtn"), muteBtn = $("muteBtn");
+      const topStatus = $("topStatus");
+      const TARGET_RATE = 16000;
+
+      // ---- interview config (from lobby) ----
+      let interviewType = "behavioral";
+
+      // ---- runtime ----
+      let ws = null, capCtx = null, playCtx = null, micStream = null, workletNode = null;
+      let running = false, serverState = "", muted = false;
+      let nextStartTime = 0;
+      let scheduleChain = Promise.resolve();
+      let aiBubble = null;
+      let activeSources = [];
+      let framesSent = 0, turnCount = 0, answeredCount = 0, emptyCleared = false;
+      let timerHandle = null, startedAt = 0;
+      let debriefPending = false, debriefTimer = null;
+
+      const canSend = () => running && ws && ws.readyState === WebSocket.OPEN;
+
+      function setStatePill(cls, text) { stateEl.className = cls; stateText.textContent = text; }
+      function setTopStatus(t) { topStatus.textContent = t; }
+
+      // ---- lobby: interview-type selection (all four topics active) ----
+      document.querySelectorAll(".type").forEach((el) => {
+        el.addEventListener("click", () => {
+          document.querySelectorAll(".type").forEach((t) => t.classList.remove("sel"));
+          el.classList.add("sel");
+          interviewType = el.dataset.type;
+        });
+      });
+
+      // Human-readable labels for topic keys that aren't a single capitalized
+      // word (system_design, dsa) — used for the preface, live-stage meta, etc.
+      const TYPE_LABELS = {
+        behavioral: "Behavioral",
+        dsa: "DSA",
+        ml: "Machine Learning",
+        system_design: "System Design",
+      };
+      const typeLabel = (t) => TYPE_LABELS[t] || (t.charAt(0).toUpperCase() + t.slice(1));
+
+      // Human-readable labels for the company picker.
+      const COMPANY_LABELS = {
+        generic: "Generic", openai: "OpenAI", anthropic: "Anthropic",
+        google: "Google", meta: "Meta",
+      };
+
+      // ---- lobby: PDF/text upload fills the JD / resume textareas ----
+      // One hidden file input shared by both "upload PDF" buttons; the server
+      // extracts the text and it lands in the (still editable) textarea, so
+      // the setup message downstream never changes shape.
+      const uplInput = document.createElement("input");
+      uplInput.type = "file"; uplInput.accept = ".pdf,.txt,.md";
+      uplInput.style.display = "none";
+      document.body.appendChild(uplInput);
+      let uplTarget = null;
+      document.querySelectorAll(".upl").forEach((btn) => {
+        btn.onclick = () => { uplTarget = btn.dataset.target; uplInput.click(); };
+      });
+      uplInput.onchange = async () => {
+        const f = uplInput.files[0]; uplInput.value = "";
+        if (!f || !uplTarget) return;
+        const note = $(uplTarget + "-note");
+        note.className = "upl-note"; note.textContent = "extracting…";
+        try {
+          const fd = new FormData(); fd.append("file", f);
+          const res = await fetch("/api/extract", { method: "POST", body: fd });
+          const out = await res.json();
+          if (out.error) { note.className = "upl-note err"; note.textContent = out.error; return; }
+          $(uplTarget).value = out.text;
+          note.className = "upl-note ok";
+          note.textContent = `loaded ${f.name}` + (out.pages > 1 ? ` (${out.pages} pages)` : "");
+        } catch (err) {
+          note.className = "upl-note err"; note.textContent = "upload failed: " + err.message;
+        }
+      };
+
+      // ---- lobby: mic check (independent, freed before the interview) ----
+      let checkStream = null, checkCtx = null, checkRAF = null, checkOn = false;
+      const micCheckBtn = $("micCheckBtn"), setupMeter = $("setupMeter");
+      micCheckBtn.onclick = async () => {
+        if (checkOn) { stopMicCheck(); return; }
+        try {
+          checkStream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true } });
+          checkCtx = new AudioContext();
+          // Chrome starts an AudioContext SUSPENDED until resumed; a suspended
+          // context feeds the analyser flat silence, so the meter never moves
+          // (reported: "Test mic did nothing"). Resume it before reading levels.
+          await checkCtx.resume();
+          const src = checkCtx.createMediaStreamSource(checkStream);
+          const an = checkCtx.createAnalyser(); an.fftSize = 512;
+          src.connect(an);
+          const buf = new Uint8Array(an.fftSize);
+          const tick = () => {
+            an.getByteTimeDomainData(buf);
+            let sum = 0; for (let i = 0; i < buf.length; i++) { const v = (buf[i] - 128) / 128; sum += v * v; }
+            const rms = Math.sqrt(sum / buf.length);
+            setupMeter.style.width = Math.min(100, rms * 320) + "%";
+            checkRAF = requestAnimationFrame(tick);
+          };
+          tick();
+          checkOn = true; micCheckBtn.textContent = "Stop test";
+        } catch (err) { alert("Mic access failed: " + err.message); }
+      };
+      function stopMicCheck() {
+        checkOn = false; micCheckBtn.textContent = "Test mic"; setupMeter.style.width = "0%";
+        if (checkRAF) cancelAnimationFrame(checkRAF);
+        if (checkStream) checkStream.getTracks().forEach((t) => t.stop());
+        if (checkCtx) checkCtx.close();
+        checkStream = checkCtx = checkRAF = null;
+      }
+
+      function addTurn(who, text) {
+        if (!emptyCleared) { const n = $("emptyNote"); if (n) n.remove(); emptyCleared = true; }
+        const div = document.createElement("div");
+        div.className = "turn " + (who === "You" ? "you" : "ai");
+        div.innerHTML = `<div class="who">${who}</div>`;
+        const p = document.createElement("div"); p.textContent = text; div.appendChild(p);
+        logEl.appendChild(div); div.scrollIntoView({ behavior: "smooth", block: "end" });
+        return p;
+      }
+
+      // ---- audio capture helpers ----
+      function downsample(input, inRate, outRate) {
+        if (inRate === outRate) return input;
+        const ratio = inRate / outRate, outLen = Math.floor(input.length / ratio), out = new Float32Array(outLen);
+        for (let i = 0; i < outLen; i++) {
+          const idx = i * ratio, i0 = Math.floor(idx), i1 = Math.min(i0 + 1, input.length - 1), frac = idx - i0;
+          out[i] = input[i0] * (1 - frac) + input[i1] * frac;
+        }
+        return out;
+      }
+      function toInt16(f32) {
+        const out = new Int16Array(f32.length);
+        for (let i = 0; i < f32.length; i++) { const s = Math.max(-1, Math.min(1, f32[i])); out[i] = s < 0 ? s * 0x8000 : s * 0x7fff; }
+        return out;
+      }
+
+      const WORKLET_SRC = `
+        class PCMWorklet extends AudioWorkletProcessor {
+          constructor() { super(); this._buf = []; this._n = 0; this._target = 2048; }
+          process(inputs) {
+            const ch = inputs[0][0];
+            if (ch) {
+              this._buf.push(ch.slice(0)); this._n += ch.length;
+              if (this._n >= this._target) {
+                const merged = new Float32Array(this._n); let o = 0;
+                for (const b of this._buf) { merged.set(b, o); o += b.length; }
+                this.port.postMessage(merged); this._buf = []; this._n = 0;
+              }
+            }
+            return true;
+          }
+        }
+        registerProcessor('pcm-worklet', PCMWorklet);
+      `;
+
+      // ---- streamed playback (gapless, scheduled on the Web Audio clock) ----
+      let interruptedAt = 0;
+      function enqueueAudio(arrayBuffer) {
+        if (!playCtx) return;   // interview already ended — drop late chunks
+        const epoch = interruptedAt;
+        scheduleChain = scheduleChain.then(async () => {
+          if (epoch !== interruptedAt || !playCtx) return;
+          const buf = await playCtx.decodeAudioData(arrayBuffer);
+          const startAt = Math.max(playCtx.currentTime, nextStartTime);
+          const src = playCtx.createBufferSource();
+          src.buffer = buf; src.connect(playCtx.destination); src.start(startAt);
+          src.onended = () => { activeSources = activeSources.filter((s) => s !== src); };
+          activeSources.push(src);
+          nextStartTime = startAt + buf.duration;
+        }).catch((e) => console.error("audio decode failed", e));
+      }
+      function stopAllAudio() {
+        interruptedAt++;
+        for (const s of activeSources) { try { s.stop(); } catch (_) {} }
+        activeSources = [];
+        nextStartTime = 0;
+        scheduleChain = Promise.resolve();
+      }
+
+      function setMicLevel(rms) {
+        $("micLevel").style.width = Math.min(100, rms * 320) + "%";
+      }
+
+      async function startAudio() {
+        micStream = await navigator.mediaDevices.getUserMedia({
+          audio: { echoCancellation: true, noiseSuppression: true, channelCount: 1 },
+        });
+        capCtx = new AudioContext({ sampleRate: TARGET_RATE });
+        playCtx = new AudioContext();
+        await capCtx.resume(); await playCtx.resume();
+        nextStartTime = 0;
+        const url = URL.createObjectURL(new Blob([WORKLET_SRC], { type: "application/javascript" }));
+        await capCtx.audioWorklet.addModule(url);
+        const source = capCtx.createMediaStreamSource(micStream);
+        workletNode = new AudioWorkletNode(capCtx, "pcm-worklet");
+        source.connect(workletNode); workletNode.connect(capCtx.destination);
+        workletNode.port.onmessage = (e) => {
+          let f32 = e.data;
+          // Live input meter. While muted it reads 0 — the meter should reflect what
+          // we actually TRANSMIT (silence, see below), not raw mic input; a bouncing
+          // bar on a muted mic looks like we're still listening. Unmute to see it move.
+          let sum = 0; for (let i = 0; i < f32.length; i++) sum += f32[i] * f32[i];
+          setMicLevel(muted ? 0 : Math.sqrt(sum / f32.length));
+          if (!canSend()) return;
+          if (capCtx.sampleRate !== TARGET_RATE) f32 = downsample(f32, capCtx.sampleRate, TARGET_RATE);
+          const pcm = toInt16(f32);
+          // While muted we still send frames — as pure silence — so the server's
+          // endpointer keeps ticking. (Sending nothing froze a half-captured
+          // utterance until unmute; silence lets it end the turn normally.)
+          if (muted) pcm.fill(0);
+          ws.send(pcm.buffer);
+          framesSent++; $("kv-frames").textContent = framesSent;
+        };
+      }
+
+      // ---- websocket ----
+      function setCon(ok, text) {
+        const chip = $("conChip");
+        chip.className = "chip con " + (ok === true ? "ok" : ok === false ? "bad" : "");
+        $("conText").textContent = text;
+        $("kv-con").textContent = text;
+      }
+      function connect() {
+        const proto = location.protocol === "https:" ? "wss" : "ws";
+        ws = new WebSocket(`${proto}://${location.host}/ws`);
+        ws.binaryType = "arraybuffer";
+        ws.onopen = () => {
+          setCon(true, "connected");
+          setStatePill("", "Setting up…");
+          // Enrich the JD with lobby context so it actually shapes the interview.
+          const name = $("candidateName").value.trim();
+          const role = $("targetRole").value.trim();
+          const diff = $("difficulty").value;
+          const company = $("company").value;
+          let jd = $("jd").value;
+          const preface = [
+            name ? `Candidate name: ${name}.` : "",
+            role ? `Target role: ${role}.` : "",
+            `Interview type: ${interviewType}. Difficulty: ${diff}.`,
+            company !== "generic" ? `Company: ${COMPANY_LABELS[company] || company}.` : "",
+          ].filter(Boolean).join(" ");
+          jd = preface + (jd ? "\n\n" + jd : "");
+          ws.send(JSON.stringify({
+            type: "setup", jd, resume: $("resume").value,
+            name, role, interviewType, difficulty: diff, company,
+          }));
+        };
+        ws.onmessage = (ev) => {
+          if (typeof ev.data === "string") handleControl(JSON.parse(ev.data));
+          else enqueueAudio(ev.data);
+        };
+        ws.onclose = () => {
+          setCon(false, "disconnected");
+          if (debriefPending) debriefFailed("connection lost");
+          else if (running) setStatePill("", "Disconnected.");
+        };
+        ws.onerror = () => setCon(false, "error");
+      }
+
+      function handleControl(msg) {
+        switch (msg.type) {
+          case "state":
+            serverState = msg.text;
+            $("kv-floor").textContent = msg.text;
+            liveView.classList.remove("ai", "user");
+            if (msg.text === "listening") { setStatePill("listening", "Listening — just talk."); setTopStatus("Listening"); aiBubble = null; }
+            else if (msg.text === "processing") { setStatePill("thinking", "Working…"); setTopStatus("Thinking"); }
+            else if (msg.text === "speaking") { setStatePill("speaking-ai", "Interviewer is speaking…"); setTopStatus("Speaking"); liveView.classList.add("ai"); }
+            break;
+          case "vad":
+            $("kv-vad").textContent = msg.text;
+            if (serverState === "listening") {
+              const sp = msg.text === "speech";
+              setStatePill(sp ? "speaking-user" : "listening", sp ? "You're speaking…" : "Listening — just talk.");
+              liveView.classList.toggle("user", sp);
+            }
+            break;
+          case "status":
+            if (msg.text === "transcribing") setStatePill("thinking", "Transcribing…");
+            else if (msg.text === "thinking") setStatePill("thinking", "Interviewer is thinking…");
+            else if (msg.text === "scoring") $("debriefHeadline").textContent = "Scoring your interview…";
+            break;
+          case "debrief":
+            renderDebrief(msg);
+            break;
+          case "director": {
+            // one line per agent action, e.g. "note_evidence: quantified impact"
+            const log = $("directorLog");
+            const empty = log.querySelector(".dd-empty");
+            if (empty) empty.remove();
+            const [kind, ...rest] = msg.text.split(":");
+            const row = document.createElement("div");
+            const isMove = ["probe_deeper", "switch_topic", "end_interview"].includes(kind.trim());
+            row.className = "dd-act" + (isMove ? " dd-move" : "");
+            const k = document.createElement("span"); k.className = "dd-kind"; k.textContent = kind.trim();
+            row.appendChild(k);
+            row.appendChild(document.createTextNode(rest.length ? " — " + rest.join(":").trim() : ""));
+            log.appendChild(row);
+            log.scrollTop = log.scrollHeight;
+            break;
+          }
+          case "transcript":
+            if (msg.text) { addTurn("You", msg.text); aiBubble = null; answeredCount++; }
+            break;
+          case "reply_delta":
+            if (!aiBubble) {
+              aiBubble = addTurn("Interviewer", "");
+              turnCount++; $("kv-turns").textContent = turnCount;
+              $("qCount").textContent = turnCount;
+            }
+            aiBubble.textContent += msg.text;
+            break;
+          case "interrupt":
+            stopAllAudio();
+            if (aiBubble) { aiBubble.textContent += " …"; aiBubble = null; }
+            break;
+          case "metrics":
+            showMetrics(msg);
+            break;
+          case "error":
+            if (debriefPending) { debriefFailed(msg.text); break; }
+            setStatePill("", "Error: " + msg.text);
+            setTopStatus("Error");
+            break;
+        }
+      }
+
+      function showMetrics(m) {
+        $("m-audio").innerHTML = (m.audio_ms != null ? m.audio_ms + " ms" : "–") + "<small> to first audio</small>";
+        $("m-stt").textContent = m.stt_ms != null ? m.stt_ms + " ms" : "–";
+        $("m-text").textContent = m.text_ms != null ? m.text_ms + " ms" : "–";
+      }
+
+      // ---- mute ----
+      muteBtn.onclick = () => {
+        muted = !muted;
+        muteBtn.classList.toggle("muted", muted);
+        muteBtn.textContent = muted ? "Unmute" : "Mute";
+        $("micIco").textContent = muted ? "🔇" : "🎤";
+        $("kv-mic").textContent = muted ? "muted" : "live";
+      };
+
+      // ---- timer ----
+      function startTimer() {
+        $("timer").textContent = "00:00";   // don't show the previous run's time
+        startedAt = Date.now();
+        timerHandle = setInterval(() => {
+          const s = Math.floor((Date.now() - startedAt) / 1000);
+          $("timer").textContent = String(Math.floor(s / 60)).padStart(2, "0") + ":" + String(s % 60).padStart(2, "0");
+        }, 1000);
+      }
+
+      // ---- start / stop ----
+      async function start() {
+        stopMicCheck();
+        startBtn.disabled = true; startBtn.textContent = "Starting…";
+        try {
+          await startAudio();
+          // populate live-stage meta from the lobby
+          const role = $("targetRole").value.trim();
+          $("metaType").textContent = typeLabel(interviewType);
+          $("presenceRole").textContent = typeLabel(interviewType) + " round";
+          if (role) { $("metaRole").style.display = ""; $("metaRoleVal").textContent = role; }
+          connect();
+          running = true;
+          setupView.style.display = "none"; liveView.style.display = "block";
+          startTimer();
+        } catch (err) {
+          startBtn.disabled = false; startBtn.textContent = "Start interview →";
+          alert("Mic/audio failed: " + err.message);
+        }
+      }
+      // Stop mic + playback (the interview is over) but KEEP the socket open so
+      // the server can still send back the debrief.
+      function stopCapture() {
+        running = false;
+        if (timerHandle) clearInterval(timerHandle);
+        stopAllAudio();
+        if (workletNode) workletNode.disconnect();
+        if (micStream) micStream.getTracks().forEach((t) => t.stop());
+        if (capCtx) capCtx.close(); if (playCtx) playCtx.close();
+        capCtx = playCtx = micStream = workletNode = null;
+      }
+      function closeSession() { if (ws) ws.close(); ws = null; serverState = ""; }
+
+      // End the interview → score it (if there was anything to score), else lobby.
+      function finishInterview() {
+        stopCapture();
+        setTopStatus("Reviewing");
+        if (answeredCount > 0 && ws && ws.readyState === WebSocket.OPEN) {
+          liveView.style.display = "none";
+          $("debriefView").style.display = "block";
+          $("debriefLoading").style.display = "block";
+          $("debriefContent").style.display = "none";
+          $("debriefHeadline").textContent = "Scoring your interview…";
+          // Never leave the spinner hanging: server error, connection loss and
+          // a hard timeout all route to debriefFailed().
+          debriefPending = true;
+          debriefTimer = setTimeout(() => debriefFailed("scoring timed out"), 90000);
+          ws.send(JSON.stringify({ type: "debrief" }));
+        } else {
+          closeSession();
+          resetToLobby();
+        }
+      }
+
+      function resetToLobby() {
+        // defensive: a pending debrief must not fire its failure path (or 90s
+        // watchdog) into the hidden view after we've already left the screen
+        debriefPending = false;
+        if (debriefTimer) { clearTimeout(debriefTimer); debriefTimer = null; }
+        closeSession();
+        liveView.style.display = "none"; $("debriefView").style.display = "none";
+        setupView.style.display = "block";
+        liveView.classList.remove("ai", "user");
+        startBtn.disabled = false; startBtn.textContent = "Start interview →";
+        setTopStatus("Ready");
+        logEl.innerHTML = '<div class="empty-note" id="emptyNote">The interviewer will greet you in a moment. Your conversation will appear here.</div>';
+        $("directorLog").innerHTML = '<span class="dd-empty">no actions yet</span>';
+        emptyCleared = false; framesSent = 0; turnCount = 0; answeredCount = 0; muted = false;
+        muteBtn.classList.remove("muted"); muteBtn.textContent = "Mute"; $("micIco").textContent = "🎤";
+      }
+
+      // ---- debrief rendering ----
+      // The review couldn't be produced (server error / disconnect / timeout).
+      // Show the debrief screen in its degraded form instead of spinning forever.
+      function debriefFailed(why) {
+        if (!debriefPending) return;
+        renderDebrief({
+          ok: false,
+          headline: "Couldn't generate the scored review (" + why + "). You can still export the transcript.",
+        });
+      }
+      function scoreClass(v) { return v >= 75 ? "high" : v >= 50 ? "mid" : "low"; }
+      function metricRow(label, value) {
+        return `<div class="metric-item">${label}: <b>${value}</b></div>`;
+      }
+      function renderDebrief(d) {
+        debriefPending = false;
+        if (debriefTimer) { clearTimeout(debriefTimer); debriefTimer = null; }
+        $("debriefLoading").style.display = "none";
+        $("debriefContent").style.display = "block";
+        $("debriefHeadline").textContent = d.headline || "Interview complete.";
+        setTopStatus("Debrief ready");
+
+        const m = d.metrics || {};
+        const ass = m.assessments || {};
+
+        // coaching summary — the plain-English headline (computed, always there)
+        $("coachSummary").textContent =
+          m.summary || d.headline || "Here's how your interview went.";
+
+        // interpreted delivery: each metric shows its number AND what it means
+        const dl = $("deliveryList");
+        dl.innerHTML = "";
+        const cards = [
+          ["Pace", m.wpm != null ? m.wpm + " wpm" : null, ass.wpm],
+          ["Avg answer length", m.avg_answer_words != null ? m.avg_answer_words + " words" : null, ass.avg_answer_words],
+          ["Filler words", m.fillers_per_min != null ? m.fillers_per_min + "/min" : null, ass.fillers_per_min],
+          ["Your airtime", m.talk_ratio != null ? m.talk_ratio + "%" : null, ass.talk_ratio],
+        ];
+        cards.forEach(([label, value, a]) => {
+          if (value == null) return;
+          const tone = a && a[1] ? a[1] : "";
+          const el = document.createElement("div");
+          el.className = "metric" + (tone ? " " + tone : "");
+          el.innerHTML = `<div class="mv"></div><div class="mk"></div><div class="mverdict"></div>`;
+          el.querySelector(".mv").textContent = value;
+          el.querySelector(".mk").textContent = label;
+          el.querySelector(".mverdict").textContent = a ? a[0] : "";
+          dl.appendChild(el);
+        });
+        $("deliveryContext").textContent =
+          `Based on ${m.answers ?? 0} answer${m.answers === 1 ? "" : "s"} · ` +
+          `${m.total_words ?? 0} words · ${m.speaking_secs ?? 0}s of speaking.`;
+
+        // scored review (LLM) — show the card if present, else a graceful note
+        const overall = d.overall;
+        const hasReview = overall != null || (d.dimensions || []).length > 0;
+        const badge = $("overallScore");
+        if (overall != null) {
+          badge.textContent = overall;
+          badge.className = "score-badge " + scoreClass(overall);
+          $("overallLabel").textContent =
+            overall >= 75 ? "Strong" : overall >= 50 ? "Solid, with gaps" : "Needs work";
+        } else {
+          badge.textContent = "–"; badge.className = "score-badge";
+          $("overallLabel").textContent = "Not scored";
+        }
+        const dimEl = $("dimensions");
+        dimEl.innerHTML = "";
+        (d.dimensions || []).forEach((dim) => {
+          const pct = Math.max(0, Math.min(100, (Number(dim.score) / 5) * 100));
+          const row = document.createElement("div");
+          row.className = "dim";
+          row.innerHTML =
+            `<div class="dim-head"><span class="n"></span><span class="s">${dim.score}/5</span></div>` +
+            `<div class="dim-bar"><span style="width:${pct}%"></span></div>` +
+            `<div class="dim-comment"></div>`;
+          row.querySelector(".n").textContent = dim.name || "";
+          row.querySelector(".dim-comment").textContent = dim.comment || "";
+          dimEl.appendChild(row);
+        });
+        $("rubricWrap").style.display = (d.dimensions || []).length ? "block" : "none";
+        $("overallCard").style.display = hasReview ? "block" : "none";
+        $("reviewMissing").style.display = hasReview ? "none" : "block";
+
+        // feedback lists
+        const fill = (id, arr, empty) => {
+          const el = $(id); el.innerHTML = "";
+          if (!arr || !arr.length) { const li = document.createElement("li"); li.textContent = empty; li.style.color = "var(--faint)"; el.appendChild(li); return; }
+          arr.forEach((t) => { const li = document.createElement("li"); li.textContent = t; el.appendChild(li); });
+        };
+        fill("strengths", d.strengths, "No standout strengths captured this round.");
+        fill("improvements", d.improvements, "No specific fixes captured this round.");
+      }
+
+      function exportTranscript() {
+        const lines = [];
+        document.querySelectorAll("#log .turn").forEach((t) => {
+          const who = t.querySelector(".who")?.textContent || "";
+          const body = t.querySelector("div:last-child")?.textContent || "";
+          lines.push(`${who}: ${body}`);
+        });
+        const blob = new Blob([lines.join("\n\n")], { type: "text/plain" });
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(blob);
+        a.download = "interview-transcript.txt";
+        a.click();
+        URL.revokeObjectURL(a.href);
+      }
+
+      startBtn.onclick = start;
+      endBtn.onclick = () => { if (confirm("End this interview?")) finishInterview(); };
+      $("newInterviewBtn").onclick = resetToLobby;
+      $("exportBtn").onclick = exportTranscript;
+    </script>
+  </body>
+</html>
