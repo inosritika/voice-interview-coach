@@ -1,0 +1,20 @@
+# local config (copy .env.example instead)
+.env
+
+# python
+.venv/
+__pycache__/
+*.pyc
+
+# IDE
+.idea/
+.DS_Store
+
+# downloaded model weights (see backend/turndetect/smart_turn.py and README
+# for the one-line downloads — piper voices + smart-turn ONNX)
+voices/
+backend/models/
+
+# runtime artifacts: saved interviews, candidate profiles, eval runs
+# (personal data — never belongs in the repo)
+backend/data/

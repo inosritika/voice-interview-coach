@@ -1,0 +1,26 @@
+fastapi
+uvicorn[standard]
+python-dotenv
+httpx
+# Local STT
+faster-whisper
+# Local TTS (pinned: piper's Python API has churned across versions).
+# 1.4.x ships a self-contained arm64 wheel with bundled espeak-ng data —
+# no piper-phonemize, which has no wheels for Python 3.13 / macOS ARM.
+piper-tts==1.4.2
+# Step 2: local voice-activity detection. Pulls torch (used via the ONNX build).
+silero-vad
+numpy
+# MCP server (mcp_server.py) — expose saved interviews to other agents.
+mcp
+# Resume/JD upload: PDF text extraction + multipart form parsing (/api/extract).
+pypdf
+python-multipart
+# Optional — only for ENDPOINT_MODE=semantic (smart-turn model, ~8MB ONNX):
+# needs transformers (for WhisperFeatureExtractor; onnxruntime comes with
+# silero-vad) plus the model file — download instructions in turndetect/smart_turn.py
+# Optional — only for PIPELINE=fused (Gemma 4 audio model). Heavy; skip for cascaded.
+# transformers>=4.55
+# accelerate
+# pillow       # Gemma's processor is multimodal (also handles images) and requires it
+# torchvision  # imported by Gemma4's image-processing module even for audio-only use
