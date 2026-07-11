@@ -1,0 +1,1690 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Voice Interview Coach — the learning guide</title>
+<style>
+  :root {
+    --ink: #1f1e1b;
+    --muted: #5f5e5a;
+    --paper: #faf9f6;
+    --card: #ffffff;
+    --line: #e3e1d9;
+    --blue: #185fa5;  --blue-bg: #e6f1fb;  --blue-line: #b5d4f4;
+    --teal: #0f6e56;  --teal-bg: #e1f5ee;  --teal-line: #9fe1cb;
+    --amber: #854f0b; --amber-bg: #faeeda; --amber-line: #fac775;
+    --purple: #534ab7;--purple-bg: #eeedfe;--purple-line: #cecbf6;
+    --coral: #993c1d; --coral-bg: #faece7; --coral-line: #f5c4b3;
+    --red: #a32d2d;   --red-bg: #fcebeb;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--paper); color: var(--ink);
+    font-family: -apple-system, "Segoe UI", system-ui, sans-serif;
+    font-size: 16.5px; line-height: 1.68;
+  }
+  main { max-width: 960px; margin: 0 auto; padding: 2.5rem 1.4rem 6rem; }
+  h1 { font-size: 2rem; line-height: 1.25; margin: 0 0 .4rem; }
+  .subtitle { color: var(--muted); font-size: 1.05rem; margin-bottom: 2rem; }
+  h2 { font-size: 1.45rem; margin: 3.2rem 0 1rem; padding-bottom: .4rem; border-bottom: 2px solid var(--line); }
+  h3 { font-size: 1.12rem; margin: 2rem 0 .6rem; }
+  p { margin: .7rem 0; }
+  a { color: var(--blue); }
+  code {
+    font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: .86em;
+    background: #f0efe9; padding: .12em .38em; border-radius: 5px;
+  }
+  pre {
+    background: #22211e; color: #e8e6df; padding: 1rem 1.2rem; border-radius: 10px;
+    overflow-x: auto; font-size: .84rem; line-height: 1.55;
+  }
+  pre code { background: none; color: inherit; padding: 0; }
+  table { border-collapse: collapse; width: 100%; margin: 1rem 0; font-size: .95rem; }
+  th, td { text-align: left; padding: .55rem .7rem; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { font-weight: 600; color: var(--muted); font-size: .85rem; text-transform: uppercase; letter-spacing: .03em; }
+  svg { width: 100%; height: auto; display: block; margin: 1.2rem 0; }
+  figure { margin: 1.6rem 0; }
+  figcaption { font-size: .88rem; color: var(--muted); text-align: center; margin-top: .2rem; }
+
+  /* Table of contents */
+  nav.toc {
+    background: var(--card); border: 1px solid var(--line); border-radius: 12px;
+    padding: 1rem 1.4rem; margin: 1.5rem 0 0;
+  }
+  nav.toc ol { margin: .4rem 0 .2rem; padding-left: 1.3rem; }
+  nav.toc li { margin: .22rem 0; }
+  nav.toc a { text-decoration: none; }
+  nav.toc a:hover { text-decoration: underline; }
+
+  /* Glossary term cards */
+  .term {
+    background: var(--card); border: 1px solid var(--line); border-radius: 12px;
+    padding: 1.1rem 1.3rem; margin: 1rem 0;
+  }
+  .term h4 { margin: 0 0 .3rem; font-size: 1.05rem; }
+  .term .tag {
+    display: inline-block; font-size: .72rem; font-weight: 600; letter-spacing: .04em;
+    text-transform: uppercase; border-radius: 999px; padding: .1rem .6rem; margin-left: .5rem;
+    background: var(--purple-bg); color: var(--purple); vertical-align: 2px;
+  }
+  .term .ex {
+    background: var(--paper); border-left: 3px solid var(--amber-line);
+    padding: .5rem .9rem; margin: .6rem 0 .2rem; font-size: .93rem;
+  }
+  .term .ex b { color: var(--amber); }
+
+  /* What / Why / How blocks */
+  .www { display: grid; gap: .7rem; margin: .9rem 0 1.4rem; }
+  .www > div { border-radius: 10px; padding: .75rem 1rem; font-size: .96rem; border: 1px solid; }
+  .www b:first-child { display: block; font-size: .74rem; text-transform: uppercase; letter-spacing: .06em; margin-bottom: .25rem; }
+  .what { background: var(--blue-bg);  border-color: var(--blue-line);  } .what  b:first-child { color: var(--blue); }
+  .why  { background: var(--amber-bg); border-color: var(--amber-line); } .why   b:first-child { color: var(--amber); }
+  .how  { background: var(--teal-bg);  border-color: var(--teal-line);  } .how   b:first-child { color: var(--teal); }
+
+  .callout {
+    background: var(--purple-bg); border: 1px solid var(--purple-line); border-radius: 12px;
+    padding: .9rem 1.2rem; margin: 1.2rem 0; font-size: .96rem;
+  }
+  .callout.warn { background: var(--red-bg); border-color: #f7c1c1; }
+  .callout b.label { color: var(--purple); text-transform: uppercase; font-size: .74rem; letter-spacing: .05em; display:block; margin-bottom:.25rem; }
+  .callout.warn b.label { color: var(--red); }
+
+  .filepath { font-family: ui-monospace, Menlo, monospace; font-size: .82rem; color: var(--muted); }
+
+  /* svg text defaults */
+  svg text { font-family: -apple-system, "Segoe UI", system-ui, sans-serif; }
+  .svg-h  { font-size: 15px; font-weight: 600; }
+  .svg-t  { font-size: 13px; }
+  .svg-s  { font-size: 11.5px; fill: #5f5e5a; }
+
+  /* §20 architecture: the typed data-flow (nodes + the data type on each edge) */
+  .flow { margin: 1.4rem 0; }
+  .flane { font-family: ui-monospace, Menlo, monospace; font-size: .72rem; letter-spacing: .1em;
+    text-transform: uppercase; color: var(--lc, var(--blue)); margin: 1.1rem 0 .5rem;
+    display: flex; align-items: center; gap: .5rem; }
+  .flane::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--lc, var(--blue)); }
+  .flane::after { content: ""; flex: 1; height: 1px; background: var(--line); }
+  .flane small { text-transform: none; letter-spacing: 0; color: var(--muted); font-size: .92em; }
+  .fnode { border: 1px solid var(--line); border-left: 3px solid var(--lc, var(--blue));
+    border-radius: 10px; background: var(--card); padding: .6rem .9rem; }
+  .fnode .fh { display: flex; justify-content: space-between; gap: .6rem; align-items: baseline; flex-wrap: wrap; }
+  .fnode .fn { font-weight: 600; font-size: .97rem; }
+  .fnode .ff { font-family: ui-monospace, Menlo, monospace; font-size: .74rem; color: var(--muted); }
+  .fnode .fb { font-size: .9rem; color: var(--muted); margin: .25rem 0 0; }
+  .fnode .fb b { color: var(--ink); }
+  .fedge { display: flex; justify-content: center; padding: .28rem 0; }
+  .fedge span { font-family: ui-monospace, Menlo, monospace; font-size: .75rem; background: #f0efe9;
+    border: 1px solid var(--line); border-radius: 999px; padding: .13rem .75rem; color: var(--ink); text-align: center; }
+  .fedge span small { color: var(--muted); }
+  .fedge.branch span { color: var(--amber); border-color: var(--amber-line); background: var(--amber-bg); }
+  .k { font-family: ui-monospace, Menlo, monospace; color: var(--coral); font-weight: 600; }
+  td .ty { font-family: ui-monospace, Menlo, monospace; font-size: .82rem; color: var(--purple); }
+</style>
+</head>
+<body>
+<main>
+
+<h1>Voice Interview Coach<br /><span style="font-weight:400">— how it works, and why it's built this way</span></h1>
+<p class="subtitle">A learning guide for the project: every term explained with examples, every component explained with <em>what</em> it does, <em>why</em> it exists, and <em>how</em> it works. <b>Part I</b> (§1–12) covers the step-1 push-to-talk MVP and the foundations; <b>Part II</b> (§13–20) covers everything built since — hands-free VAD + endpointing, streaming, barge-in, the fused Gemma pipeline, the scored debrief, the interview-platform UI, the multi-topic interview packs, and a full architecture reference — including the real bugs we hit and how we fixed them.</p>
+
+<nav class="toc">
+  <b>Contents</b>
+  <ol>
+    <li><a href="#big-picture">The big picture: what is a voice agent?</a></li>
+    <li><a href="#two-architectures">The two ways to build one</a></li>
+    <li><a href="#glossary">Glossary — every term, with examples</a></li>
+    <li><a href="#stack">The tech stack we chose, and why</a></li>
+    <li><a href="#topology">Architecture 1: browser ↔ server</a></li>
+    <li><a href="#adapters">Architecture 2: the adapter pattern</a></li>
+    <li><a href="#sequence">Architecture 3: anatomy of one turn</a></li>
+    <li><a href="#latency">The latency budget</a></li>
+    <li><a href="#components">Component deep dive (what / why / how)</a></li>
+    <li><a href="#missing">What's deliberately missing <em>(now mostly built — statuses updated)</em></a></li>
+    <li><a href="#roadmap">The roadmap: 6 steps, 6 lessons</a></li>
+    <li><a href="#gotchas">Known rough edges — original list, with what happened to each</a></li>
+  </ol>
+  <b>Part II — everything since step 1</b>
+  <ol start="13">
+    <li><a href="#step2">Step 2: hands-free — VAD, endpointing, the floor</a></li>
+    <li><a href="#step3">Step 3: streaming — first sound in half the time</a></li>
+    <li><a href="#step4">Step 4: barge-in — interrupting the interviewer (and 2 real bugs)</a></li>
+    <li><a href="#pipelines">Cascaded vs fused: the Gemma 4 experiment</a></li>
+    <li><a href="#step5">Step 5: the scored debrief — the LLM as judge</a></li>
+    <li><a href="#platform">The frontend: from scratch page to interview platform</a></li>
+    <li><a href="#packs">Interview packs: one interviewer, many rounds (DSA, ML, system design, companies)</a></li>
+    <li><a href="#architecture">The whole system on one page — data flow, structures, patterns</a></li>
+  </ol>
+  <b>Part III — the road ahead</b>
+  <ol start="21">
+    <li><a href="#roadahead">How we plan, and the target agentic architecture</a></li>
+    <li><a href="#resources">The bookshelf: the best resource for every concept</a></li>
+  </ol>
+</nav>
+
+<!-- ============================================================ -->
+<h2 id="big-picture">1. The big picture: what is a voice agent?</h2>
+
+<p>A <strong>voice agent</strong> is a program you talk to and that talks back — no typing, no reading. Ours plays a job interviewer: you paste a job description and your resume, then answer its questions out loud, and it follows up like a real interviewer would.</p>
+
+<p>Under the hood, "talking to a computer" decomposes into three fundamental conversions, because the AI models that reason well (large language models) only understand text:</p>
+
+<ol>
+  <li><strong>Your speech → text</strong> (so the model can read what you said)</li>
+  <li><strong>Text → the model's reply text</strong> (the actual "thinking")</li>
+  <li><strong>Reply text → speech</strong> (so you can hear the answer)</li>
+</ol>
+
+<p><strong>Why this decomposition matters:</strong> almost every hard problem in voice AI lives <em>between</em> these conversions, not inside them. When has the person stopped talking? How do you avoid a 3-second awkward silence? What happens when the user interrupts? Those are the problems this project exists to teach — the conversions themselves are mostly solved by off-the-shelf models.</p>
+
+<!-- ============================================================ -->
+<h2 id="two-architectures">2. The two ways to build one</h2>
+
+<figure>
+<svg viewBox="0 0 900 330" role="img" aria-label="Cascaded pipeline versus end-to-end speech-to-speech architecture">
+  <defs>
+    <marker id="arr" markerWidth="10" markerHeight="10" refX="8" refY="3.5" orient="auto"><path d="M0,0 L8,3.5 L0,7 Z" fill="#888780"/></marker>
+  </defs>
+  <text x="20" y="34" class="svg-h">A. Cascaded pipeline — what we're building first</text>
+  <g>
+    <rect x="20"  y="55" width="130" height="58" rx="9" fill="#e1f5ee" stroke="#1d9e75" stroke-width="1.5"/>
+    <text x="85" y="80" text-anchor="middle" class="svg-t" font-weight="600" fill="#085041">VAD</text>
+    <text x="85" y="98" text-anchor="middle" class="svg-s">is sound speech?</text>
+
+    <rect x="200" y="55" width="130" height="58" rx="9" fill="#e1f5ee" stroke="#1d9e75" stroke-width="1.5"/>
+    <text x="265" y="80" text-anchor="middle" class="svg-t" font-weight="600" fill="#085041">Endpoint</text>
+    <text x="265" y="98" text-anchor="middle" class="svg-s">are they done?</text>
+
+    <rect x="380" y="55" width="130" height="58" rx="9" fill="#e6f1fb" stroke="#378add" stroke-width="1.5"/>
+    <text x="445" y="80" text-anchor="middle" class="svg-t" font-weight="600" fill="#0c447c">STT</text>
+    <text x="445" y="98" text-anchor="middle" class="svg-s">speech → text</text>
+
+    <rect x="560" y="55" width="130" height="58" rx="9" fill="#eeedfe" stroke="#7f77dd" stroke-width="1.5"/>
+    <text x="625" y="80" text-anchor="middle" class="svg-t" font-weight="600" fill="#3c3489">LLM</text>
+    <text x="625" y="98" text-anchor="middle" class="svg-s">thinks of reply</text>
+
+    <rect x="740" y="55" width="130" height="58" rx="9" fill="#faece7" stroke="#d85a30" stroke-width="1.5"/>
+    <text x="805" y="80" text-anchor="middle" class="svg-t" font-weight="600" fill="#712b13">TTS</text>
+    <text x="805" y="98" text-anchor="middle" class="svg-s">text → speech</text>
+
+    <line x1="152" y1="84" x2="196" y2="84" stroke="#888780" stroke-width="2" marker-end="url(#arr)"/>
+    <line x1="332" y1="84" x2="376" y2="84" stroke="#888780" stroke-width="2" marker-end="url(#arr)"/>
+    <line x1="512" y1="84" x2="556" y2="84" stroke="#888780" stroke-width="2" marker-end="url(#arr)"/>
+    <line x1="692" y1="84" x2="736" y2="84" stroke="#888780" stroke-width="2" marker-end="url(#arr)"/>
+
+    <path d="M 805 117 L 805 150 L 85 150 L 85 117" fill="none" stroke="#d85a30" stroke-width="1.6" stroke-dasharray="5 4" marker-end="url(#arr)"/>
+    <text x="445" y="144" text-anchor="middle" class="svg-s" fill="#993c1d">barge-in loop: while TTS speaks, VAD keeps listening — if you talk, playback stops</text>
+  </g>
+  <text x="20" y="196" class="svg-h">B. End-to-end realtime speech-to-speech — the step 6 capstone</text>
+  <g>
+    <rect x="20" y="215" width="850" height="60" rx="9" fill="#f1efe8" stroke="#888780" stroke-width="1.5"/>
+    <text x="445" y="240" text-anchor="middle" class="svg-t" font-weight="600" fill="#444441">One giant model (OpenAI Realtime, Gemini Live): audio in → audio out</text>
+    <text x="445" y="260" text-anchor="middle" class="svg-s">all five stages happen inside — you can't see or control any of them</text>
+  </g>
+  <text x="20" y="308" class="svg-s">Tradeoff: A gives full visibility and control (and more latency to fight). B is fastest and most natural, but a black box.</text>
+</svg>
+<figcaption>The cascaded pipeline (top) vs the end-to-end model (bottom). We build A by hand, then swap in B last — so we can feel what B hides.</figcaption>
+</figure>
+
+<p><strong>Why build the harder one first?</strong> Because the goal of this project is learning, and architecture B teaches you almost nothing — you send audio, you get audio, the interesting parts are invisible. Architecture A forces you to personally solve endpointing, latency, and interruptions. Then, when you swap in B at the end (step 6), you'll be able to say <em>exactly</em> what you gave up — from experience, not from a blog post.</p>
+
+<p>In step 1 we built the <strong>STT → LLM → TTS core</strong> of pipeline A, with <em>your thumb on the button doing VAD and Endpoint's job</em>: holding = "this is speech", releasing = "I'm done". Since then the thumb has been fully replaced with software — VAD + endpointing (step 2), streaming (step 3), barge-in (step 4) and the debrief (step 5) are all built and working. Part II (§13 onward) walks through each. The diagram above, including its barge-in loop, is now a literal description of the running code.</p>
+
+<!-- ============================================================ -->
+<h2 id="glossary">3. Glossary — every term, with examples</h2>
+
+<p>Grouped roughly in the order you'd meet them following one sentence you speak through the system.</p>
+
+<h3>Capturing sound</h3>
+
+<div class="term">
+  <h4>Microphone capture / <code>getUserMedia</code> <span class="tag">browser</span></h4>
+  <p>The browser API that asks the user for microphone permission and returns a live audio stream. The browser is the only practical, cross-platform way for our app to reach a mic — which is <em>why</em> this project needs a web frontend at all, even though it's a "backend-flavored" project.</p>
+  <div class="ex"><b>Example:</b> the permission popup you saw when you clicked <em>Start interview</em> — that was <code>getUserMedia({ audio: true })</code> executing.</div>
+</div>
+
+<div class="term">
+  <h4>MediaRecorder <span class="tag">browser</span></h4>
+  <p>A browser API that records an audio stream into compressed chunks. You start it, it accumulates data, you stop it, you get a file-like blob.</p>
+  <div class="ex"><b>Example:</b> in our app, pressing the talk button calls <code>mediaRecorder.start()</code>, releasing calls <code>.stop()</code>, and the collected chunks become one clip sent to the server.</div>
+</div>
+
+<div class="term">
+  <h4>Audio formats: WebM/Opus vs WAV/PCM <span class="tag">audio</span></h4>
+  <p><strong>Opus</strong> is a modern compressed audio codec (like MP3 but better for speech); <strong>WebM</strong> is the container file that holds it. <strong>PCM</strong> is raw, uncompressed samples — just numbers describing the sound wave; <strong>WAV</strong> is PCM with a small header on top. Compressed is small but must be decoded; raw is big but instantly usable.</p>
+  <div class="ex"><b>Example in our app:</b> uploads are WebM/Opus (a 10-second answer ≈ 80&nbsp;KB — cheap to send), downloads are WAV (the reply you heard was ~500&nbsp;KB — but the browser can play it with zero decoding work). Choosing per-direction like this is a classic bandwidth-vs-simplicity tradeoff.</div>
+</div>
+
+<div class="term">
+  <h4>Sample rate <span class="tag">audio</span></h4>
+  <p>How many times per second the sound wave is measured, in hertz. More samples = higher fidelity = more data. Speech models don't need music-grade fidelity.</p>
+  <div class="ex"><b>Example:</b> music CDs use 44,100&nbsp;Hz. Whisper listens at 16,000&nbsp;Hz; our piper voice speaks at 22,050&nbsp;Hz. Telephone audio is 8,000&nbsp;Hz — which is why phone calls sound "thin".</div>
+</div>
+
+<h3>Understanding speech</h3>
+
+<div class="term">
+  <h4>STT — speech-to-text (also called ASR) <span class="tag">pipeline stage</span></h4>
+  <p>A model that converts audio of speech into written text. Also called ASR (automatic speech recognition). Ours is <strong>faster-whisper</strong>, an optimized version of OpenAI's open-source Whisper model, running on your CPU.</p>
+  <div class="ex"><b>Example:</b> our smoke test fed piper's audio of "The quick brown fox jumps over the lazy dog" into whisper, and got exactly that sentence back as text.</div>
+</div>
+
+<div class="term">
+  <h4>Beam search <span class="tag">how models decode</span></h4>
+  <p>When transcribing, the model considers several candidate transcriptions in parallel ("beams") instead of greedily committing to the single most likely word at each step, then keeps the best overall sentence. Slower but more accurate.</p>
+  <div class="ex"><b>Example:</b> hearing "I worked at a <em>fin-tech</em>…", a greedy decoder might lock in "fin" then be stuck with "fin tech"; beam search keeps both "fintech" and "fin tech" alive until more audio disambiguates. Our code passes <code>beam_size=5</code> — five candidates.</div>
+</div>
+
+<div class="term">
+  <h4>VAD — voice activity detection <span class="tag">step 2 ✓ built</span></h4>
+  <p>A tiny, fast model that looks at ~30-millisecond slices of audio and answers one question per slice: <em>is this speech, or not?</em> It knows nothing about words or meaning — it's purely a sound-vs-silence gatekeeper. The standard choice is <strong>Silero VAD</strong>, which beats naive "is the volume loud?" checks (those get fooled by keyboard clatter and coughs).</p>
+  <div class="ex"><b>Example:</b> while you answer a question, VAD emits a stream like <code>speech, speech, speech, silence, silence, speech…</code> — the raw signal that endpointing (below) interprets. In our app this is now real: <span class="filepath">backend/vad/silero.py</span> scores every 32&nbsp;ms slice of mic audio with a probability, all interview long. Details in §13.</div>
+</div>
+
+<div class="term">
+  <h4>Endpointing / turn detection <span class="tag">step 2 ✓ built</span></h4>
+  <p>The decision "the speaker is <em>finished</em>", as opposed to "the speaker is <em>pausing to think</em>". It consumes VAD's silence stream (e.g. "500ms of continuous silence") and, done well, also looks at the transcript so far. This is widely considered the hardest UX problem in voice agents.</p>
+  <div class="ex"><b>Example:</b> you say "My biggest achievement was… <em>[1.5s pause, thinking]</em> …leading the payments migration." A naive 700ms-of-silence rule <b>guillotines</b> you mid-thought and the agent answers half a story. But a 2-second rule makes every single exchange feel laggy. <b>Semantic endpointing</b> checks whether "My biggest achievement was" even <em>sounds</em> like a finished sentence (it doesn't — so wait longer). We built the classic fixed-silence baseline (700&nbsp;ms) in <span class="filepath">backend/endpointing.py</span> — deliberately the naive version, so you can feel its failure modes yourself. §13 dissects it.</div>
+</div>
+
+<h3>Thinking</h3>
+
+<div class="term">
+  <h4>LLM — large language model <span class="tag">pipeline stage</span></h4>
+  <p>The model that actually converses — reads the transcript, decides what the interviewer should say next. Ours is <strong>Llama&nbsp;3 8B</strong> running locally via Ollama. LLMs read and write only text, which is the entire reason STT and TTS must exist around it.</p>
+  <div class="ex"><b>Example:</b> given your answer "I led a team of five", the LLM (prompted to be a rigorous interviewer) produces "What was the hardest people-problem you faced with that team?"</div>
+</div>
+
+<div class="term">
+  <h4>Token <span class="tag">llm</span></h4>
+  <p>The unit LLMs read and write — roughly ¾ of a word. Models generate one token at a time, which is why replies can be <em>streamed</em> word-by-word (see streaming, below).</p>
+  <div class="ex"><b>Example:</b> "interviewing" might be split into the tokens <code>inter</code> + <code>view</code> + <code>ing</code>. A 100-word answer is roughly 130 tokens.</div>
+</div>
+
+<div class="term">
+  <h4>Context window <span class="tag">llm</span></h4>
+  <p>The maximum amount of text (in tokens) an LLM can consider at once — its working memory. Everything must fit: the system prompt, the whole conversation so far, and the reply being generated.</p>
+  <div class="ex"><b>Example:</b> llama3:8b has an 8,192-token window ≈ 6,000 words. A long interview (JD + resume + 30 exchanges) can exceed it — and Ollama silently drops the <em>oldest</em> text, which is our system prompt. The interviewer would literally forget what job it's hiring for. This is a known rough edge in our current code (see §12).</div>
+</div>
+
+<div class="term">
+  <h4>Stateless model / conversation history <span class="tag">llm</span></h4>
+  <p>LLMs remember <em>nothing</em> between calls. The illusion of memory is created by re-sending the entire conversation every single turn.</p>
+  <div class="ex"><b>Example:</b> on turn 10 of your interview, <code>main.py</code> sends all 9 previous exchanges plus your new answer. The model re-reads everything, every time. This is why <code>main.py</code> keeps the <code>messages</code> list — it, not the model, is the memory.</div>
+</div>
+
+<div class="term">
+  <h4>System prompt <span class="tag">llm</span></h4>
+  <p>A special first message that sets the model's role, rules, and knowledge for the whole conversation. The user never sees it.</p>
+  <div class="ex"><b>Example:</b> ours (in <span class="filepath">backend/prompts.py</span>) says: be a warm-but-rigorous behavioral interviewer, ask ONE question at a time, keep turns to 1–3 sentences, no markdown or emoji <em>because your words will be spoken aloud by TTS</em>, probe vague answers using STAR (Situation, Task, Action, Result) — and then embeds your pasted JD and resume so questions are role-specific. Writing prompts "for the ear" is a real voice-AI discipline: a TTS engine will cheerfully read <code>**asterisk asterisk**</code> out loud.</div>
+</div>
+
+<h3>Speaking</h3>
+
+<div class="term">
+  <h4>TTS — text-to-speech <span class="tag">pipeline stage</span></h4>
+  <p>A model that converts written text into spoken audio. Ours is <strong>piper</strong>, a fast local neural TTS.</p>
+  <div class="ex"><b>Example:</b> the interviewer's greeting you heard in our test — "Welcome to the mock job interview…" — was piper converting the LLM's text into a 505&nbsp;KB WAV file in about a second.</div>
+</div>
+
+<div class="term">
+  <h4>Phoneme <span class="tag">tts internals</span></h4>
+  <p>The smallest unit of spoken sound. TTS engines first convert text into phonemes (using pronunciation rules), then render phonemes as audio. This two-step split is why TTS can pronounce words it has never seen.</p>
+  <div class="ex"><b>Example:</b> "coach" becomes the phonemes <code>k</code>-<code>oʊ</code>-<code>tʃ</code>. Piper uses a library called espeak-ng for this step. It's also why TTS sometimes mispronounces names: "Ritika" gets whatever phonemes the rules guess.</div>
+</div>
+
+<div class="term">
+  <h4>Vocoder / neural voice <span class="tag">tts internals</span></h4>
+  <p>The neural network that turns phonemes into an actual sound wave — the part that makes it sound like a human rather than a 1990s robot. This is the 60&nbsp;MB <code>.onnx</code> file we downloaded.</p>
+  <div class="ex"><b>Example:</b> <code>en_US-lessac-medium.onnx</code> is one specific voice (trained on one speaker's recordings). Swap the file, swap the voice — same text, different person.</div>
+</div>
+
+<h3>Moving data around</h3>
+
+<div class="term">
+  <h4>HTTP vs WebSocket <span class="tag">transport</span></h4>
+  <p><strong>HTTP</strong> is like sending letters: the browser asks, the server answers, the exchange is over. The server can never speak first. A <strong>WebSocket</strong> is like a phone call: one connection stays open and <em>either side can send anything at any time</em>.</p>
+  <div class="ex"><b>Example why this matters for voice:</b> mid-turn, our server pushes "status: thinking" to the browser without being asked — impossible over plain HTTP. Later it gets more critical: streaming partial transcripts (step 3) and "user interrupted, stop the audio NOW" (step 4) both need server-initiated push. That's why we used a WebSocket from day one even though step 1 barely needs it — re-architecting the connection layer mid-project would be painful.</div>
+</div>
+
+<div class="term">
+  <h4>Text frames vs binary frames <span class="tag">transport</span></h4>
+  <p>A WebSocket can carry two kinds of messages. We use a simple convention: <strong>text frames are JSON control messages</strong> (with a <code>type</code> field), <strong>binary frames are always audio</strong>. This is exactly how production voice platforms structure their protocols.</p>
+  <div class="ex"><b>Example — one full turn on the wire:</b><br/>
+  → you send: <code>&lt;binary: 80KB WebM clip&gt;</code><br/>
+  ← server: <code>{"type":"status","text":"transcribing"}</code><br/>
+  ← server: <code>{"type":"transcript","text":"I led a team of five"}</code><br/>
+  ← server: <code>{"type":"status","text":"thinking"}</code><br/>
+  ← server: <code>{"type":"reply","text":"What was the hardest…"}</code><br/>
+  ← server: <code>&lt;binary: 500KB WAV audio&gt;</code></div>
+</div>
+
+<h3>Software design</h3>
+
+<div class="term">
+  <h4>Adapter pattern (a.k.a. ports &amp; adapters) <span class="tag">design pattern</span></h4>
+  <p>Define an abstract <em>interface</em> for a capability ("anything with a <code>transcribe()</code> method is an STT engine"), write multiple interchangeable <em>implementations</em> of it, and make the rest of the code depend only on the interface. Swapping implementations then requires zero changes to the code that uses them.</p>
+  <div class="ex"><b>Example from our code:</b>
+<pre>class STTEngine(ABC):                      # the interface (stt/base.py)
+    async def transcribe(self, audio: bytes) -> str: ...
+
+class LocalWhisperSTT(STTEngine): ...      # implementation 1 (local)
+class DeepgramSTT(STTEngine): ...          # implementation 2 (hosted API)
+
+# main.py only ever writes:
+text = await engines.get_stt().transcribe(audio)   # doesn't know which!</pre>
+  Setting <code>STT_ENGINE=deepgram</code> in <code>.env</code> swaps whisper for Deepgram with <em>no code change</em>. Every stage (STT, LLM, TTS) follows this pattern — and it's what will make step 6's realtime-model swap a component replacement instead of a rewrite.</div>
+</div>
+
+<div class="term">
+  <h4>Factory <span class="tag">design pattern</span></h4>
+  <p>The single place that knows how to construct the right concrete object for the current configuration. Keeping construction in one spot means only <em>one</em> file ever imports the concrete engines.</p>
+  <div class="ex"><b>Example:</b> <span class="filepath">backend/engines.py</span> — <code>get_stt()</code> reads the flag, builds <code>LocalWhisperSTT</code> or <code>DeepgramSTT</code> once, caches it, and hands it out forever after.</div>
+</div>
+
+<div class="term">
+  <h4>Event loop, blocking, and <code>asyncio.to_thread</code> <span class="tag">python async</span></h4>
+  <p>Our server runs on an <strong>event loop</strong>: one thread juggling many waiting tasks (network reads, timers) by switching between them whenever one is idle. This works only if no task hogs the thread. Heavy CPU work like running a neural network <strong>blocks</strong> — hogs the loop so <em>nothing else</em> can happen, not even receiving a WebSocket message. <code>asyncio.to_thread(...)</code> pushes such work onto a separate thread so the loop stays free.</p>
+
+  <p><b>The analogy that makes it click:</b> the server is <em>one waiter serving a whole restaurant</em>. It handles every connected client with a single thread — which works because a voice server spends almost all its time <em>waiting</em> (for the next audio chunk, for Ollama to reply), and waiting isn't work. The instant a task starts waiting, the loop sets it aside and serves someone else; it comes back when the wait is over. One waiter looks like ten, because no customer needs the waiter <em>while the kitchen is cooking</em> — only to place an order or receive the food. The word that marks a "safe to switch away" point is <code>await</code>.</p>
+
+  <p><b>Blocking is the one thing that breaks the trick.</b> The scheme depends on tasks genuinely <em>waiting</em> (idle). But running a neural network isn't waiting — it's the CPU grinding flat-out for ~2 seconds, with no idle moment to slip away. It's the waiter deciding to personally cook one table's meal <em>at the table</em>: for those 2 seconds every other table is frozen, unable to even place an order. That's the top timeline below.</p>
+
+  <p><b><code>asyncio.to_thread</code> is hiring a line cook.</b> It hands the heavy work to a background thread (a cook in the kitchen) and <code>await</code>s the result — so from the loop's view it's back to normal "waiting" and free to serve other clients. Whisper still takes its 2 seconds, but now in parallel, on the worker thread. That's the bottom timeline.</p>
+
+  <figure>
+  <svg viewBox="0 0 900 470" role="img" aria-label="Without to_thread the event loop freezes during whisper; with to_thread whisper runs on a worker thread and the loop stays responsive">
+  <defs>
+  <marker id="elp" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#888780"/></marker>
+  <marker id="elr" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#a32d2d"/></marker>
+  </defs>
+  <text x="30" y="30" font-size="15" font-weight="600" fill="#501313">A · without to_thread — one blocking call freezes everything</text>
+  <text x="30" y="72" font-size="12.5" fill="#5f5e5a">event loop</text>
+  <text x="30" y="86" font-size="12.5" fill="#5f5e5a">(the 1 thread)</text>
+  <rect x="120" y="58" width="750" height="40" rx="5" fill="#f1efe8"/>
+  <rect x="120" y="58" width="80" height="40" rx="5" fill="#e1f5ee" stroke="#1d9e75"/>
+  <text x="160" y="82" text-anchor="middle" font-size="11.5" fill="#085041">handle A</text>
+  <rect x="200" y="58" width="520" height="40" rx="5" fill="#fcebeb" stroke="#a32d2d" stroke-width="1.5"/>
+  <text x="460" y="76" text-anchor="middle" font-size="12" font-weight="600" fill="#791f1f">whisper runs ~2s — loop FROZEN</text>
+  <text x="460" y="91" text-anchor="middle" font-size="10.5" fill="#a32d2d">nothing else can run, not even reading a socket</text>
+  <rect x="720" y="58" width="90" height="40" rx="5" fill="#e1f5ee" stroke="#1d9e75"/>
+  <text x="765" y="82" text-anchor="middle" font-size="11.5" fill="#085041">handle B</text>
+  <line x1="330" y1="150" x2="330" y2="100" stroke="#a32d2d" stroke-width="1.5" marker-end="url(#elr)"/>
+  <text x="330" y="166" text-anchor="middle" font-size="11.5" fill="#a32d2d">client B's message arrives here…</text>
+  <line x1="330" y1="128" x2="720" y2="128" stroke="#a32d2d" stroke-width="1.2" stroke-dasharray="4 3"/>
+  <line x1="720" y1="122" x2="720" y2="100" stroke="#a32d2d" stroke-width="1.5" marker-end="url(#elr)"/>
+  <text x="600" y="144" text-anchor="middle" font-size="11.5" fill="#a32d2d">…but B waits the full 2s to be handled</text>
+  <line x1="120" y1="200" x2="810" y2="200" stroke="#e3e1d9" stroke-width="1"/>
+  <text x="30" y="240" font-size="15" font-weight="600" fill="#085041">B · with asyncio.to_thread — heavy work moves off the loop</text>
+  <text x="30" y="286" font-size="12.5" fill="#5f5e5a">event loop</text>
+  <rect x="120" y="272" width="750" height="38" rx="5" fill="#f1efe8"/>
+  <rect x="120" y="272" width="70" height="38" rx="5" fill="#e1f5ee" stroke="#1d9e75"/>
+  <text x="155" y="295" text-anchor="middle" font-size="11" fill="#085041">start A</text>
+  <rect x="240" y="272" width="80" height="38" rx="5" fill="#e6f1fb" stroke="#378add"/>
+  <text x="280" y="295" text-anchor="middle" font-size="11" fill="#0c447c">handle B</text>
+  <rect x="360" y="272" width="80" height="38" rx="5" fill="#e6f1fb" stroke="#378add"/>
+  <text x="400" y="295" text-anchor="middle" font-size="11" fill="#0c447c">handle C</text>
+  <rect x="770" y="272" width="100" height="38" rx="5" fill="#e1f5ee" stroke="#1d9e75"/>
+  <text x="820" y="291" text-anchor="middle" font-size="10.5" fill="#085041">A's result</text>
+  <text x="820" y="304" text-anchor="middle" font-size="10.5" fill="#085041">→ resume A</text>
+  <text x="30" y="376" font-size="12.5" fill="#5f5e5a">worker thread</text>
+  <rect x="190" y="362" width="580" height="38" rx="5" fill="#eeedfe" stroke="#7f77dd" stroke-width="1.5"/>
+  <text x="480" y="386" text-anchor="middle" font-size="12" fill="#3c3489">whisper runs ~2s here, in parallel — loop is untouched</text>
+  <line x1="190" y1="310" x2="190" y2="360" stroke="#7f77dd" stroke-width="1.5" stroke-dasharray="4 3" marker-end="url(#elp)"/>
+  <text x="120" y="340" font-size="10.5" fill="#534ab7">hand off</text>
+  <line x1="770" y1="381" x2="815" y2="381" stroke="#7f77dd" stroke-width="1.5"/>
+  <line x1="815" y1="381" x2="815" y2="312" stroke="#7f77dd" stroke-width="1.5" stroke-dasharray="4 3" marker-end="url(#elp)"/>
+  <text x="30" y="440" font-size="11.5" fill="#5f5e5a">Same 2 seconds of whisper work in both. The difference is who else gets served during it.</text>
+  </svg>
+  <figcaption>Top: the loop frozen for 2s, client B stalled. Bottom: whisper on a worker thread, loop stays free.</figcaption>
+  </figure>
+
+  <p><b>In our code</b> (<span class="filepath">stt/local_whisper.py</span>) — note the inner function is a <em>plain, non-async</em> function, because whisper has no <code>await</code> points to exploit, so it <em>must</em> go to a thread:</p>
+<pre><code>async def transcribe(self, audio_bytes: bytes) -> str:
+    # to_thread ships the blocking work to a worker; the loop stays free.
+    return await asyncio.to_thread(self._transcribe_sync, audio_bytes)
+
+def _transcribe_sync(self, audio_bytes: bytes) -> str:
+    segments, _ = self._get_model().transcribe(...)   # heavy, blocking
+    return " ".join(...)</code></pre>
+
+  <div class="ex"><b>Why it matters more later:</b> freezing for 2s is merely rude to other users today. But in <b>step 4 (barge-in)</b> the server must <em>listen for you interrupting while it's speaking</em> — two things at once. A blocking call that freezes the loop means it literally cannot hear your interruption. Keeping the loop free stops being a nicety and becomes the thing that makes the feature possible. (Piper in <span class="filepath">tts/local_piper.py</span> is wrapped the same way, for the same reason.)</div>
+</div>
+
+<div class="term">
+  <h4>Environment variables and <code>.env</code> <span class="tag">configuration</span></h4>
+  <p>Configuration passed to a program from outside, instead of hardcoded in it. A <code>.env</code> file holds them for local development; the <code>python-dotenv</code> library loads it at startup. Secrets (API keys) live here so they never get committed to git.</p>
+  <div class="ex"><b>Example:</b> our <code>.env</code> contains <code>LLM_ENGINE=local</code> and <code>OLLAMA_MODEL=llama3:8b</code>. Change a line, restart, different brain — code untouched.</div>
+</div>
+
+<h3>The concepts of steps 3–5 <em>(all built now — Part II has the deep dives)</em></h3>
+
+<div class="term">
+  <h4>Streaming <span class="tag">step 3 ✓ built</span></h4>
+  <p>Processing data <em>while it's still arriving</em> instead of waiting for the whole thing. Applied to every stage: STT emits partial transcripts while you're still talking; the LLM emits tokens as it thinks; TTS starts speaking the first sentence before the LLM has finished the last.</p>
+  <div class="ex"><b>Example:</b> our step-1 pipeline was fully sequential — STT 1s + LLM 2s + TTS 1s = 4s of silence. After step 3 the LLM's token stream is cut into speakable clauses and each is synthesized and played <em>while the rest is still generating</em> — measured time-to-first-audio dropped from ~5.5s to ~2.75s. Same total work — radically different <em>feel</em>. §14 shows exactly how.</div>
+</div>
+
+<div class="term">
+  <h4>Barge-in <span class="tag">step 4 ✓ built</span></h4>
+  <p>Interrupting the agent mid-sentence, like you would a human: it should stop talking <em>immediately</em> and listen.</p>
+  <div class="ex"><b>Example:</b> the interviewer starts a long question, you cut in with "sorry, could you repeat the last part?" — playback halts and it listens. This forced real concurrency into the server (each turn is now a cancellable task) and produced the two most instructive bugs of the whole project — §15 tells both war stories.</div>
+</div>
+
+<div class="term">
+  <h4>Echo cancellation <span class="tag">step 4 ✓ built</span></h4>
+  <p>Removing the agent's own voice (coming out of your speakers) from what the microphone hears. Without it, the agent hears itself, its VAD says "speech!", and it interrupts <em>itself</em>, forever.</p>
+  <div class="ex"><b>Example:</b> you know this bug from bad conference-call setups where you hear your own voice echoed back. Browsers ship an echo canceller (<code>echoCancellation: true</code> on <code>getUserMedia</code>) — one reason capturing audio in the browser is a gift.</div>
+</div>
+
+<div class="term">
+  <h4>Floor state <span class="tag">step 2/4 ✓ built</span></h4>
+  <p>An explicit variable tracking <em>who has permission to speak right now</em> — borrowed from linguistics ("holding the floor"). Sounds trivial; prevents chaos.</p>
+  <div class="ex"><b>Example:</b> states like <code>USER_SPEAKING → AGENT_THINKING → AGENT_SPEAKING → USER_SPEAKING</code>. Barge-in is then a clean rule: "if VAD detects speech while state is AGENT_SPEAKING → kill playback, set state to USER_SPEAKING." Without the explicit state, you get two parties talking over each other in an infinite loop.</div>
+</div>
+
+<div class="term">
+  <h4>Latency budget <span class="tag">the core metric</span></h4>
+  <p>The total delay from your mouth closing to the agent's first audible word, broken down per stage. Humans expect a reply gap of a few hundred milliseconds; past ~1 second, conversation feels broken. Target: 600–900ms.</p>
+  <div class="ex"><b>Example:</b> see §8 below for the full breakdown. Key insight worth internalizing now: the biggest chunk (endpoint wait) is not computation at all — it's <em>chosen</em> silence, a UX decision about patience.</div>
+</div>
+
+<!-- ============================================================ -->
+<h2 id="stack">4. The tech stack we chose, and why</h2>
+
+<table>
+  <tr><th>Layer</th><th>Choice</th><th>Why this one</th></tr>
+  <tr>
+    <td><b>Frontend</b></td>
+    <td>Plain HTML + JavaScript</td>
+    <td>The browser is the only sane way to reach the mic. No React/framework because step 1 has one button and a log — a framework would only add noise to the learning.</td>
+  </tr>
+  <tr>
+    <td><b>Backend language</b></td>
+    <td>Python</td>
+    <td>The entire voice-AI ecosystem (faster-whisper, Silero VAD, piper, Pipecat, LiveKit Agents) is Python-first with the best docs. Fighting the ecosystem is a bad use of learning time.</td>
+  </tr>
+  <tr>
+    <td><b>Web server</b></td>
+    <td>FastAPI + uvicorn</td>
+    <td>Python's standard modern async server. Async matters here: a voice server spends most of its life <em>waiting</em> (for audio, for models) and must juggle those waits without freezing.</td>
+  </tr>
+  <tr>
+    <td><b>Transport</b></td>
+    <td>WebSocket</td>
+    <td>Two-way, always-open, server can push. Chosen on day one — before it's strictly needed — so steps 3–4 don't require re-architecting the connection.</td>
+  </tr>
+  <tr>
+    <td><b>STT</b></td>
+    <td>faster-whisper (base model, CPU, int8)</td>
+    <td>Local (your preference — no API keys, no cost, no data leaves the machine), and Whisper is the de-facto open standard worth knowing deeply. <code>int8</code> means the model's numbers are compressed to 8-bit integers — ~4× less memory, much faster on CPU, tiny accuracy loss.</td>
+  </tr>
+  <tr>
+    <td><b>LLM</b></td>
+    <td>Ollama running llama3:8b</td>
+    <td>Ollama makes running local models one command and exposes a clean HTTP API. llama3:8b was <em>already on your machine</em> — zero download. 8B parameters is small enough for a laptop, smart enough to interview.</td>
+  </tr>
+  <tr>
+    <td><b>TTS</b></td>
+    <td>piper (en_US-lessac-medium)</td>
+    <td>Local, fast (~1s for a sentence on CPU), genuinely pleasant voice. The hosted alternative (Cartesia) is noticeably better and faster — which you'll be able to <em>hear</em> by flipping one flag. That comparison is a feature of the design.</td>
+  </tr>
+  <tr>
+    <td><b>Swappable hosted alternates</b></td>
+    <td>Deepgram (STT) · OpenAI (LLM) · Cartesia (TTS)</td>
+    <td>Written but dormant behind flags. Each swap is a built-in experiment: local-vs-hosted latency, quality, and cost — judged with your own ears.</td>
+  </tr>
+</table>
+
+<!-- ============================================================ -->
+<h2 id="topology">5. Architecture 1: browser ↔ server</h2>
+
+<figure>
+<svg viewBox="0 0 900 320" role="img" aria-label="Browser and server topology with HTTP page load and websocket connection">
+  <defs>
+    <marker id="arr2" markerWidth="10" markerHeight="10" refX="8" refY="3.5" orient="auto"><path d="M0,0 L8,3.5 L0,7 Z" fill="#888780"/></marker>
+    <marker id="arr2s" markerWidth="10" markerHeight="10" refX="0" refY="3.5" orient="auto"><path d="M8,0 L0,3.5 L8,7 Z" fill="#888780"/></marker>
+  </defs>
+  <rect x="30" y="40" width="280" height="240" rx="12" fill="#f1efe8" stroke="#888780" stroke-width="1.5"/>
+  <text x="170" y="72" text-anchor="middle" class="svg-h" fill="#2c2c2a">Your browser (Chrome)</text>
+  <text x="170" y="92" text-anchor="middle" class="svg-s">frontend/index.html</text>
+  <text x="55" y="126" class="svg-t" fill="#444441">• getUserMedia → mic permission</text>
+  <text x="55" y="152" class="svg-t" fill="#444441">• MediaRecorder → records clips</text>
+  <text x="55" y="178" class="svg-t" fill="#444441">• WebSocket client</text>
+  <text x="55" y="204" class="svg-t" fill="#444441">• &lt;audio&gt; element → playback</text>
+  <text x="55" y="230" class="svg-t" fill="#444441">• conversation log UI</text>
+
+  <rect x="590" y="40" width="280" height="240" rx="12" fill="#eeedfe" stroke="#7f77dd" stroke-width="1.5"/>
+  <text x="730" y="72" text-anchor="middle" class="svg-h" fill="#26215c">Your machine, port 8000</text>
+  <text x="730" y="92" text-anchor="middle" class="svg-s">FastAPI + uvicorn (Python)</text>
+  <text x="615" y="126" class="svg-t" fill="#3c3489">• GET /  → serves index.html</text>
+  <text x="615" y="152" class="svg-t" fill="#3c3489">• /ws → the voice pipeline</text>
+  <text x="615" y="178" class="svg-t" fill="#3c3489">• whisper + piper (in-process)</text>
+  <text x="615" y="204" class="svg-t" fill="#3c3489">• → Ollama on port 11434</text>
+  <text x="615" y="230" class="svg-t" fill="#3c3489">• per-connection history</text>
+
+  <line x1="315" y1="120" x2="583" y2="120" stroke="#888780" stroke-width="2" marker-end="url(#arr2)"/>
+  <text x="450" y="108" text-anchor="middle" class="svg-t" font-weight="600" fill="#444441">① GET http://localhost:8000/</text>
+  <text x="450" y="140" text-anchor="middle" class="svg-s">one-time page load over HTTP</text>
+
+  <line x1="317" y1="205" x2="581" y2="205" stroke="#185fa5" stroke-width="2.5" marker-start="url(#arr2s)" marker-end="url(#arr2)"/>
+  <text x="450" y="193" text-anchor="middle" class="svg-t" font-weight="600" fill="#185fa5">② ws://localhost:8000/ws</text>
+  <text x="450" y="226" text-anchor="middle" class="svg-s">stays open the whole interview — both sides push freely</text>
+
+  <text x="30" y="308" class="svg-s">why the page must be loaded FROM the server: the code builds the socket address from the page's own origin —</text>
+  <text x="30" y="308" class="svg-s"></text>
+</svg>
+<figcaption>Connection ① fetches the page; connection ② carries the conversation. ② derives its address from ①.</figcaption>
+</figure>
+
+<p><strong>The subtle dependency between ① and ②:</strong> the frontend contains this line, which decides <em>which server</em> the browser phones for the voice connection:</p>
+<pre><code>ws = new WebSocket(`${proto}://${location.host}/ws`);</code></pre>
+
+<p>Taking it apart piece by piece:</p>
+<ul>
+  <li><b>The backticks and <code>${...}</code></b> — a JavaScript <em>template literal</em>: a string with blanks that get filled by live values. Pure string assembly: <code>`hello ${name}!`</code> becomes <code>"hello world!"</code> when <code>name</code> is <code>"world"</code>. So the URL has two blanks to fill: <code>proto</code> and <code>location.host</code>.</li>
+  <li><b><code>proto</code></b> — either <code>"ws"</code> or <code>"wss"</code> (the secure version). Think <code>http</code> vs <code>https</code>, but for WebSockets.</li>
+  <li><b><code>location.host</code></b> — the important one. <code>location</code> is a built-in object the browser fills in describing <em>the address of the page you're currently viewing</em>; <code>.host</code> is the "where did this page come from" part (domain + port). <em>The browser sets it — your code only reads it.</em></li>
+</ul>
+
+<p>So the whole line means: <em>"open a WebSocket back to the exact same place this page was served from, at the path <code>/ws</code>."</em></p>
+
+<p><b>The two scenarios, concretely</b> — same page, different ways of opening it:</p>
+<table>
+  <tr><th>How you opened the page</th><th><code>location.host</code> becomes</th><th>Socket URL becomes</th><th>Result</th></tr>
+  <tr><td>Typed <code>http://localhost:8000</code> (served <b>from the server</b>)</td><td><code>localhost:8000</code></td><td><code>ws://localhost:8000/ws</code></td><td>✅ points at your server, which has <code>/ws</code></td></tr>
+  <tr><td>Double-clicked the <code>.html</code> file</td><td>empty (it's a <code>file://</code> path, no host)</td><td><code>ws:///ws</code></td><td>❌ no server there at all</td></tr>
+  <tr><td>Opened via a preview panel on another address</td><td>e.g. <code>preview.local:3000</code></td><td><code>ws://preview.local:3000/ws</code></td><td>❌ that address has no <code>/ws</code></td></tr>
+</table>
+
+<p>That's the "load it from the server, not the file/preview" rule in one table. The page <em>looks</em> identical in all three cases — buttons render, layout is fine — but in the bottom two the socket is dialing a phone number where nobody is home. The app is <b>deaf and mute</b>: you hold the button and nothing reaches the pipeline.</p>
+
+<p><strong>Why build it this way anyway, instead of just hardcoding <code>ws://localhost:8000/ws</code>?</strong> Because that hardcoded string is only correct <em>on your laptop, today</em>. The moment the app runs anywhere else — a teammate's machine on a different port, or a deployed server at <code>wss://interview-coach.yourdomain.com</code> — the hardcoded value would be wrong and every connection would fail. Deriving from <code>location.host</code> says <em>"connect back to wherever I came from,"</em> which is automatically correct in <em>every</em> environment with zero changes. The catch — and the reason for the whole warning — is that this only works if the page was genuinely served by the server in the first place; load it any other way and the "connect back to where I came from" logic faithfully connects you to the wrong place.</p>
+
+<!-- ============================================================ -->
+<h2 id="adapters">6. Architecture 2: the adapter pattern in our codebase</h2>
+
+<figure>
+<svg viewBox="0 0 900 470" role="img" aria-label="Adapter pattern: pipeline stages backed by swappable engine implementations chosen by a factory">
+  <defs>
+    <marker id="arr3" markerWidth="10" markerHeight="10" refX="8" refY="3.5" orient="auto"><path d="M0,0 L8,3.5 L0,7 Z" fill="#888780"/></marker>
+  </defs>
+  <rect x="30" y="20" width="840" height="64" rx="10" fill="#eeedfe" stroke="#7f77dd" stroke-width="1.5"/>
+  <text x="450" y="47" text-anchor="middle" class="svg-h" fill="#26215c">main.py — the orchestrator</text>
+  <text x="450" y="68" text-anchor="middle" class="svg-s">only ever writes: get_stt().transcribe(...) · get_llm().reply(...) · get_tts().synthesize(...)</text>
+
+  <line x1="170" y1="88" x2="170" y2="128" stroke="#888780" stroke-width="2" marker-end="url(#arr3)"/>
+  <line x1="450" y1="88" x2="450" y2="128" stroke="#888780" stroke-width="2" marker-end="url(#arr3)"/>
+  <line x1="730" y1="88" x2="730" y2="128" stroke="#888780" stroke-width="2" marker-end="url(#arr3)"/>
+
+  <rect x="55"  y="132" width="230" height="52" rx="9" fill="#e6f1fb" stroke="#378add" stroke-width="1.5"/>
+  <text x="170" y="154" text-anchor="middle" class="svg-t" font-weight="600" fill="#0c447c">STTEngine (interface)</text>
+  <text x="170" y="173" text-anchor="middle" class="svg-s">stt/base.py · transcribe()</text>
+
+  <rect x="335" y="132" width="230" height="52" rx="9" fill="#e6f1fb" stroke="#378add" stroke-width="1.5"/>
+  <text x="450" y="154" text-anchor="middle" class="svg-t" font-weight="600" fill="#0c447c">LLMEngine (interface)</text>
+  <text x="450" y="173" text-anchor="middle" class="svg-s">llm/base.py · reply() · stream()</text>
+
+  <rect x="615" y="132" width="230" height="52" rx="9" fill="#e6f1fb" stroke="#378add" stroke-width="1.5"/>
+  <text x="730" y="154" text-anchor="middle" class="svg-t" font-weight="600" fill="#0c447c">TTSEngine (interface)</text>
+  <text x="730" y="173" text-anchor="middle" class="svg-s">tts/base.py · synthesize()</text>
+
+  <line x1="120" y1="188" x2="120" y2="222" stroke="#1d9e75" stroke-width="2" marker-end="url(#arr3)"/>
+  <line x1="222" y1="188" x2="222" y2="222" stroke="#b4b2a9" stroke-width="2" stroke-dasharray="4 4" marker-end="url(#arr3)"/>
+  <rect x="55"  y="226" width="120" height="70" rx="9" fill="#e1f5ee" stroke="#1d9e75" stroke-width="2"/>
+  <text x="115" y="252" text-anchor="middle" class="svg-t" font-weight="600" fill="#085041">✓ ACTIVE</text>
+  <text x="115" y="270" text-anchor="middle" class="svg-s">faster-whisper</text>
+  <text x="115" y="286" text-anchor="middle" class="svg-s">local, CPU</text>
+  <rect x="187" y="226" width="120" height="70" rx="9" fill="#fdfcfa" stroke="#b4b2a9" stroke-width="1.5" stroke-dasharray="5 4"/>
+  <text x="247" y="252" text-anchor="middle" class="svg-t" fill="#5f5e5a">dormant</text>
+  <text x="247" y="270" text-anchor="middle" class="svg-s">Deepgram</text>
+  <text x="247" y="286" text-anchor="middle" class="svg-s">hosted API</text>
+
+  <line x1="400" y1="188" x2="400" y2="222" stroke="#1d9e75" stroke-width="2" marker-end="url(#arr3)"/>
+  <line x1="502" y1="188" x2="502" y2="222" stroke="#b4b2a9" stroke-width="2" stroke-dasharray="4 4" marker-end="url(#arr3)"/>
+  <rect x="335" y="226" width="120" height="70" rx="9" fill="#e1f5ee" stroke="#1d9e75" stroke-width="2"/>
+  <text x="395" y="252" text-anchor="middle" class="svg-t" font-weight="600" fill="#085041">✓ ACTIVE</text>
+  <text x="395" y="270" text-anchor="middle" class="svg-s">Ollama</text>
+  <text x="395" y="286" text-anchor="middle" class="svg-s">llama3:8b, local</text>
+  <rect x="467" y="226" width="120" height="70" rx="9" fill="#fdfcfa" stroke="#b4b2a9" stroke-width="1.5" stroke-dasharray="5 4"/>
+  <text x="527" y="252" text-anchor="middle" class="svg-t" fill="#5f5e5a">dormant</text>
+  <text x="527" y="270" text-anchor="middle" class="svg-s">OpenAI</text>
+  <text x="527" y="286" text-anchor="middle" class="svg-s">hosted API</text>
+
+  <line x1="680" y1="188" x2="680" y2="222" stroke="#1d9e75" stroke-width="2" marker-end="url(#arr3)"/>
+  <line x1="782" y1="188" x2="782" y2="222" stroke="#b4b2a9" stroke-width="2" stroke-dasharray="4 4" marker-end="url(#arr3)"/>
+  <rect x="615" y="226" width="120" height="70" rx="9" fill="#e1f5ee" stroke="#1d9e75" stroke-width="2"/>
+  <text x="675" y="252" text-anchor="middle" class="svg-t" font-weight="600" fill="#085041">✓ ACTIVE</text>
+  <text x="675" y="270" text-anchor="middle" class="svg-s">piper</text>
+  <text x="675" y="286" text-anchor="middle" class="svg-s">local voice</text>
+  <rect x="747" y="226" width="120" height="70" rx="9" fill="#fdfcfa" stroke="#b4b2a9" stroke-width="1.5" stroke-dasharray="5 4"/>
+  <text x="807" y="252" text-anchor="middle" class="svg-t" fill="#5f5e5a">dormant</text>
+  <text x="807" y="270" text-anchor="middle" class="svg-s">Cartesia</text>
+  <text x="807" y="286" text-anchor="middle" class="svg-s">hosted API</text>
+
+  <line x1="450" y1="300" x2="450" y2="338" stroke="#888780" stroke-width="2" stroke-dasharray="4 4" marker-end="url(#arr3)"/>
+  <rect x="150" y="342" width="600" height="64" rx="10" fill="#faeeda" stroke="#fac775" stroke-width="1.5"/>
+  <text x="450" y="369" text-anchor="middle" class="svg-h" fill="#633806">engines.py (factory) + config.py (flags) + .env</text>
+  <text x="450" y="390" text-anchor="middle" class="svg-s">STT_ENGINE=local · LLM_ENGINE=local · TTS_ENGINE=local — the only file that knows concrete classes</text>
+
+  <text x="30" y="442" class="svg-s">Swap any ✓ for its dormant twin by editing one line in .env and restarting. main.py, the pipeline, and the frontend never change.</text>
+</svg>
+<figcaption>Three interfaces, six implementations, one factory. Green = currently active; dashed = dormant, awaiting a flag flip.</figcaption>
+</figure>
+
+<p><strong>Why go to this trouble in a learning project?</strong> Three reasons. First, every local↔hosted swap is a built-in experiment — you'll <em>hear</em> the difference in latency and quality, which teaches the tradeoff better than any benchmark table. Second, it keeps the pipeline logic clean enough to read — <code>main.py</code> stays ~100 lines because engine details live elsewhere. Third, it's rehearsal: step 6 (swapping the entire cascade for one realtime model) is only feasible because everything already hides behind interfaces.</p>
+
+<!-- ============================================================ -->
+<h2 id="sequence">7. Architecture 3: anatomy of one turn</h2>
+
+<p>This is the step-1 app in one picture — what happened between you releasing the button and hearing the interviewer's next question. Time flows downward. <em>(Kept in its original form because it's the clearest mental model of the cascade; Part II shows how every hop below has since evolved — the clip became a continuous stream, the reply became chunks, and the whole turn became cancellable.)</em></p>
+
+<figure>
+<svg viewBox="0 0 900 640" role="img" aria-label="Sequence diagram of one conversation turn">
+  <defs>
+    <marker id="arr4" markerWidth="10" markerHeight="10" refX="8" refY="3.5" orient="auto"><path d="M0,0 L8,3.5 L0,7 Z" fill="#888780"/></marker>
+  </defs>
+  <rect x="60"  y="16" width="190" height="50" rx="9" fill="#f1efe8" stroke="#888780" stroke-width="1.5"/>
+  <text x="155" y="38" text-anchor="middle" class="svg-t" font-weight="600" fill="#2c2c2a">Browser</text>
+  <text x="155" y="56" text-anchor="middle" class="svg-s">index.html</text>
+  <rect x="355" y="16" width="190" height="50" rx="9" fill="#eeedfe" stroke="#7f77dd" stroke-width="1.5"/>
+  <text x="450" y="38" text-anchor="middle" class="svg-t" font-weight="600" fill="#26215c">main.py</text>
+  <text x="450" y="56" text-anchor="middle" class="svg-s">orchestrator · /ws</text>
+  <rect x="650" y="16" width="190" height="50" rx="9" fill="#e1f5ee" stroke="#1d9e75" stroke-width="1.5"/>
+  <text x="745" y="38" text-anchor="middle" class="svg-t" font-weight="600" fill="#085041">Engines</text>
+  <text x="745" y="56" text-anchor="middle" class="svg-s">stt · llm · tts</text>
+
+  <line x1="155" y1="70" x2="155" y2="580" stroke="#b4b2a9" stroke-width="1.5" stroke-dasharray="4 4"/>
+  <line x1="450" y1="70" x2="450" y2="580" stroke="#b4b2a9" stroke-width="1.5" stroke-dasharray="4 4"/>
+  <line x1="745" y1="70" x2="745" y2="580" stroke="#b4b2a9" stroke-width="1.5" stroke-dasharray="4 4"/>
+
+  <text x="302" y="102" text-anchor="middle" class="svg-t" font-weight="600" fill="#1f1e1b">① audio clip — your answer</text>
+  <line x1="160" y1="112" x2="443" y2="112" stroke="#888780" stroke-width="2" marker-end="url(#arr4)"/>
+  <text x="302" y="130" text-anchor="middle" class="svg-s">hold, speak, release → one binary frame (WebM/Opus)</text>
+
+  <text x="597" y="152" text-anchor="middle" class="svg-t" font-weight="600" fill="#1f1e1b">② stt.transcribe(clip)</text>
+  <line x1="455" y1="162" x2="738" y2="162" stroke="#888780" stroke-width="2" marker-end="url(#arr4)"/>
+  <text x="597" y="180" text-anchor="middle" class="svg-s">faster-whisper · CPU · in a worker thread (to_thread)</text>
+
+  <text x="597" y="205" text-anchor="middle" class="svg-s">"I led a team of five" (text)</text>
+  <line x1="740" y1="215" x2="457" y2="215" stroke="#888780" stroke-width="1.6" stroke-dasharray="5 4" marker-end="url(#arr4)"/>
+
+  <text x="302" y="248" text-anchor="middle" class="svg-t" font-weight="600" fill="#1f1e1b">③ transcript JSON</text>
+  <line x1="445" y1="258" x2="162" y2="258" stroke="#888780" stroke-width="2" marker-end="url(#arr4)"/>
+  <text x="302" y="276" text-anchor="middle" class="svg-s">UI shows what it heard — trust check for the user</text>
+
+  <text x="597" y="300" text-anchor="middle" class="svg-t" font-weight="600" fill="#1f1e1b">④ llm.reply(entire history)</text>
+  <line x1="455" y1="310" x2="738" y2="310" stroke="#888780" stroke-width="2" marker-end="url(#arr4)"/>
+  <text x="597" y="328" text-anchor="middle" class="svg-s">system prompt + every turn so far → Ollama, llama3:8b</text>
+
+  <text x="597" y="353" text-anchor="middle" class="svg-s">"What was the hardest part…?" (text)</text>
+  <line x1="740" y1="363" x2="457" y2="363" stroke="#888780" stroke-width="1.6" stroke-dasharray="5 4" marker-end="url(#arr4)"/>
+
+  <text x="302" y="396" text-anchor="middle" class="svg-t" font-weight="600" fill="#1f1e1b">⑤ reply JSON</text>
+  <line x1="445" y1="406" x2="162" y2="406" stroke="#888780" stroke-width="2" marker-end="url(#arr4)"/>
+  <text x="302" y="424" text-anchor="middle" class="svg-s">question appears as text before the audio is ready</text>
+
+  <text x="597" y="448" text-anchor="middle" class="svg-t" font-weight="600" fill="#1f1e1b">⑥ tts.synthesize(reply)</text>
+  <line x1="455" y1="458" x2="738" y2="458" stroke="#888780" stroke-width="2" marker-end="url(#arr4)"/>
+  <text x="597" y="476" text-anchor="middle" class="svg-s">piper: text → phonemes → neural vocoder → WAV</text>
+
+  <text x="597" y="501" text-anchor="middle" class="svg-s">WAV bytes (~0.5 MB)</text>
+  <line x1="740" y1="511" x2="457" y2="511" stroke="#888780" stroke-width="1.6" stroke-dasharray="5 4" marker-end="url(#arr4)"/>
+
+  <text x="302" y="544" text-anchor="middle" class="svg-t" font-weight="600" fill="#1f1e1b">⑦ WAV binary frame</text>
+  <line x1="445" y1="554" x2="162" y2="554" stroke="#888780" stroke-width="2" marker-end="url(#arr4)"/>
+  <text x="302" y="572" text-anchor="middle" class="svg-s">browser wraps it in a blob URL → &lt;audio&gt; plays it aloud</text>
+
+  <text x="60" y="614" class="svg-s">Throughout, main.py pushes status frames (transcribing · thinking · speaking) so the UI can show which stage is running.</text>
+  <text x="60" y="632" class="svg-s">Everything between ① and ⑦ is silence for the user — that gap is the latency budget (next section).</text>
+</svg>
+<figcaption>One turn, seven hops. Solid arrows = requests/messages; dashed = returned results.</figcaption>
+</figure>
+
+<p><strong>Why the text arrives before the audio (⑤ before ⑦):</strong> a small UX trick that costs nothing — the user can start reading the question during the ~1s TTS is still rendering, which makes the wait feel shorter. It also foreshadows streaming: the more of the pipeline's intermediate products you surface early, the faster the system <em>feels</em>, independent of how fast it <em>is</em>.</p>
+
+<p><strong>Why send the transcript back at all (③):</strong> trust. If the agent's next question seems off, the user can see whether STT misheard them. Voice UIs without visible transcripts feel haunted when recognition errors happen.</p>
+
+<!-- ============================================================ -->
+<h2 id="latency">8. The latency budget</h2>
+
+<p>The one number that decides whether a voice agent feels like a conversation or a walkie-talkie: <strong>time from your mouth closing to the first sound of the reply</strong>. Human conversational gaps are ~200–400ms. Beyond ~1s, people start repeating themselves or checking if the app crashed. Target: <strong>600–900ms</strong>.</p>
+
+<figure>
+<svg viewBox="0 0 900 230" role="img" aria-label="Latency budget stacked bar: endpoint wait, STT finalize, LLM first token, TTS first audio">
+  <text x="30" y="30" class="svg-h">Where the milliseconds go (typical ranges, well-tuned pipeline)</text>
+  <rect x="30"  y="50" width="270" height="56" fill="#faeeda" stroke="#ef9f27" stroke-width="1.5"/>
+  <text x="165" y="74" text-anchor="middle" class="svg-t" font-weight="600" fill="#633806">endpoint wait</text>
+  <text x="165" y="93" text-anchor="middle" class="svg-s">200–500 ms</text>
+  <rect x="300" y="50" width="100" height="56" fill="#e6f1fb" stroke="#378add" stroke-width="1.5"/>
+  <text x="350" y="74" text-anchor="middle" class="svg-t" font-weight="600" fill="#0c447c">STT final</text>
+  <text x="350" y="93" text-anchor="middle" class="svg-s">50–200 ms</text>
+  <rect x="400" y="50" width="345" height="56" fill="#eeedfe" stroke="#7f77dd" stroke-width="1.5"/>
+  <text x="572" y="74" text-anchor="middle" class="svg-t" font-weight="600" fill="#26215c">LLM first token</text>
+  <text x="572" y="93" text-anchor="middle" class="svg-s">300–600 ms</text>
+  <rect x="745" y="50" width="125" height="56" fill="#faece7" stroke="#d85a30" stroke-width="1.5"/>
+  <text x="807" y="74" text-anchor="middle" class="svg-t" font-weight="600" fill="#712b13">TTS first audio</text>
+  <text x="807" y="93" text-anchor="middle" class="svg-s">80–250 ms</text>
+
+  <text x="30" y="140" class="svg-t" fill="#444441">← mouth closes</text>
+  <text x="870" y="140" text-anchor="end" class="svg-t" fill="#444441">first reply sound →</text>
+
+  <text x="30" y="175" class="svg-s" font-weight="600">The counterintuitive part: the amber block is not computation. It's chosen silence —</text>
+  <text x="30" y="193" class="svg-s">how long the endpointer waits to be sure you're done. Cut it and you interrupt people mid-thought;</text>
+  <text x="30" y="211" class="svg-s">stretch it and every reply feels sluggish. It's a UX decision, not an engineering cost. That tension is the heart of step 2.</text>
+</svg>
+<figcaption>Note these ranges assume a streaming pipeline (step 3). Our current sequential pipeline is far slower — measuring exactly how much is part of the learning.</figcaption>
+</figure>
+
+<p><strong>Why our step 1 app is much slower than this chart:</strong> we don't stream, so stages can't overlap — each waits for the previous to <em>completely</em> finish. Whisper transcribes the full clip (1–2s), llama generates the full reply (2–4s), piper renders the full WAV (~1s): easily 4–7 seconds of silence per turn. That's not a bug — it's the baseline we'll measure (step 3's latency HUD) and then demolish, stage by stage. Feeling the difference is the point.</p>
+
+<!-- ============================================================ -->
+<h2 id="components">9. Component deep dive — what, why, how</h2>
+
+<h3><span class="filepath">frontend/index.html</span> — the ears and mouth</h3>
+<div class="www">
+  <div class="what"><b>What</b>Captures your mic, sends recordings up the socket, shows the conversation as text, plays reply audio.</div>
+  <div class="why"><b>Why</b>The browser is the only sane cross-platform path to the microphone — and it ships professional-grade audio machinery for free (echo cancellation, format encoding). Even a "backend project" needs this thin web layer. It's deliberately frameworkless: one button and a log don't justify React, and every dependency added is noise between you and the concepts.</div>
+  <div class="how"><b>How</b><code>getUserMedia</code> obtains the mic stream once at start. Holding the talk button (or spacebar) runs <code>MediaRecorder.start()</code>; releasing runs <code>.stop()</code>, and the accumulated chunks are combined into one Blob and pushed down the WebSocket as a single binary frame. Incoming messages are sorted by type — strings parse as JSON (status/transcript/reply → rendered into the log), binary is audio (wrapped in an object URL, handed to an <code>&lt;audio&gt;</code> element).</div>
+</div>
+
+<h3>The WebSocket protocol — the spinal cord</h3>
+<div class="www">
+  <div class="what"><b>What</b>One persistent two-way connection at <code>/ws</code> carrying everything: setup JSON up, audio clips up, status/transcript/reply JSON down, reply audio down.</div>
+  <div class="why"><b>Why</b>Conversation is inherently push-based — the server must be able to say things unprompted ("still thinking…", and later: partial transcripts, "stop, user interrupted"). HTTP can't do that. Adopting WebSocket on day one, before it's strictly necessary, means steps 3 and 4 change <em>what flows through the pipe</em>, never the pipe itself.</div>
+  <div class="how"><b>How</b>A fixed convention: text frames are JSON with a <code>type</code> field (<code>setup</code>, <code>status</code>, <code>transcript</code>, <code>reply</code>, <code>error</code>); binary frames are always audio. Typed control messages + raw media on one socket is exactly how production voice APIs (Deepgram, LiveKit) shape their protocols — you're learning the real pattern.</div>
+</div>
+
+<h3><span class="filepath">backend/main.py</span> — the conductor</h3>
+<div class="www">
+  <div class="what"><b>What</b>Owns each conversation. Accepts the connection, holds the message history, and for every clip received runs the chain: transcribe → append to history → generate reply → synthesize → send back.</div>
+  <div class="why"><b>Why</b>Something has to hold state, because the LLM is stateless — it "remembers" the interview only because main.py re-sends the entire history each turn. Scoping that memory to the connection (one socket = one interview = one history list) is the simplest correct design. Note what main.py deliberately does <em>not</em> know: it never imports whisper, Ollama, or piper — it talks only to abstract interfaces.</div>
+  <div class="how"><b>How</b>An async loop awaits frames. A <code>setup</code> text frame installs the system prompt (with your JD + resume baked in) and immediately triggers the interviewer's opening question. Each binary frame becomes one turn through <code>_run_llm_tts</code>. Status frames go out before each stage so the UI always knows what's happening.</div>
+</div>
+
+<h3><span class="filepath">backend/config.py</span> + <span class="filepath">engines.py</span> — the switchboard</h3>
+<div class="www">
+  <div class="what"><b>What</b>config.py reads flags (<code>STT_ENGINE</code>, <code>LLM_ENGINE</code>, <code>TTS_ENGINE</code>…) from <code>.env</code>. engines.py maps each flag to a concrete class, constructs it once, caches it, and hands it to anyone who asks.</div>
+  <div class="why"><b>Why</b>This pair is the <em>enforcement point</em> of the adapter pattern. Because only the factory imports concrete engines, nothing else <em>can</em> accidentally depend on one — the swap-by-flag guarantee is structural, not aspirational. Caching matters because engines are expensive to create (whisper loads ~150MB of weights).</div>
+  <div class="how"><b>How</b>Simple if/elif on the flag with the import <em>inside</em> each branch — lazy importing, so the OpenAI SDK never even loads while you run local, and you don't need dormant engines' dependencies installed at all.</div>
+</div>
+
+<h3><span class="filepath">backend/stt/</span> — speech to text</h3>
+<div class="www">
+  <div class="what"><b>What</b><code>base.py</code> defines the interface (async <code>transcribe(bytes) → str</code>). <code>local_whisper.py</code> implements it with faster-whisper (active). <code>deepgram.py</code> implements it against Deepgram's API (dormant).</div>
+  <div class="why"><b>Why</b>Local per your preference — free, private, offline. Whisper specifically because it's the open-source standard: whatever voice work you do after this project, you will meet Whisper again. The <code>base</code> model on CPU with int8 quantization is the accuracy/speed sweet spot for a laptop.</div>
+  <div class="how"><b>How</b>The clip is written to a temp file so ffmpeg can sniff the container and decode Opus into raw samples; whisper then beam-searches (5 beams) over its acoustic model to find the best transcription. The call is wrapped in <code>asyncio.to_thread</code> because inference is blocking CPU work that would otherwise freeze the whole server. The model loads lazily on first use, then stays warm in memory.</div>
+</div>
+
+<h3><span class="filepath">backend/llm/</span> + <span class="filepath">prompts.py</span> — the interviewer's brain</h3>
+<div class="www">
+  <div class="what"><b>What</b><code>base.py</code> defines <code>reply(messages) → str</code> plus a <code>stream()</code> that yields tokens. <code>local_ollama.py</code> talks to Ollama (active); <code>openai_api.py</code> talks to OpenAI (dormant). <code>prompts.py</code> builds the system prompt from your JD + resume.</div>
+  <div class="why"><b>Why</b>Ollama because it makes local models trivial (one command, clean HTTP API) and llama3:8b was already on your machine. The prompt's odd-looking rules — short turns, one question, no markdown — exist because this text is destined for a speaker, not a screen: TTS reads formatting characters aloud, and nobody talks in bullet points. The <code>stream()</code> method is deliberately built now-but-unused: step 3 will need it, and writing the call streaming-capable today avoids a rewrite.</div>
+  <div class="how"><b>How</b>Plain HTTP POST to Ollama's local API (<code>localhost:11434/api/chat</code>) with the full message history; Ollama runs the model and returns the reply. The streaming variant reads Ollama's line-by-line JSON chunks and yields each token fragment as it arrives.</div>
+</div>
+
+<h3><span class="filepath">backend/tts/</span> — text to speech</h3>
+<div class="www">
+  <div class="what"><b>What</b><code>base.py</code> defines <code>synthesize(text) → WAV bytes</code>. <code>local_piper.py</code> implements it with piper (active); <code>cartesia.py</code> against Cartesia's API (dormant).</div>
+  <div class="why"><b>Why</b>Piper is the best fast-and-local option with genuinely listenable voices. WAV as the output format because it's the zero-friction choice for step 1: no decoding, plays everywhere, directly from a Blob. (Foreshadowing: WAV's header wants to know the total length up front, which fights streaming — step 3 will force us to rethink the format. Meeting that constraint yourself is worth more than being told about it.)</div>
+  <div class="how"><b>How</b>Two stages inside piper: espeak-ng converts text to phonemes (pronunciation units), then the neural vocoder — the 60MB <code>.onnx</code> voice file — renders those phonemes into a waveform. Same <code>to_thread</code> wrapping and lazy loading as STT, for the same event-loop reasons.</div>
+</div>
+
+<!-- ============================================================ -->
+<h2 id="missing">10. What's deliberately missing (and what replaces it meanwhile)</h2>
+
+<p><em>This table described step 1. Every row has since been built — kept here with updated statuses because the "what substituted for it" column is still the best explanation of what each piece is for.</em></p>
+
+<table>
+  <tr><th>Missing piece</th><th>What substituted for it in step 1</th><th>Status</th></tr>
+  <tr><td><b>VAD</b> — detecting that speech is happening</td><td>Your thumb. Holding the button <em>was</em> the speech/no-speech signal.</td><td>✓ built — §13</td></tr>
+  <tr><td><b>Endpointing</b> — detecting that you're <em>done</em></td><td>Button release: a perfect, unambiguous end-of-turn signal. Step 2 lost this luxury and infers "done" from silence.</td><td>✓ built — §13</td></tr>
+  <tr><td><b>Streaming</b> — overlapping the stages</td><td>Nothing. Every stage waited for the previous to finish; 4–7s silence per turn.</td><td>✓ built — §14</td></tr>
+  <tr><td><b>Barge-in</b> — interrupting the agent</td><td>Nothing. While the agent spoke, nobody was listening.</td><td>✓ built — §15</td></tr>
+  <tr><td><b>Debrief</b> — scoring, filler-word and pace metrics</td><td>Nothing.</td><td>✓ built — §17 (word-level timestamps still a future refinement)</td></tr>
+</table>
+
+<p><strong>Why leave these out rather than scaffold them all at once?</strong> Because each is a distinct concept, and the project's method is: add exactly one new concept to a <em>working</em> system, feel what breaks, fix it, repeat. Scaffolding everything up front would mean debugging five interacting concepts simultaneously — the fastest way to learn nothing.</p>
+
+<!-- ============================================================ -->
+<h2 id="roadmap">11. The roadmap: 6 steps, 6 lessons</h2>
+
+<table>
+  <tr><th>Step</th><th>Build</th><th>The lesson it forces</th></tr>
+  <tr><td><b>1 ✓</b></td><td>Push-to-talk MVP</td><td>The full STT→LLM→TTS shape; the WebSocket protocol; the adapter discipline.</td></tr>
+  <tr><td><b>2 ✓</b></td><td>Silero VAD + endpointing; button removed</td><td>The hardest UX problem in voice: when has a human finished talking? Fixed silence thresholds vs. semantic endpointing. <em>(§13)</em></td></tr>
+  <tr><td><b>3 ✓</b></td><td>Streaming everywhere + a latency HUD</td><td>Pipelining: same total compute, radically better perceived speed. Measured: time-to-first-audio ~halved. <em>(§14)</em></td></tr>
+  <tr><td><b>4 ✓</b></td><td>Barge-in</td><td>Concurrency for real: listen while speaking, echo cancellation, floor state, cancellable turns — and the difference between <em>sending</em> audio and the user <em>hearing</em> it. <em>(§15)</em></td></tr>
+  <tr><td><b>5 ✓</b></td><td>The debrief: rubric scoring + delivery metrics</td><td>A second discipline of prompting (LLM-as-evaluator, strict JSON) and the value of keeping arithmetic separate from model opinion. <em>(§17)</em></td></tr>
+  <tr><td><b>6</b></td><td>Swap the whole cascade for a realtime S2S model</td><td>The capstone comparison: what the end-to-end model gives you (speed, naturalness) and what it takes away (visibility, control) — argued from experience. <em>(next)</em></td></tr>
+  <tr><td><b>bonus ✓</b></td><td>Fused Gemma 4 pipeline (a flag away)</td><td>A halfway house between cascade and S2S: one model does listening + thinking. Taught us that fewer stages ≠ faster. <em>(§16)</em></td></tr>
+</table>
+
+<!-- ============================================================ -->
+<h2 id="gotchas">12. Known rough edges — the original list, and what happened to each</h2>
+
+<p>This was the step-1 review list. Tracking what became of each item is itself a lesson in how predicted problems play out:</p>
+
+<div class="callout">
+  <b class="label">✓ Fixed in step 2: one engine error kills the session</b>
+  The step-1 <code>try/except</code> wrapped the entire receive loop, so one hiccup (Ollama restarting, a corrupt clip) closed the WebSocket and lost the interview. Now each turn runs inside its own <code>try/except</code> in <code>_run_turn</code>: the error goes to the UI as a message, the floor returns to LISTENING, and the interview continues. Per-turn resilience is a core property of production voice agents — one bad turn should cost one turn, not the session.
+</div>
+
+<div class="callout warn">
+  <b class="label">STILL OPEN — the only survivor: unbounded conversation history</b>
+  <code>messages</code> grows every turn and is sent whole to the LLM. We <em>verified</em> the real numbers on this machine (rather than assuming): Ollama 0.30.8 loads llama3:8b at its full 8,192-token window — better than older Ollama defaults — but a long interview plus a pasted JD + resume can still exceed it, and Ollama truncates <em>from the top</em>: it eats the system prompt first, so the interviewer silently forgets the job and its own rules. No error, just degradation. Deliberately left open: fixing it properly (rolling summarization — compacting old exchanges into a summary block while keeping recent turns verbatim) is planned as an <em>agent-harness</em> learning exercise, because it's exactly what production harnesses do with long conversations.
+</div>
+
+<div class="callout">
+  <b class="label">✓ Made obsolete by step 3: object URL leak</b>
+  The leak lived in the <code>&lt;audio&gt;</code>-element playback path — which no longer exists. Step 3 replaced it wholesale with Web Audio scheduling (<code>decodeAudioData</code> + <code>AudioBufferSourceNode</code>), which has no object URLs to leak. A nice illustration that some bugs get <em>architected away</em> rather than fixed.
+</div>
+
+<div class="callout">
+  <b class="label">✓ Done in steps 2–3: per-stage timing logs</b>
+  <code>main.py</code> logs transcript / first-text / first-audio milliseconds per turn, and the same numbers stream to the browser as a <code>metrics</code> frame feeding the latency HUD. The prediction held: STT (whisper base, ~1–2s on CPU) is the dominant cost once streaming hides the LLM + TTS time.
+</div>
+
+<div class="callout">
+  <b class="label">Still a design note: STT returns only a string</b>
+  Step 5's delivery metrics turned out to be buildable <em>without</em> word timestamps — words-per-minute comes from transcript word count ÷ measured utterance duration, fillers from text matching. But per-word timing (exact pause placement, per-answer pacing curves) still wants <code>word_timestamps=True</code> and a richer transcript object. Deferred, not forgotten.
+</div>
+
+<!-- ============================================================ -->
+<!-- ====================  PART II  ============================= -->
+<!-- ============================================================ -->
+
+<h2 id="step2">13. Step 2: hands-free — VAD, endpointing, and the floor</h2>
+
+<p>Step 2 removed the button. That one sentence hides a complete change of architecture: instead of the browser sending <em>one finished clip per turn</em>, it now sends <strong>a continuous stream of raw audio for the entire interview</strong>, and the server must figure out — from sound alone — when a turn starts and when it ends.</p>
+
+<h3>The browser side: from MediaRecorder to AudioWorklet</h3>
+
+<div class="term">
+  <h4>AudioWorklet <span class="tag">browser</span></h4>
+  <p>A tiny JavaScript class the browser runs on its <em>dedicated audio thread</em>, handing it raw microphone samples every ~3&nbsp;ms as plain <code>Float32Array</code>s. It replaces MediaRecorder for us, because MediaRecorder produces <em>compressed, containerized</em> chunks (WebM/Opus) that only make sense as a complete file — useless when the server needs to inspect audio in 32&nbsp;ms slices as it arrives.</p>
+  <div class="ex"><b>Example from our code:</b> our worklet (inlined in <span class="filepath">frontend/index.html</span> as a Blob URL) just accumulates samples until it has ~2048, then posts them to the main thread, which downsamples them to 16&nbsp;kHz, converts to 16-bit integers, and fires them down the WebSocket. No container, no codec — just numbers.</div>
+</div>
+
+<div class="www">
+  <div class="what"><b>What</b>The mic streams raw PCM — 16&nbsp;kHz, mono, 16-bit signed little-endian — over the WebSocket, continuously, from "Start interview" until the end. There is no per-turn client logic at all anymore: the browser doesn't know when your turn starts or ends. The server decides.</div>
+  <div class="why"><b>Why raw PCM, and why this exact format?</b> Because both consumers on the server — Silero VAD and whisper — natively want 16&nbsp;kHz mono float arrays. Sending exactly that (as int16, 2 bytes/sample ≈ 32&nbsp;KB/s — trivial on localhost) means the server does <em>zero decoding</em>: it reinterprets bytes as samples and goes. The step-1 path needed ffmpeg to unpack WebM/Opus; that entire dependency fell away. <em>Fixing the wire format in config (<code>SAMPLE_RATE=16000</code>) is a contract, and contracts beat negotiation for learning projects.</em></div>
+  <div class="how"><b>How</b>The mic hardware usually runs at 48&nbsp;kHz, so the main thread linearly interpolates down to 16&nbsp;kHz (<code>downsample()</code>), clamps floats to [-1,&nbsp;1] and scales to int16 (<code>toInt16()</code>). One subtlety: we create the <em>capture</em> AudioContext asking for 16&nbsp;kHz directly (<code>new AudioContext({sampleRate: 16000})</code>) — most browsers oblige, and the downsampler is the fallback when hardware refuses.</div>
+</div>
+
+<h3>The server side: frames → probabilities → decisions</h3>
+
+<figure>
+<svg viewBox="0 0 900 430" role="img" aria-label="Step 2 pipeline: byte stream to frames to VAD probability to endpointer events, and the endpointer state machine">
+  <defs>
+    <marker id="a13" markerWidth="10" markerHeight="10" refX="8" refY="3.5" orient="auto"><path d="M0,0 L8,3.5 L0,7 Z" fill="#888780"/></marker>
+  </defs>
+  <text x="20" y="28" class="svg-h">From byte-stream to turn boundaries</text>
+
+  <rect x="20" y="48" width="150" height="62" rx="9" fill="#f1efe8" stroke="#888780" stroke-width="1.5"/>
+  <text x="95" y="74" text-anchor="middle" class="svg-t" font-weight="600" fill="#2c2c2a">byte stream</text>
+  <text x="95" y="93" text-anchor="middle" class="svg-s">arbitrary chunk sizes</text>
+
+  <rect x="215" y="48" width="150" height="62" rx="9" fill="#e6f1fb" stroke="#378add" stroke-width="1.5"/>
+  <text x="290" y="74" text-anchor="middle" class="svg-t" font-weight="600" fill="#0c447c">framer</text>
+  <text x="290" y="93" text-anchor="middle" class="svg-s">512 samples = 32 ms</text>
+
+  <rect x="410" y="48" width="150" height="62" rx="9" fill="#e1f5ee" stroke="#1d9e75" stroke-width="1.5"/>
+  <text x="485" y="74" text-anchor="middle" class="svg-t" font-weight="600" fill="#085041">Silero VAD</text>
+  <text x="485" y="93" text-anchor="middle" class="svg-s">prob 0.0 – 1.0 / frame</text>
+
+  <rect x="605" y="48" width="150" height="62" rx="9" fill="#faeeda" stroke="#ef9f27" stroke-width="1.5"/>
+  <text x="680" y="74" text-anchor="middle" class="svg-t" font-weight="600" fill="#633806">Endpointer</text>
+  <text x="680" y="93" text-anchor="middle" class="svg-s">state machine</text>
+
+  <line x1="172" y1="79" x2="211" y2="79" stroke="#888780" stroke-width="2" marker-end="url(#a13)"/>
+  <line x1="367" y1="79" x2="406" y2="79" stroke="#888780" stroke-width="2" marker-end="url(#a13)"/>
+  <line x1="562" y1="79" x2="601" y2="79" stroke="#888780" stroke-width="2" marker-end="url(#a13)"/>
+  <line x1="757" y1="79" x2="800" y2="79" stroke="#888780" stroke-width="2" marker-end="url(#a13)"/>
+  <text x="843" y="72" text-anchor="middle" class="svg-t" font-weight="600" fill="#444441">events</text>
+  <text x="843" y="92" text-anchor="middle" class="svg-s">START · END ·</text>
+  <text x="843" y="106" text-anchor="middle" class="svg-s">CANCEL · NONE</text>
+
+  <text x="20" y="165" class="svg-h">The endpointer's two states</text>
+
+  <ellipse cx="200" cy="270" rx="120" ry="52" fill="#f1efe8" stroke="#888780" stroke-width="1.8"/>
+  <text x="200" y="264" text-anchor="middle" class="svg-t" font-weight="600" fill="#2c2c2a">WAITING</text>
+  <text x="200" y="284" text-anchor="middle" class="svg-s">no utterance yet</text>
+
+  <ellipse cx="640" cy="270" rx="130" ry="52" fill="#e1f5ee" stroke="#1d9e75" stroke-width="1.8"/>
+  <text x="640" y="264" text-anchor="middle" class="svg-t" font-weight="600" fill="#085041">IN SPEECH</text>
+  <text x="640" y="284" text-anchor="middle" class="svg-s">buffering every frame</text>
+
+  <path d="M 310 240 C 400 195, 480 195, 520 236" fill="none" stroke="#1d9e75" stroke-width="2" marker-end="url(#a13)"/>
+  <text x="418" y="196" text-anchor="middle" class="svg-t" fill="#085041">speech frame → START (seed with preroll)</text>
+
+  <path d="M 520 305 C 470 350, 380 350, 316 302" fill="none" stroke="#ef9f27" stroke-width="2" marker-end="url(#a13)"/>
+  <text x="418" y="360" text-anchor="middle" class="svg-t" fill="#854f0b">≥700 ms silence → END (≥250 ms of speech) or CANCEL (blip)</text>
+
+  <path d="M 745 232 C 800 185, 830 230, 762 288" fill="none" stroke="#1d9e75" stroke-width="1.6" stroke-dasharray="5 4" marker-end="url(#a13)"/>
+  <text x="815" y="185" text-anchor="middle" class="svg-s">speech, or silence &lt; 700 ms</text>
+  <text x="815" y="200" text-anchor="middle" class="svg-s">→ NONE (keep buffering)</text>
+
+  <path d="M 90 293 C 40 340, 95 362, 150 320" fill="none" stroke="#888780" stroke-width="1.6" stroke-dasharray="5 4" marker-end="url(#a13)"/>
+  <text x="72" y="372" text-anchor="middle" class="svg-s">silence → NONE</text>
+
+  <text x="20" y="418" class="svg-s">A pause mid-sentence emits NONE for up to 21 frames (700 ms) — the utterance keeps growing, pauses included. Only sustained silence ends it.</text>
+</svg>
+<figcaption>Top: each stage answers one narrow question. Bottom: the whole "when are they done?" decision is this two-state machine in <span class="filepath">backend/endpointing.py</span>.</figcaption>
+</figure>
+
+<div class="www">
+  <div class="what"><b>What</b>WebSocket bytes are appended to a residual buffer and cut into exact 1024-byte frames (512 samples × 2 bytes = 32&nbsp;ms). Every frame gets a speech probability from Silero VAD; the Endpointer folds that probability stream into turn-level events; on <code>END</code> the buffered frames are joined into one utterance and handed to the pipeline — the same STT→LLM→TTS flow as step 1.</div>
+  <div class="why"><b>Why a residual buffer?</b> Because the network doesn't respect frame boundaries — a WebSocket message might carry 2048 samples or 1500. Silero <em>requires exactly</em> 512-sample frames at 16&nbsp;kHz. The framer decouples "how bytes arrive" from "what the model needs" — a two-line pattern (<code>while len(buf) &gt;= FRAME: cut</code>) you'll reuse in every streaming system you ever build.</div>
+  <div class="how"><b>How</b><code>_process_frame</code> in <span class="filepath">backend/main.py</span>: reinterpret 1024 bytes as int16 → float32 in [-1,1] → <code>vad.speech_prob(frame)</code> → <code>endpointer.update(prob)</code> → act on the event. Silero runs as a tiny ONNX model — sub-millisecond per frame on CPU, which is what makes "score everything, always" affordable.</div>
+</div>
+
+<div class="term">
+  <h4>Preroll ring buffer <span class="tag">the detail everyone forgets</span></h4>
+  <p>VAD always fires a beat <em>late</em> — it needs a few frames of evidence before it's confident. If you start the utterance at the trigger frame, the first phoneme is missing and STT hears "…orked at Google" instead of "I worked at Google". The fix: always keep the last few frames in a small ring buffer (<code>collections.deque(maxlen=5)</code> ≈ 160&nbsp;ms), and when speech starts, <em>seed the utterance with them</em>.</p>
+  <div class="ex"><b>Example:</b> you say "So…" — VAD confirms speech at frame 3, but frames 1–2 (the "S" sound) are already gone from the live stream. The preroll ring still has them; the utterance starts complete. Cost: 10&nbsp;KB of memory. This trick returns in step 4's barge-in fix (§15), in a different costume.</div>
+</div>
+
+<h3>The knobs, and what each one <em>feels</em> like</h3>
+
+<table>
+  <tr><th>Flag (config.py)</th><th>Default</th><th>Turn it down…</th><th>Turn it up…</th></tr>
+  <tr><td><code>VAD_THRESHOLD</code></td><td>0.5</td><td>hears whispers, but also keyboard clatter</td><td>misses quiet speech onsets</td></tr>
+  <tr><td><code>ENDPOINT_SILENCE_MS</code></td><td>700</td><td>guillotines thinking pauses mid-story</td><td>every reply feels laggy — this is the amber block of §8, live and tunable</td></tr>
+  <tr><td><code>MIN_SPEECH_MS</code></td><td>250</td><td>a cough becomes a full (empty) turn</td><td>very short answers ("yes") get discarded</td></tr>
+  <tr><td><code>SPEECH_PREROLL_MS</code></td><td>160</td><td>first phonemes clipped</td><td>utterances start with junk noise</td></tr>
+</table>
+
+<div class="callout">
+  <b class="label">The floor — now real code, not a diagram</b>
+  Step 2 also introduced the explicit <code>Floor</code> enum (<code>LISTENING → PROCESSING → SPEAKING</code>) in <span class="filepath">main.py</span>. While the floor isn't LISTENING, incoming frames aren't endpointed. In step 2 this was mostly bookkeeping — but it was built <em>then</em> so that step 4's barge-in could be expressed as one clean rule on top of it ("speech while SPEAKING → interrupt") instead of a rewrite. The state is also streamed to the UI (<code>state</code> frames), which drives the status pill and the presence avatar — one source of truth for who's talking.
+</div>
+
+<!-- ============================================================ -->
+<h2 id="step3">14. Step 3: streaming — first sound in half the time</h2>
+
+<p>Step 2's hands-free loop still had step 1's core sin: every stage waits for the previous to <em>fully finish</em>. Whisper finishes the whole transcript, llama writes the whole reply, piper renders the whole WAV — and only then do you hear anything. Step 3 attacks the silence with the single biggest latency lever in voice AI: <strong>overlap</strong>.</p>
+
+<figure>
+<svg viewBox="0 0 900 330" role="img" aria-label="Sequential versus streamed turn timeline">
+  <text x="20" y="28" class="svg-h">The same turn, twice (times measured on this machine)</text>
+
+  <text x="20" y="66" class="svg-t" fill="#5f5e5a">A · sequential</text>
+  <rect x="150" y="48" width="180" height="40" rx="5" fill="#e6f1fb" stroke="#378add"/>
+  <text x="240" y="73" text-anchor="middle" class="svg-s" fill="#0c447c">STT ~2.2s</text>
+  <rect x="330" y="48" width="200" height="40" rx="5" fill="#eeedfe" stroke="#7f77dd"/>
+  <text x="430" y="73" text-anchor="middle" class="svg-s" fill="#3c3489">LLM writes ALL of it ~2s</text>
+  <rect x="530" y="48" width="110" height="40" rx="5" fill="#faece7" stroke="#d85a30"/>
+  <text x="585" y="73" text-anchor="middle" class="svg-s" fill="#712b13">TTS ~1s</text>
+  <line x1="645" y1="68" x2="645" y2="108" stroke="#a32d2d" stroke-width="2"/>
+  <text x="655" y="105" class="svg-t" font-weight="600" fill="#a32d2d">first sound ≈ 5.5s</text>
+
+  <text x="20" y="166" class="svg-t" fill="#5f5e5a">B · streamed</text>
+  <rect x="150" y="148" width="180" height="40" rx="5" fill="#e6f1fb" stroke="#378add"/>
+  <text x="240" y="173" text-anchor="middle" class="svg-s" fill="#0c447c">STT ~2.2s</text>
+  <rect x="330" y="148" width="300" height="40" rx="5" fill="#eeedfe" stroke="#7f77dd"/>
+  <text x="480" y="173" text-anchor="middle" class="svg-s" fill="#3c3489">LLM streams tokens…</text>
+  <rect x="395" y="196" width="80" height="34" rx="5" fill="#faece7" stroke="#d85a30"/>
+  <text x="435" y="218" text-anchor="middle" class="svg-s" fill="#712b13">TTS c1</text>
+  <rect x="485" y="196" width="80" height="34" rx="5" fill="#faece7" stroke="#d85a30" opacity="0.75"/>
+  <text x="525" y="218" text-anchor="middle" class="svg-s" fill="#712b13">TTS c2</text>
+  <rect x="575" y="196" width="80" height="34" rx="5" fill="#faece7" stroke="#d85a30" opacity="0.5"/>
+  <text x="615" y="218" text-anchor="middle" class="svg-s" fill="#712b13">TTS c3</text>
+  <line x1="478" y1="168" x2="478" y2="250" stroke="#0f6e56" stroke-width="2"/>
+  <text x="488" y="247" class="svg-t" font-weight="600" fill="#0f6e56">first sound ≈ 2.75s — while c2, c3 don't exist yet</text>
+
+  <text x="20" y="295" class="svg-s">Same total compute. The trick: never make the user wait for work that hasn't become audible yet.</text>
+  <text x="20" y="313" class="svg-s">After overlap, STT is the dominant remaining cost — visible instantly in the HUD, exactly what §8 predicted for a streaming pipeline.</text>
+</svg>
+<figcaption>Chunk 1 of the reply is being spoken while the LLM is still writing chunk 3. Latency hides inside overlap.</figcaption>
+</figure>
+
+<h3>The hinge: cutting a token stream into <em>speakable</em> chunks</h3>
+
+<div class="www">
+  <div class="what"><b>What</b><span class="filepath">backend/text_chunking.py</span> — an async generator that consumes LLM tokens and yields the earliest <em>complete-sounding</em> piece of text: for the very first chunk, anything past 18 characters ending in a comma; after that, whole sentences.</div>
+  <div class="why"><b>Why clauses and not fixed sizes?</b> Because TTS quality dies at bad seams. Cut every 20 characters and piper pronounces half-words with wrong intonation; wait for full sentences always and you lose the latency win on long first sentences. The compromise encodes something true about speech: <em>a comma is a place a human would breathe</em>. And the first-chunk-is-special rule exists because time-to-first-audio is the only number the user feels — "Thanks for sharing that," can be <em>speaking</em> while the rest of the sentence is still being generated.</div>
+  <div class="how"><b>How</b>Buffer tokens; scan for the earliest sentence-ender (<code>. ! ?</code>) — or, for the first chunk only, a clause-ender (<code>, ; :</code>) past the minimum. One hard-won refinement (found in review, §15's sibling): an ender only counts <em>if followed by whitespace</em> — otherwise "3.5" splits into "3." + "5" and "Node.js" gets spoken as two fragments. Punctuation at the very end of the buffer waits for the next token to prove it's a real boundary; the stream-end flush catches final periods.</div>
+</div>
+
+<pre><code># the shape of a streamed turn (main.py, simplified)
+async for chunk in speakable_chunks(llm_tokens):
+    send_json("reply_delta", chunk)      # text appears in the UI now
+    wav = await tts.synthesize(chunk)    # small text = fast synth
+    send_bytes(wav)                      # browser plays chunk 1
+                                         # …while the LLM writes chunk 3</code></pre>
+
+<h3>The browser side: gapless playback on the Web Audio clock</h3>
+
+<div class="www">
+  <div class="what"><b>What</b>Each arriving WAV chunk is decoded and scheduled to start at the <em>exact sample</em> the previous chunk ends — so five separate files play as one seamless voice.</div>
+  <div class="why"><b>Why not just play each chunk as it arrives?</b> Two failure modes. Play-on-arrival stutters: network jitter puts 50&nbsp;ms gaps between chunks, and human ears are merciless about gaps inside a sentence. And decoding is async — chunk 2 can finish decoding <em>before</em> chunk 1, so naive code plays them out of order. The Web Audio API exists for exactly this: it has its own high-precision clock and lets you book playback in the future, sample-accurately.</div>
+  <div class="how"><b>How</b><code>decodeAudioData</code> → schedule at <code>max(now, nextStartTime)</code> → advance <code>nextStartTime += buf.duration</code>. Ordering is forced by chaining every decode onto one promise chain (<code>scheduleChain</code>), so chunks schedule strictly in arrival order regardless of decode speed. Note there are <em>two</em> AudioContexts: capture runs at 16&nbsp;kHz (the wire contract), playback at the device's native rate (piper's audio is 22&nbsp;kHz and forcing it through a 16&nbsp;kHz context would resample it down — audibly worse).</div>
+</div>
+
+<pre><code>const startAt = Math.max(playCtx.currentTime, nextStartTime);
+src.start(startAt);                       // booked on the audio clock
+nextStartTime = startAt + buf.duration;   // next chunk butts up exactly</code></pre>
+
+<div class="callout">
+  <b class="label">The HUD — making latency a first-class citizen</b>
+  Every turn, the server sends a <code>metrics</code> frame: <b>stt_ms</b> (utterance end → transcript), <b>text_ms</b> (→ first speakable chunk), <b>audio_ms</b> (→ first WAV sent — the number that matters). The UI shows them after each turn (now inside the collapsible developer panel, §18). <em>Why bother?</em> Because you can't grind down a number you can't see — the HUD is what turned "feels sluggish" into "STT is 80% of the remaining wait, whisper-base is the next target". Measurement before optimization, always.
+</div>
+
+<!-- ============================================================ -->
+<h2 id="step4">15. Step 4: barge-in — and the two best bugs of the project</h2>
+
+<p>Interrupting a human mid-sentence works because they hear you <em>while</em> talking, stop fast, and cede the floor. Making software do that decomposed into four requirements, each mapping to one mechanism:</p>
+
+<table>
+  <tr><th>Requirement</th><th>Mechanism</th></tr>
+  <tr><td>Hear the user while speaking</td><td>The mic <b>never stops sending</b> — the step-2 gate ("ignore audio unless LISTENING") became a <em>router</em>: while a turn is active, frames go to barge-in detection instead of the endpointer.</td></tr>
+  <tr><td>Don't hear <em>yourself</em></td><td>Browser echo cancellation (<code>echoCancellation: true</code>) subtracts the reply audio from the mic signal. Headphones make it near-perfect; on speakers, residual leak is why detection must be strict.</td></tr>
+  <tr><td>Be interruptible at all</td><td>Each turn runs as its own <b>cancellable asyncio task</b> — the receive loop stays free to hear you (the §3 event-loop lesson paying off exactly as promised).</td></tr>
+  <tr><td>Stop <em>everything</em>, instantly</td><td>Cancel the task server-side; send <code>interrupt</code>; the browser kills all scheduled audio and drops in-flight chunks.</td></tr>
+</table>
+
+<div class="term">
+  <h4>asyncio.Task and cancellation <span class="tag">python async</span></h4>
+  <p><code>asyncio.create_task(coro)</code> starts a coroutine running <em>concurrently</em> on the event loop and returns a handle. <code>task.cancel()</code> makes <code>CancelledError</code> erupt inside the task at its current <code>await</code> point — a cooperative "stop now" that the task can catch to clean up. This is the idiomatic asyncio way to make long work abortable.</p>
+  <div class="ex"><b>Example from our code:</b> <code>_start_turn</code> spawns <code>_turn_wrapper(pcm)</code> as a task and returns immediately — so the receive loop keeps consuming mic frames during the whole 5-second turn. Barge-in is then just <code>task.cancel()</code>: the error surfaces inside <code>_run_turn</code> wherever it happens to be — mid-LLM-stream, mid-TTS, or in the playback sleep — and generation stops within milliseconds.</div>
+</div>
+
+<div class="www">
+  <div class="what"><b>What</b>Detection: while a turn is active, a frame counts toward barge-in if its speech probability ≥ 0.6, and the interrupt fires only after ~240&nbsp;ms of <em>consecutive</em> such frames. Trigger: cancel the turn task, send <code>{"type":"interrupt"}</code>, hand the floor back, and replay the trigger frames (below).</div>
+  <div class="why"><b>Why stricter than normal VAD (0.6 vs 0.5), and why sustained?</b> Because the cost of a false positive is horrible: the interviewer cuts itself off mid-question for no reason. During playback the mic signal contains echo-cancellation residue — brief, low-confidence "speech-ish" flickers. A higher bar plus a required run length means a cough or a leaked syllable does nothing, while real speech (which sustains effortlessly) still interrupts in a quarter second. Two thresholds for two different costs of being wrong.</div>
+  <div class="how"><b>How</b>Client side, <code>stopAllAudio()</code> stops every scheduled source and — the subtle part — bumps an <b>epoch counter</b> (<code>interruptedAt</code>). Chunks still in the decode pipeline carry the old epoch and silently no-op when they surface. Without the epoch, a chunk that was mid-decode during the interrupt would schedule itself <em>after</em> the flush and blurt a fragment of the dead reply.</div>
+</div>
+
+<h3>War story #1: the turn that wouldn't die</h3>
+
+<div class="callout warn">
+  <b class="label">The bug, as experienced</b>
+  Barge-in passed its tests… and then in a real interview: you interrupt, the AI <em>transcribes what you said</em> — but finishes its whole sentence first, then answers the interruption as the next turn. Detection clearly worked. So what was off?
+</div>
+
+<p><strong>The diagnosis: two clocks.</strong> The server finishes <em>sending</em> a reply's audio in ~2s (synthesis + network). The browser takes ~6s to <em>play</em> it, because playback runs at the speed of speech. The server considered the turn over when it finished sending — so for those last 4 seconds, it was back in LISTENING mode: your interruption didn't hit the barge-in path at all. It hit the <em>endpointer</em>, and was dutifully captured as the next turn while the browser (knowing nothing) kept playing.</p>
+
+<figure>
+<svg viewBox="0 0 900 360" role="img" aria-label="Barge-in playback window bug: server sending clock vs browser playing clock, before and after fix">
+  <defs>
+    <marker id="a15" markerWidth="10" markerHeight="10" refX="8" refY="3.5" orient="auto"><path d="M0,0 L8,3.5 L0,7 Z" fill="#993c1d"/></marker>
+  </defs>
+  <text x="20" y="26" class="svg-h" fill="#a32d2d">Before — interruptible only while SENDING</text>
+  <text x="20" y="60" class="svg-s">server sends</text>
+  <rect x="130" y="44" width="180" height="26" rx="4" fill="#eeedfe" stroke="#7f77dd"/>
+  <text x="220" y="61" text-anchor="middle" class="svg-s" fill="#3c3489">~2s</text>
+  <text x="20" y="96" class="svg-s">browser plays</text>
+  <rect x="130" y="80" width="540" height="26" rx="4" fill="#faece7" stroke="#d85a30"/>
+  <text x="400" y="97" text-anchor="middle" class="svg-s" fill="#712b13">~6s of actual audio</text>
+  <text x="20" y="132" class="svg-s">barge-in armed</text>
+  <rect x="130" y="116" width="180" height="26" rx="4" fill="#e1f5ee" stroke="#1d9e75"/>
+  <rect x="310" y="116" width="360" height="26" rx="4" fill="#fcebeb" stroke="#a32d2d" stroke-dasharray="5 4"/>
+  <text x="490" y="133" text-anchor="middle" class="svg-s" fill="#a32d2d">DEAF — speech here becomes the "next turn"</text>
+  <line x1="400" y1="170" x2="400" y2="146" stroke="#993c1d" stroke-width="2" marker-end="url(#a15)"/>
+  <text x="400" y="186" text-anchor="middle" class="svg-t" font-weight="600" fill="#993c1d">you speak at 3s → ignored by barge-in</text>
+
+  <text x="20" y="226" class="svg-h" fill="#0f6e56">After — floor held for the full playback window</text>
+  <text x="20" y="260" class="svg-s">barge-in armed</text>
+  <rect x="130" y="244" width="540" height="26" rx="4" fill="#e1f5ee" stroke="#1d9e75"/>
+  <text x="400" y="261" text-anchor="middle" class="svg-s" fill="#085041">armed for the whole 6s — server sleeps out the remainder (cancellable)</text>
+  <line x1="400" y1="308" x2="400" y2="274" stroke="#0f6e56" stroke-width="2" marker-end="url(#a15)"/>
+  <text x="400" y="324" text-anchor="middle" class="svg-t" font-weight="600" fill="#0f6e56">you speak at 3s → INTERRUPT → audio stops instantly</text>
+  <text x="20" y="352" class="svg-s">The fix didn't touch detection at all — it corrected the server's belief about when its own turn ends.</text>
+</svg>
+<figcaption>The server's "I'm done" (finished sending) and the user's "it's done" (finished hearing) are 4 seconds apart.</figcaption>
+</figure>
+
+<p><strong>The fix</strong> (in <code>_run_turn</code>): as each WAV chunk goes out, read its real duration from the header (<code>_wav_seconds</code>) and accumulate. After generating, don't release the floor — <em>sleep out the remaining playback time</em>:</p>
+
+<pre><code>remaining = audio_secs - (time.perf_counter() - first_audio_at)
+if remaining > 0:
+    await asyncio.sleep(remaining)   # still SPEAKING; still watching for barge-in
+                                     # and cancellable — an interrupt cuts it short</code></pre>
+
+<p><em>The lesson, worth generalizing:</em> in any streaming system, "I finished producing X" and "the consumer finished consuming X" are different events, and confusing them creates windows where your state machine believes something false about the world.</p>
+
+<h3>War story #2: the interrupt that erased your answer</h3>
+
+<div class="callout warn">
+  <b class="label">The bug</b>
+  History was appended only <em>after</em> the generation loop completed. Interrupt during playback? Fine — appends had already run. Interrupt <em>during generation</em> (early, before or during the first chunks)? The cancel landed before the appends: your transcribed answer and the partial reply simply vanished from <code>messages</code>. Next question ignored what you'd just said, and the debrief under-counted your answers. Classic cancellation bug: <code>CancelledError</code> can erupt at <em>any</em> <code>await</code>, and any bookkeeping that lives "after the loop" silently becomes optional.
+</div>
+
+<p><strong>The fix:</strong> a <code>record_turn()</code> closure with a once-guard, called from <em>both</em> the normal completion path and an <code>except asyncio.CancelledError</code> handler (which re-raises after recording). Whichever path runs first wins; the other becomes a no-op. Interrupted replies get an explicit marker appended — <code>[cut off by the candidate]</code> — so both the interviewer LLM and the debrief evaluator know that line was never fully delivered.</p>
+
+<div class="callout">
+  <b class="label">Why not just append the user message as soon as the transcript arrives?</b>
+  The obvious fix is wrong in a subtle way, and it's worth understanding why: the cascaded strategy yields the <code>Transcript</code> event <em>first</em>, and only <em>afterwards</em> builds its LLM context as <code>history + [user message]</code>. If the transcript callback appended to <code>history</code> immediately, the user's answer would appear <b>twice</b> in the LLM's context. Ownership matters: the strategy owns "context for this turn", the session owns "history of committed turns" — the fix respects the boundary, the obvious fix violates it.
+</div>
+
+<h3>Two refinements found in review</h3>
+
+<p><strong>The first word of your interruption survives.</strong> The ~240&nbsp;ms of speech that <em>triggers</em> barge-in used to be discarded — buffers were cleared on floor handback, so your interruption was captured only from re-detection onward, often missing its first word. Now those trigger frames are buffered and, after the floor returns, <em>replayed through the normal frame path</em>: VAD sees them, START fires, the utterance is seeded. It's the preroll idea (§13) again — same insight, new location: <em>the evidence that made you act is usually also data you need to keep</em>.</p>
+
+<p><strong>Mute sends silence, not nothing.</strong> The endpointer is driven by incoming frames; if muting simply stopped sending, a half-captured utterance would freeze mid-turn until unmute. Instead the browser keeps sending frames while muted — zeroed. The server hears "silence", the endpointer counts it, the turn ends normally. <em>In stream protocols, "no data" and "data that says nothing" are very different messages.</em></p>
+
+<!-- ============================================================ -->
+<h2 id="pipelines">16. Cascaded vs fused: the Gemma 4 experiment</h2>
+
+<p>Everything so far assumed the cascade: separate STT and LLM models. But a new class of <strong>natively multimodal</strong> models can consume raw audio directly — one model both <em>hears</em> and <em>thinks</em>. We added Google's Gemma 4 (E4B, Apache-2.0, runs locally via transformers) as a complete alternative pipeline, switchable with one flag: <code>PIPELINE=cascaded|fused</code>.</p>
+
+<div class="www">
+  <div class="what"><b>What</b>A second layer of the adapter idea, one level up: <code>TurnStrategy</code> (<span class="filepath">backend/pipeline/base.py</span>) abstracts <em>how a whole turn is processed</em> — <code>run(utterance_pcm, history)</code> yields <code>Transcript</code> then <code>ReplyToken</code> events. <code>CascadedStrategy</code> = whisper + Ollama. <code>FusedStrategy</code> = Gemma 4 for both jobs. <code>main.py</code> consumes the event stream and does everything shared: chunking, TTS, HUD, history.</div>
+  <div class="why"><b>Why abstract at the turn level and not just swap the STT engine?</b> Because fused isn't an STT engine — it collapses <em>two stages into one call</em>, so the seam between them disappears. The engine-level adapters (§6) can't express that; the strategy level can. This is also the dress rehearsal for step 6: a realtime speech-to-speech model is "just" a third strategy.</div>
+  <div class="how"><b>How</b>The events are tiny dataclasses; the strategy is an async generator. Everything downstream of the events — speakable chunks, piper, the metrics — is identical for both pipelines, which is what makes the comparison honest.</div>
+</div>
+
+<figure>
+<svg viewBox="0 0 900 300" role="img" aria-label="Cascaded pipeline versus fused Gemma pipeline with measured latencies">
+  <text x="20" y="28" class="svg-h">Two strategies, same contract (measured on this M3 Pro, warm)</text>
+
+  <rect x="20" y="50" width="410" height="170" rx="12" fill="#fdfcfa" stroke="#e3e1d9" stroke-width="1.5"/>
+  <text x="225" y="78" text-anchor="middle" class="svg-t" font-weight="600" fill="#1f1e1b">PIPELINE=cascaded (default)</text>
+  <rect x="45" y="95" width="170" height="52" rx="8" fill="#e6f1fb" stroke="#378add" stroke-width="1.5"/>
+  <text x="130" y="117" text-anchor="middle" class="svg-s" fill="#0c447c">faster-whisper</text>
+  <text x="130" y="134" text-anchor="middle" class="svg-s" fill="#0c447c">audio → text</text>
+  <rect x="235" y="95" width="170" height="52" rx="8" fill="#eeedfe" stroke="#7f77dd" stroke-width="1.5"/>
+  <text x="320" y="117" text-anchor="middle" class="svg-s" fill="#3c3489">llama3:8b (Ollama)</text>
+  <text x="320" y="134" text-anchor="middle" class="svg-s" fill="#3c3489">text → reply tokens</text>
+  <text x="225" y="185" text-anchor="middle" class="svg-t" font-weight="600" fill="#0f6e56">~2.7s to reply · llama.cpp runtime</text>
+  <text x="225" y="205" text-anchor="middle" class="svg-s">visible seam: you can log the transcript between stages</text>
+
+  <rect x="470" y="50" width="410" height="170" rx="12" fill="#fdfcfa" stroke="#e3e1d9" stroke-width="1.5"/>
+  <text x="675" y="78" text-anchor="middle" class="svg-t" font-weight="600" fill="#1f1e1b">PIPELINE=fused</text>
+  <rect x="495" y="95" width="360" height="52" rx="8" fill="#e1f5ee" stroke="#1d9e75" stroke-width="1.5"/>
+  <text x="675" y="117" text-anchor="middle" class="svg-s" fill="#085041">Gemma 4 E4B — call ① transcribe (greedy) · call ② reply (from history)</text>
+  <text x="675" y="134" text-anchor="middle" class="svg-s" fill="#085041">one model hears AND thinks · transformers on MPS</text>
+  <text x="675" y="185" text-anchor="middle" class="svg-t" font-weight="600" fill="#854f0b">~5s to reply · ≈1.8× slower here</text>
+  <text x="675" y="205" text-anchor="middle" class="svg-s">fewer stages — but a slower runtime for this hardware</text>
+
+  <text x="20" y="262" class="svg-s" font-weight="600">The counterintuitive result: deleting the STT→LLM handoff did NOT win. Ollama's llama.cpp backend generates tokens so much</text>
+  <text x="20" y="280" class="svg-s" font-weight="600">faster than transformers-on-MPS that the runtime gap dwarfs the architecture gain. Benchmark the runtime, not the diagram.</text>
+</svg>
+<figcaption>Both verified working end-to-end; cascaded remains the daily driver on this hardware.</figcaption>
+</figure>
+
+<h3>What the experiment taught (three findings, all earned the hard way)</h3>
+
+<div class="callout warn">
+  <b class="label">Finding 1 — <code>device_map="auto"</code> silently paid a disk tax</b>
+  First fused runs took 12.45s per reply. The cause hid in one log line: <em>"Some parameters are on the meta device…"</em> — transformers' <code>device_map="auto"</code> had mis-judged available memory and offloaded some layers to <b>disk</b>, despite 36&nbsp;GB of RAM. Every forward pass paged weights back in. Explicitly detecting and pinning the device (<code>mps</code>) in <span class="filepath">pipeline/fused.py</span> dropped it to 4.78s — <em>over half the latency was one silent default</em>. Lesson: "auto" placement is a guess, and guesses about memory deserve verification when latency matters.
+</div>
+
+<div class="callout warn">
+  <b class="label">Finding 2 — one call per job, not one call for two jobs</b>
+  The elegant design was a single Gemma call returning "transcript\nreply". Gemma followed that format only about half the time — and when it didn't, the parser mis-split, instruction text leaked into the visible transcript, got committed to history, and poisoned every later turn (the interviewer drifted into fabricated questions). The fix: <b>two clean calls</b> — call ① transcribe only (greedy decoding, nothing else in the output), call ② reply only, from history + transcript. Costs a second inference; buys deterministic parsing. Lesson: parsing a model's free-form compliance is a tax you pay on every single turn — restructure so there's nothing to parse.
+</div>
+
+<div class="callout">
+  <b class="label">Finding 3 — warm up at boot, not on the first victim</b>
+  The first fused turn took ~10s even after the device fix: model loading + MPS kernel compilation happen on first inference. Moved to a FastAPI <code>lifespan</code> hook: at server start, the pipeline's <code>warmup()</code> loads weights and runs a tiny text + audio generation to compile the kernels (~11s, once, while nobody's waiting). First user turn: ~5s. Cascaded's warmup is a no-op — the abstraction lets each strategy define what "ready" means.
+</div>
+
+<!-- ============================================================ -->
+<h2 id="step5">17. Step 5: the scored debrief — the LLM as judge</h2>
+
+<p>Until step 5, ending the interview just… stopped the audio. The debrief turns the transcript into feedback — and introduces a genuinely different discipline of LLM use: the model as <strong>evaluator</strong> instead of conversationalist.</p>
+
+<h3>Design decision zero: two signals, kept separate on purpose</h3>
+
+<div class="www">
+  <div class="what"><b>What</b>The debrief combines <b>delivery metrics</b> — pure arithmetic on data captured during the interview (words-per-minute, filler-word rate, average answer length, talk-time ratio) — with <b>rubric scores</b> — the LLM's judgment of answer <em>content</em> across four behavioral dimensions (Structure, Specificity, Ownership &amp; impact, Communication), plus strengths and improvements.</div>
+  <div class="why"><b>Why not let the LLM report the numbers too?</b> Trust, and its failure modes. An LLM asked "how many filler words?" will produce a plausible number, not a counted one. Keeping the two channels separate means every number on the screen is <em>true by construction</em> (the UI even says "computed directly from your speech — not a model's guess"), and the model's opinions are clearly labeled as opinions. When a scoring hallucination happens — and eventually one will — it can't contaminate the metrics.</div>
+  <div class="how"><b>How</b>During the interview, <code>main.py</code> accumulates <code>turn_stats</code> per answer (word count, speaking seconds, text) and total AI airtime. Speaking seconds are the utterance's PCM length <em>minus</em> the capture overhead (preroll + 700&nbsp;ms endpoint silence — not talking, just machinery), so WPM isn't quietly deflated. AI airtime counts only audio that actually <em>played</em> — a barged-in reply contributes its heard portion, not its synthesized length. Fillers are counted with word-boundary regexes (so "like" doesn't fire inside "unlikely") including multi-word fillers ("you know", "kind of").</div>
+</div>
+
+<div class="term">
+  <h4>LLM-as-judge / rubric prompting <span class="tag">llm discipline</span></h4>
+  <p>Using a model to <em>evaluate</em> text against explicit criteria rather than to converse. The craft is entirely different from the interviewer prompt: you pin the dimensions (so it can't invent its own), pin the scale (1–5, with meaning anchored), demand evidence ("must reference the transcript"), forbid invention, and — critically — demand <b>machine-readable output</b> and nothing else.</p>
+  <div class="ex"><b>Example from our rubric prompt</b> (<span class="filepath">backend/debrief.py</span>): "Base every judgement on what the candidate ACTUALLY said"; "If the interview is very short or the candidate gave non-answers, score low and say so"; "Improvements must be actionable ('quantify your results', not 'be better')"; then an exact JSON shape to fill. Same anti-fabrication battle we fought in the interviewer prompt (§16, finding 2) — evaluators hallucinate praise as readily as interviewers hallucinate questions.</div>
+</div>
+
+<h3>War story #3: the JSON that was missing one brace</h3>
+
+<div class="callout warn">
+  <b class="label">The bug</b>
+  llama3:8b produced excellent, well-formed rubric JSON… minus the final <code>}</code>, reliably. <code>json.loads</code> failed, the code fell back to metrics-only, and the entire scored review silently vanished — no error, just an inexplicably empty debrief. Small local models are much better at <em>starting</em> structure than <em>finishing</em> it.
+</div>
+
+<p><strong>The fix:</strong> a repairing extractor. Walk the text once, tracking bracket depth while correctly ignoring everything inside string literals (including escapes), then append whatever closers (<code>}</code>, <code>]</code>, <code>"</code>) are still open, and parse again. The general shape of the lesson: <em>when a model produces structured output, your parser is part of the model's error distribution</em> — design it for the model you have, not the model you wish you had. Two supporting details: the scoring call passes <code>max_tokens=700</code> (a new per-call override on the LLM interface — the interviewer's 80-token cap that keeps spoken turns snappy would strangle a full review), and <code>generate_debrief()</code> is written to <em>never raise</em>: any failure degrades to metrics-plus-a-note, because a broken review must not eat the interview.</p>
+
+<figure>
+<svg viewBox="0 0 900 320" role="img" aria-label="Debrief data flow: turn stats to arithmetic metrics, transcript to LLM judge, merged into one payload">
+  <defs>
+    <marker id="a17" markerWidth="10" markerHeight="10" refX="8" refY="3.5" orient="auto"><path d="M0,0 L8,3.5 L0,7 Z" fill="#888780"/></marker>
+  </defs>
+  <text x="20" y="28" class="svg-h">One debrief, two provenances</text>
+
+  <rect x="20" y="52" width="200" height="60" rx="9" fill="#f1efe8" stroke="#888780" stroke-width="1.5"/>
+  <text x="120" y="77" text-anchor="middle" class="svg-t" font-weight="600" fill="#2c2c2a">turn_stats</text>
+  <text x="120" y="96" text-anchor="middle" class="svg-s">words · secs · AI airtime</text>
+
+  <rect x="20" y="180" width="200" height="60" rx="9" fill="#f1efe8" stroke="#888780" stroke-width="1.5"/>
+  <text x="120" y="205" text-anchor="middle" class="svg-t" font-weight="600" fill="#2c2c2a">full transcript</text>
+  <text x="120" y="224" text-anchor="middle" class="svg-s">INTERVIEWER / CANDIDATE</text>
+
+  <rect x="330" y="52" width="240" height="60" rx="9" fill="#e1f5ee" stroke="#1d9e75" stroke-width="1.5"/>
+  <text x="450" y="74" text-anchor="middle" class="svg-t" font-weight="600" fill="#085041">arithmetic</text>
+  <text x="450" y="91" text-anchor="middle" class="svg-s">wpm · fillers/min · talk ratio</text>
+  <text x="450" y="105" text-anchor="middle" class="svg-s">— true by construction</text>
+
+  <rect x="330" y="180" width="240" height="60" rx="9" fill="#eeedfe" stroke="#7f77dd" stroke-width="1.5"/>
+  <text x="450" y="200" text-anchor="middle" class="svg-t" font-weight="600" fill="#3c3489">LLM judge (rubric prompt)</text>
+  <text x="450" y="219" text-anchor="middle" class="svg-s">strict JSON → repair truncation</text>
+  <text x="450" y="233" text-anchor="middle" class="svg-s">→ scores are labeled opinion</text>
+
+  <line x1="222" y1="82" x2="326" y2="82" stroke="#888780" stroke-width="2" marker-end="url(#a17)"/>
+  <line x1="222" y1="210" x2="326" y2="210" stroke="#888780" stroke-width="2" marker-end="url(#a17)"/>
+
+  <rect x="660" y="116" width="220" height="60" rx="9" fill="#faeeda" stroke="#ef9f27" stroke-width="1.5"/>
+  <text x="770" y="141" text-anchor="middle" class="svg-t" font-weight="600" fill="#633806">one debrief payload</text>
+  <text x="770" y="160" text-anchor="middle" class="svg-s">→ debrief screen (§18)</text>
+
+  <line x1="572" y1="82" x2="656" y2="130" stroke="#888780" stroke-width="2" marker-end="url(#a17)"/>
+  <line x1="572" y1="210" x2="656" y2="162" stroke="#888780" stroke-width="2" marker-end="url(#a17)"/>
+
+  <text x="20" y="292" class="svg-s">If the judge fails (model down, JSON unrepairable, 90s timeout): the metrics half still renders, with an honest headline.</text>
+  <text x="20" y="310" class="svg-s">Failure of the optional half never destroys the whole — the debrief must not eat the interview.</text>
+</svg>
+<figcaption>Numbers from arithmetic, judgments from the model, and a merge that survives losing the model half.</figcaption>
+</figure>
+
+<div class="www">
+  <div class="what"><b>What (the end-to-end flow)</b>You click <em>End interview</em> → the browser stops the mic and playback but <b>keeps the WebSocket open</b> → sends <code>{"type":"debrief"}</code> → the server cancels any in-flight turn (so the transcript can't mutate mid-scoring), computes metrics, runs the judge, sends one payload → the debrief screen renders.</div>
+  <div class="why"><b>Why keep the socket open — and why cancel the in-flight turn?</b> The socket <em>is</em> the session: closing it would discard the server-side history before it could be scored. And scoring a transcript while a turn task is still appending to it is a race — cancel first, then read. Both are instances of the same rule: <em>define the object's final state before you analyze it</em>.</div>
+  <div class="how"><b>How (the failure paths)</b>Three independent guards make the "Scoring your interview…" spinner un-hangable: a server <code>error</code> frame routes to the failure renderer while a debrief is pending; a WebSocket close does the same ("connection lost"); a 90-second client-side watchdog catches a silently hung server. All three land on the degraded screen — headline with the reason, metrics if available, transcript export always. (This was review bug #2 — the original code could spin forever with the error painted onto a hidden view.)</div>
+</div>
+
+<!-- ============================================================ -->
+<h2 id="platform">18. The frontend: from scratch page to interview platform</h2>
+
+<p>The original frontend was a debugging scratchpad: two textareas, a button, a log. It's now a three-view product — and the redesign is itself a lesson: <strong>every piece of invisible pipeline state became something you can see</strong>, which changes debugging from log-archaeology into watching a dashboard.</p>
+
+<div class="www">
+  <div class="what"><b>What</b>Three views in one file, no framework, no build step. <b>Lobby:</b> candidate name/role, JD + resume, interview-type picker, difficulty and length, a live mic check. <b>Live stage:</b> timer, question counter, connection chip, interviewer presence avatar, live mic meter, mute, end button, chat-style transcript, and a collapsible developer panel (the §14 HUD plus floor state, VAD state, frames sent, turn count). <b>Debrief:</b> §17's payload rendered — overall badge, rubric bars, strengths/improvements, metrics grid, transcript export.</div>
+  <div class="why"><b>Why does a learning project need a "real" UI?</b> Three honest reasons. Practicing the scenario end-to-end matters — a mock interview should <em>feel</em> like an interview, or you won't rehearse seriously. The state displays double as instruments: when barge-in misbehaves, the floor/VAD readouts in the dev panel show you <em>what the server believes</em>, live — that's how war story #1 was understood. And features that don't exist say <b>"Coming Soon"</b> instead of pretending: for months the type picker offered Technical/Coding/System-design as visibly disabled, because the prompt (§3, system prompt) only implemented behavioral. An honest UI is documentation — and when §19's interview packs made those rounds real, un-disabling the cards <em>was</em> the changelog. (Recording and video still wear the badge, truthfully.)</div>
+  <div class="how"><b>How (three details worth stealing)</b> The <b>mic check</b> runs an <code>AnalyserNode</code> over its own temporary stream and animates an RMS level bar — users confirm the mic works <em>before</em> the interview, killing the most common "it's broken" report; the stream is released before the real capture starts. The <b>presence avatar</b> is driven purely by the server's <code>state</code>/<code>vad</code> frames (blue ring while SPEAKING, green while you talk) — zero client-side guessing, so it's also a truthful floor-state debugger. The <b>lobby fields</b> (name, role, type, difficulty) are folded into a preface on the JD text in the <code>setup</code> message — the server's contract didn't change at all, which is the adapter mindset applied to a protocol.</div>
+</div>
+
+<div class="callout">
+  <b class="label">Where the project stands, and what's next</b>
+  Steps 1–5 are built, reviewed, and bug-fixed; the fused pipeline is a working bonus experiment. Two threads remain. <b>Step 6</b> — swapping the cascade for a realtime speech-to-speech model — is the capstone the <code>TurnStrategy</code> abstraction (§16) was built to receive. Before that: a set of <b>agent-harness</b> features chosen for learning value — a hand-rolled tool-use loop for the interviewer (an "interview director" that takes structured actions like <code>note_evidence</code> / <code>switch_topic</code> / <code>end_interview</code>), rolling history summarization (which finally closes §12's last open item), and an eval harness where a simulated candidate and a judge model regression-test the interviewer's behavior. Each is the same method that built steps 1–5: one concept at a time, added to a working system, measured, and understood. <b>Part III (§21) lays out the full plan, the ordering rationale, and the target architecture.</b> <em>(Status note: everything this callout promised has since shipped — the director, compaction, and evals are all built and tracked in §21's queue table — and one thing it didn't promise arrived too: §19's interview packs. §20 is the whole grown system on one page.)</em>
+</div>
+
+<!-- ============================================================ -->
+<h2 id="packs">19. Interview packs: one interviewer, many rounds</h2>
+
+<p>Until now, every prompt in the project was hardcoded <em>behavioral</em>: the spoken persona said "behavioral interviewer", the director judged answers by STAR-story rules, and the debrief scored Structure/Specificity/Ownership/Communication no matter what you were practicing for. The lobby collected an interview type — and then threw it into a text preface the prompts mostly ignored. This section made topic and company <strong>first-class</strong>: pick <b>DSA</b>, <b>Machine Learning</b>, <b>System Design</b>, or <b>Behavioral</b>, optionally target a company bar (<b>OpenAI · Anthropic · Google · Meta</b>), and the persona, the director's judgment, <em>and</em> the debrief rubric all swap together.</p>
+
+<div class="www">
+  <div class="what"><b>What</b>Two small registries and a composition function. <code>backend/packs.py</code> defines one <code>InterviewPack</code> per topic, each contributing four things: a <b>persona</b> (the domain half of the system prompt — what to probe, what a good answer looks like), <b>director guidance</b> (what counts as evidence vs. a red flag <em>in this domain</em>), an <b>opening move</b>, and a four-axis <b>rubric</b> for the debrief. <code>backend/companies.py</code> adds a signal profile per company — one honest paragraph on what that bar actually screens for (first-principles reasoning at OpenAI, intellectual honesty about uncertainty at Anthropic, rigor-at-scale at Google, impact-and-shipping at Meta; <code>generic</code> injects nothing). <code>prompts.py</code> composes: <em>shared spoken rules + pack persona + company signal + difficulty block + pack opening + JD/resume</em>.</div>
+  <div class="why"><b>Why this shape — the real lesson</b>This is <strong>prompt composition as separation of concerns</strong>. The rules about brevity, one-question-per-turn, and never inventing specifics aren't behavioral-interview rules — they're properties of the <em>medium</em> (a live voice call), so they moved into a shared block every pack inherits. The domain knowledge is what varies, so it lives in the pack. The company overlay is a third, orthogonal axis. Without this split you get four near-duplicate mega-prompts that drift apart with every edit; with it, <code>prompts.py</code> and <code>debrief.py</code> stay generic plumbing and a new round type is ~40 lines of registry entry. It's §6's adapter pattern applied to <em>prompts</em> instead of engines.</div>
+  <div class="how"><b>How it threads through</b>The lobby's four (now all-enabled) type cards plus a company dropdown ride the existing <code>setup</code> frame. <code>main.py</code> passes them to <code>build_system_prompt()</code> and stamps them onto <code>DirectorState</code> — so the director loop's <em>signature and action schema never changed</em>; the topic rides the state object it already owned. The debrief pulls its rubric from the pack, so a system-design round is scored on <em>Requirements &amp; scoping / High-level design / Trade-offs &amp; bottlenecks / Communication</em>, not STAR structure. Unknown type or company? <code>get_pack()</code>/<code>get_company()</code> fall back to behavioral/generic — never raise, matching the harness's degrade-don't-break rule everywhere else.</div>
+</div>
+
+<table>
+  <tr><th>Pack</th><th>The interviewer probes for…</th><th>The debrief scores…</th></tr>
+  <tr><td><b>Behavioral</b></td><td>Real STAR stories, quantified outcomes, personal ownership (not "the team did it")</td><td>Structure · Specificity · Ownership &amp; impact · Communication</td></tr>
+  <tr><td><b>DSA</b></td><td>Approach talked through out loud, the right data structure <em>with a reason</em>, time/space complexity, edge cases</td><td>Problem-solving approach · Correctness &amp; edge cases · Complexity analysis · Communication</td></tr>
+  <tr><td><b>Machine Learning</b></td><td>Problem framing (what's actually predicted), defensible model/feature choices, a metric that <em>fits</em> (not reflexive "accuracy"), production failure modes</td><td>Problem framing · Modeling choices · Evaluation &amp; metrics · Communication</td></tr>
+  <tr><td><b>System Design</b></td><td>Requirements scoped <em>before</em> designing, a coherent high-level design, one real trade-off reasoned about (not a buzzword dropped)</td><td>Requirements &amp; scoping · High-level design · Trade-offs &amp; bottlenecks · Communication</td></tr>
+</table>
+
+<div class="term">
+  <h4>The constraint that shaped the design: don't touch the schema <span class="tag">built — reliability</span></h4>
+  <p>The tempting version of this feature gives each topic its own director actions (<code>note_complexity</code>, <code>note_scoping</code>…). We deliberately didn't. The director's five-action flat schema (§21's centerpiece) stays <em>byte-for-byte identical</em> across every topic — only the <b>judgment text</b> around it changes ("a red flag here means a wrong complexity claim" vs. "blame-shifting onto the team"). Two reasons: schema→grammar compilation for constrained decoding is the fragile step with a small local model, and a schema that never changes means every downstream consumer (the UI's director log, the debrief's notes block, the eval judge) keeps working untouched. <b>Vary the prompt, freeze the contract.</b></p>
+  <div class="ex"><b>Verified live, not vibed (rule 5):</b> fed the DSA/Google director a candidate who described a correct hash-map approach for two-sum but never stated complexity. It chose <code>note_evidence</code> ("correctly proposed a hash map…") then <code>probe_deeper</code> ("ask for the time complexity — they didn't mention it"). The domain guidance demonstrably reaches the model's judgment, through the unchanged schema.</div>
+</div>
+
+<div class="callout">
+  <b class="label">One more medium-shaped rule</b>
+  A voice DSA round has a failure mode a text one doesn't: the model asking you to "write a function". Every technical pack states <em>spoken only — never ask them to write, type, or diagram</em>, and the shared rules repeat it, because a local 8B model needs the constraint twice. This is the same lesson as the brevity rules: the medium (voice) imposes requirements no amount of domain prompting implies.
+</div>
+
+<!-- ============================================================ -->
+<h2 id="architecture">20. The whole system, on one page</h2>
+
+<p>§7 traced one turn when the system was small — VAD, STT, one LLM call, TTS. It has grown a lot since: a director loop, compaction, a spoken-output guard, semantic endpointing, interview packs. This section is the <b>reference map of the whole thing as it stands</b> — the same journey from a pressure wave in the room to a spoken question back, but with every stage the later sections added, the <em>exact data type crossing each boundary</em>, and then two tables: every data structure and the pattern each choice is an instance of.</p>
+
+<p>The single idea that holds it together (§6): the turn code never names an engine. It asks <code>engines.get_llm()</code> for an abstract port and gets whichever concrete adapter a flag selected. So the flow below is true whether STT is local Whisper or hosted Deepgram — the seam is the point.</p>
+
+<h3>Anatomy of one turn — the grown pipeline</h3>
+
+<p>Colour marks <em>whose machine</em> the work runs on: <span style="color:#185fa5;font-weight:600">browser</span>, the <span style="color:#0f6e56;font-weight:600">per-frame loop</span> (every 32 ms, even while the AI speaks), and the <span style="color:#854f0b;font-weight:600">turn task</span> (a cancellable <code>asyncio.Task</code>, so the loop stays free to hear a barge-in). The pill between nodes is the actual data type handed across.</p>
+
+<div class="flow">
+  <div style="--lc:#185fa5">
+    <div class="flane">Browser — capture</div>
+    <div class="fnode">
+      <div class="fh"><span class="fn">Microphone → AudioWorklet</span><span class="ff">startAudio()</span></div>
+      <p class="fb"><code>getUserMedia</code> with <b>echo cancellation</b> (so the AI never hears itself) feeds a worklet running off the main thread: downsample to 16&nbsp;kHz mono, Float32 → Int16.</p>
+    </div>
+  </div>
+  <div class="fedge"><span>16&nbsp;kHz mono Int16 PCM &nbsp;<small>· WebSocket binary frames</small></span></div>
+
+  <div style="--lc:#0f6e56">
+    <div class="flane">Server — per-frame loop <small>(runs on every 32&nbsp;ms of audio)</small></div>
+    <div class="fnode">
+      <div class="fh"><span class="fn">Reframe to VAD windows</span><span class="ff">_on_audio → _process_frame</span></div>
+      <p class="fb">Bytes append to a <code>bytearray</code> residual, drained in exact <b>512-sample (32&nbsp;ms)</b> frames — the window Silero needs; leftover bytes wait for the next packet.</p>
+    </div>
+    <div class="fedge"><span>frame → np.float32[512] ÷ 32768</span></div>
+    <div class="fnode">
+      <div class="fh"><span class="fn">Voice-activity detection</span><span class="ff">vad/silero.py</span></div>
+      <p class="fb">Silero scores the frame: speech or silence? Purely acoustic — it answers <em>“sound vs. silence”</em>, never <em>“finished vs. thinking”</em>.</p>
+    </div>
+    <div class="fedge branch"><span>◇ is a turn already speaking? → barge-in path (§15) · else ↓</span></div>
+    <div class="fnode">
+      <div class="fh"><span class="fn">Endpointer — “are they done?”</span><span class="ff">endpointing.py</span></div>
+      <p class="fb">A small state machine turns the VAD stream into a turn-level verdict. <b>Silence mode:</b> a fixed 700&nbsp;ms pause = done. <b>Semantic mode</b> (§13-era seam, filled later): at 450&nbsp;ms it asks the smart-turn model whether you <em>sound</em> finished. A pre-roll <code>deque</code> keeps ~160&nbsp;ms from before onset so the first phoneme isn’t clipped.</p>
+    </div>
+  </div>
+  <div class="fedge"><span>Event.END → utterance: bytes &nbsp;<small>(list[bytes] joined)</small></span></div>
+
+  <div style="--lc:#854f0b">
+    <div class="flane">Server — turn task <small>(cancellable asyncio.Task)</small></div>
+    <div class="fnode">
+      <div class="fh"><span class="fn">Compact the context</span><span class="ff">history.py · Compactor.view</span></div>
+      <p class="fb">Before the LLM sees anything: <b>system prompt pinned</b>, oldest turns folded into an incremental rolling summary, recent turns verbatim. <code>Session.messages</code> stays lossless — only the model’s <em>view</em> shrinks.</p>
+    </div>
+    <div class="fedge"><span>budgeted list[dict] + utterance</span></div>
+    <div class="fnode">
+      <div class="fh"><span class="fn">Speech-to-text</span><span class="ff">stt/local_whisper.py</span></div>
+      <p class="fb">faster-whisper (model <code>small</code>, int8) transcribes on a worker thread via <code>asyncio.to_thread</code>, so blocking inference never stalls the event loop. Emitted as a <code>Transcript</code> event → shown live.</p>
+    </div>
+    <div class="fedge"><span>turn_history ending in {role:"user"}</span></div>
+    <div class="fnode">
+      <div class="fh"><span class="fn">Director — decide HOW to respond</span><span class="ff">director.py · the agent loop</span></div>
+      <p class="fb">A hand-rolled tool-use loop runs <em>before</em> speaking: the LLM picks one action as <b>schema-constrained JSON</b> (invalid output is impossible), notes accumulate in <code>DirectorState</code> — memory <b>outside the model</b> — and the terminal move becomes the directive for the spoken call.</p>
+    </div>
+    <div class="fedge"><span>directive folded into the user-msg tail</span></div>
+    <div class="fnode">
+      <div class="fh"><span class="fn">LLM — stream the words</span><span class="ff">llm/local_ollama.py · stream()</span></div>
+      <p class="fb">Ollama (llama3:8b) streams the reply <b>token by token</b>, so the first words are ready long before the sentence finishes. Persona + interview pack + company profile all live in the pinned system prompt (§19).</p>
+    </div>
+    <div class="fedge"><span>ReplyToken(str) …</span></div>
+    <div class="fnode">
+      <div class="fh"><span class="fn">Spoken-output guard</span><span class="ff">speech_filter.py · spoken_only</span></div>
+      <p class="fb">The harness enforces what the prompt only <em>asks</em>: strips bracketed stage directions the small model echoes (<code>[Wait for response]</code>), and ends the turn at the first <code>?</code> so “one question per turn” is a guarantee. Closes the source stream deterministically.</p>
+    </div>
+    <div class="fedge"><span>clean token stream</span></div>
+    <div class="fnode">
+      <div class="fh"><span class="fn">Clause chunker</span><span class="ff">text_chunking.py · speakable_chunks</span></div>
+      <p class="fb">Buffers tokens to a speakable boundary. The <b>first</b> chunk breaks early (a comma) for fast audio; after that, whole sentences (they sound natural). Guards decimals and <code>Node.js</code> from splitting.</p>
+    </div>
+    <div class="fedge"><span>chunk: str → TTS</span></div>
+    <div class="fnode">
+      <div class="fh"><span class="fn">Text-to-speech</span><span class="ff">tts/local_piper.py</span></div>
+      <p class="fb">piper synthesizes each chunk the moment it’s ready — TTS of chunk N overlaps LLM generation of chunk N+1. On the first audio, the floor flips to <b>SPEAKING</b> and the latency clock stops.</p>
+    </div>
+  </div>
+  <div class="fedge"><span>WAV bytes &nbsp;<small>· WebSocket binary</small></span></div>
+
+  <div style="--lc:#185fa5">
+    <div class="flane">Browser — playback</div>
+    <div class="fnode">
+      <div class="fh"><span class="fn">Gapless playback</span><span class="ff">enqueueAudio()</span></div>
+      <p class="fb">Each WAV is decoded and scheduled on a running <code>nextStartTime</code> cursor so chunks butt seamlessly; an <b>epoch guard</b> drops any chunk a barge-in already invalidated. Then the floor returns to you and the loop starts over.</p>
+    </div>
+  </div>
+</div>
+
+<div class="callout">
+  <b class="label">Why it feels fast</b>
+  STT → director → first token → first chunk → first audio are <em>pipelined, not sequential</em> — you hear the interviewer begin before it has “finished thinking”. Measured time-to-first-audio on an M3 Pro is ~2.7&nbsp;s for the cascaded pipeline. That overlap is the entire reason for the token-stream → clause-chunk → per-chunk-TTS shape (§14).
+</div>
+
+<h3>The data structures — where state lives, and why that shape</h3>
+
+<p>The interesting choices are all about <em>where</em> state lives: tight buffers on the hot path, dataclasses for the agent’s memory, enums for the things that must be exhaustive.</p>
+
+<table>
+  <thead><tr><th>Structure</th><th>Type</th><th>Role &amp; why this shape</th></tr></thead>
+  <tbody>
+    <tr><td><span class="k">_residual</span><br><span class="filepath">main.py</span></td><td><span class="ty">bytearray</span></td><td>Accumulates WebSocket bytes, sliced into 512-sample frames every packet. Mutable buffer because it’s on the hot path.</td></tr>
+    <tr><td><span class="k">_preroll</span><br><span class="filepath">main.py</span></td><td><span class="ty">deque(maxlen=N)</span></td><td><b>Bounded ring buffer</b> of recent frames — seeds an utterance with ~160&nbsp;ms from <em>before</em> VAD fired (it always triggers a hair late). <code>maxlen</code> ages stale audio out for free.</td></tr>
+    <tr><td><span class="k">_utterance / _bargein_buf</span><br><span class="filepath">main.py</span></td><td><span class="ty">list[bytes]</span></td><td>Frames of the turn (or the interruption) being captured, joined to one <code>bytes</code> blob at the end. Keeps pauses so the audio is contiguous.</td></tr>
+    <tr><td><span class="k">Event / Floor</span><br><span class="filepath">endpointing.py · main.py</span></td><td><span class="ty">Enum</span></td><td>Exhaustive named states. <code>Event</code> = {NONE, START, END, CANCEL}; <code>Floor</code> = {LISTENING, PROCESSING, SPEAKING}. Enums make the state machine’s branches total.</td></tr>
+    <tr><td><span class="k">Endpointer</span><br><span class="filepath">endpointing.py</span></td><td><span class="ty">@dataclass (FSM)</span></td><td>Turn-detection state: in-speech flag, frame counts, a one-verdict-per-pause latch. Injected with an optional async <code>checker</code> → testable with a fake, knows nothing about ONNX.</td></tr>
+    <tr><td><span class="k">DirectorState</span><br><span class="filepath">director.py</span></td><td><span class="ty">@dataclass</span></td><td>The agent’s memory <b>outside the model</b>: <code>evidence[]</code>, <code>red_flags[]</code>, <code>topics[]</code>, <code>ended</code>, plus <code>interview_type</code>/<code>company</code>. Feeds the next decide call and the debrief.</td></tr>
+    <tr><td><span class="k">ACTION_SCHEMA</span><br><span class="filepath">director.py</span></td><td><span class="ty">dict (JSON Schema)</span></td><td>The tool menu, deliberately <b>flat</b> (<code>{action, detail}</code>) — flat schemas survive schema→grammar compilation and give a small model less to get wrong.</td></tr>
+    <tr><td><span class="k">Compactor</span><br><span class="filepath">history.py</span></td><td><span class="ty">class (_summary, _covered)</span></td><td>Holds the rolling summary and a watermark of messages already covered, so each compaction folds only the <em>new</em> old turns.</td></tr>
+    <tr><td><span class="k">Session.messages</span><br><span class="filepath">main.py</span></td><td><span class="ty">list[dict]</span></td><td>The <b>lossless</b> record ({role, content}). Compaction shapes only the model’s view; the debrief and saved transcript always see all of it.</td></tr>
+    <tr><td><span class="k">TurnEvent</span><br><span class="filepath">pipeline/base.py</span></td><td><span class="ty">Transcript | DirectorAction | ReplyToken</span></td><td>A typed union streamed out of the strategy; the orchestrator routes each variant by type — transcript to the UI, action to the dev panel, token to the chunker.</td></tr>
+    <tr><td><span class="k">InterviewPack / CompanyProfile</span><br><span class="filepath">packs.py · companies.py</span></td><td><span class="ty">frozen @dataclass</span></td><td>Immutable registries: a pack carries persona, director guidance, opening, and a 4-tuple <code>rubric</code>. Frozen because they’re config, not state.</td></tr>
+  </tbody>
+</table>
+
+<h3>The patterns — the concept each choice is an instance of</h3>
+
+<table>
+  <thead><tr><th>Concept</th><th>Where it lives</th><th>What it buys</th></tr></thead>
+  <tbody>
+    <tr><td><span class="k">Ports &amp; adapters</span></td><td>engines.py + <code>*/base.py</code> (§6)</td><td>Every engine behind an interface; one flag swaps local↔hosted with no flow changes.</td></tr>
+    <tr><td><span class="k">Strategy pattern</span></td><td>pipeline/ — cascaded · fused (§16)</td><td>A whole <em>turn strategy</em> is swappable, not just one stage — the seam step 6 will drop into.</td></tr>
+    <tr><td><span class="k">Agent loop / tool use</span></td><td>director.py</td><td>propose → validate → execute → feed back. The core of “agentic”, hand-rolled so every part is visible.</td></tr>
+    <tr><td><span class="k">Constrained decoding</span></td><td>Ollama <code>format</code> = JSON Schema</td><td>Token masking makes invalid JSON <em>impossible</em> — no brace-repair hacks (§17).</td></tr>
+    <tr><td><span class="k">State outside the model</span></td><td>DirectorState · Compactor</td><td>Structured memory the model can’t forget; the debrief reads accumulated judgment, not one glance.</td></tr>
+    <tr><td><span class="k">Streaming &amp; backpressure</span></td><td>async generators end-to-end (§14)</td><td>token → clause → audio pipelined for low time-to-first-audio; consumers pull, so slow TTS paces generation.</td></tr>
+    <tr><td><span class="k">Two-stage endpointing</span></td><td>endpointing.py + smart-turn ONNX</td><td>Acoustic (Silero) answers sound-vs-silence; semantic (prosody) answers finished-vs-thinking.</td></tr>
+    <tr><td><span class="k">Full-duplex / barge-in</span></td><td>Floor + cancellable Task (§15)</td><td>Mic stays live during playback; sustained speech cancels the reply and returns the floor.</td></tr>
+    <tr><td><span class="k">Don’t block the loop</span></td><td>asyncio.to_thread</td><td>Blocking inference (Whisper, ONNX) runs on worker threads so the event loop keeps serving frames.</td></tr>
+    <tr><td><span class="k">Separation of concerns</span></td><td>prompt composition — packs (§19)</td><td>Medium-rules vs. domain-knowledge vs. company-style are three orthogonal layers, composed.</td></tr>
+    <tr><td><span class="k">Harness-enforced invariants</span></td><td>speech_filter.py · every fallback</td><td>Don’t <em>beg</em> the prompt for a property you can <em>guarantee</em> in code; never raise past yourself, so one turn’s failure can’t kill the session.</td></tr>
+  </tbody>
+</table>
+
+<div class="callout">
+  <b class="label">The through-line</b>
+  Read the right-hand column of both tables together and the project’s whole thesis falls out: <b>move everything that can be structured out of the model’s head</b> — into schemas, dataclasses, state machines, and enforced invariants — and keep the model for the one thing only it can do: judgement in language. The next section (§21) is what remains when you follow that thesis one step further, to a model that hears and speaks directly.
+</div>
+
+<!-- ============================================================ -->
+<!-- ====================  PART III  ============================ -->
+<!-- ============================================================ -->
+
+<h2 id="roadahead">21. The road ahead: how we plan, and the target agentic architecture</h2>
+
+<p><em>This section was written <b>before</b> the code existed — a plan, on purpose, so it could later be compared against what actually happened (the §12 retrospective showed how instructive that is). Status now: queue items <b>1–4 are built and tested</b> (director, semantic turn detection, MCP server, evals + compaction + memory — statuses updated in the table below); step 6 remains the capstone. Two plan-vs-reality deltas worth knowing: the director's directive had to be folded into the user message rather than appended as a system message (llama3's chat template breaks on a trailing system turn), and smart-turn shipped as an 8&nbsp;MB Whisper-based ONNX model — far lighter than the wav2vec2 checkpoint this plan expected.</em></p>
+
+<h3>The planning method — the six rules that got us here</h3>
+
+<p>The roadmap isn't a feature wish-list; it's the output of a small set of rules applied consistently since day one:</p>
+
+<table>
+  <tr><th>Rule</th><th>What it means</th><th>Where you've already seen it</th></tr>
+  <tr><td><b>1. One concept per step</b></td><td>Add exactly one new idea to a <em>working</em> system; feel what breaks; fix; understand; repeat.</td><td>Every step. It's why war stories #1–3 were each debuggable — only one new variable at a time.</td></tr>
+  <tr><td><b>2. Learning density decides order</b></td><td>Prioritize by transferable-skills-per-hour, not by product value.</td><td>The director loop goes before nicer TTS, even though a product roadmap would flip that.</td></tr>
+  <tr><td><b>3. Build the seam before you need it</b></td><td>Put the interface in place one step early, so the future feature is a drop-in.</td><td>WebSocket before streaming needed push; <code>Floor</code> before barge-in; <code>TurnStrategy</code> before step 6.</td></tr>
+  <tr><td><b>4. Hand-roll before frameworks</b></td><td>Write the mechanism yourself first; adopt Pipecat/LiveKit/agent frameworks only once you know what they'd be hiding.</td><td>The whole project. Next application: the agent loop gets hand-rolled too.</td></tr>
+  <tr><td><b>5. Measure, then optimize; verify, then adopt</b></td><td>No latency claim without the HUD; no model/library adoption without checking licenses and behavior live.</td><td>The Gemma experiment (kept as a measured "loss"); the verified-not-assumed 8K context finding in §12.</td></tr>
+  <tr><td><b>6. Local-first, always</b></td><td>Every planned piece has a no-API-key path; hosted engines stay optional flags.</td><td>The entire stack — and every candidate below (smart-turn, Kokoro, Moshi…) was chosen to keep it true.</td></tr>
+</table>
+
+<h3>The queue, and why it's in this order</h3>
+
+<table>
+  <tr><th>#</th><th>Feature</th><th>The concept it teaches</th><th>Why this position</th></tr>
+  <tr><td><b>1 ✓</b></td><td>Interview director (agentic tool loop) — <b>built</b></td><td>Tool schemas · action validation · retries · state outside the model · constrained decoding</td><td>Highest learning density; builds only on what exists; everything later (evals, MCP) gets more interesting once the interviewer is an agent. <em>Shipped in backend/director.py — measured cost ~3.7s of decide calls per turn; DIRECTOR=off restores single-call speed.</em></td></tr>
+  <tr><td><b>2 ✓</b></td><td>Semantic turn detection — <b>built</b></td><td>Model-based endpointing — the research frontier of voice UX</td><td>Dropped behind the existing endpointer interface exactly as planned (rule 3 paid off); fixes the §13 "guillotine" failure mode. <em>Two-stage: smart-turn v3 (8MB ONNX, ~40ms) consulted at 450ms of silence; ENDPOINT_MODE=semantic to enable.</em></td></tr>
+  <tr><td><b>3 ✓</b></td><td>MCP server around the coach — <b>built</b></td><td>The Model Context Protocol — how agents discover and call external tools</td><td>Small scope, big ecosystem relevance. <em>backend/mcp_server.py: list_interviews / get_transcript / get_debrief / get_progress over saved sessions, verified with a real MCP stdio client.</em></td></tr>
+  <tr><td><b>4 ✓</b></td><td>Evals · compaction · memory — <b>built</b> (engine swaps still pending)</td><td>LLM-as-judge regression testing · context engineering · persistence</td><td>Compaction (history.py) finally closed §12's open item; evals (evals/run_eval.py) turned prompt changes into scored runs; storage.py persists sessions + cross-session candidate profiles. <em>Kokoro/Parakeet engine swaps remain the open quick wins.</em></td></tr>
+  <tr><td><b>5</b></td><td>Step 6: realtime speech-to-speech</td><td>The capstone comparison — what the black box gives and takes</td><td>Last on purpose: its value is contrast, and contrast requires having built everything it replaces. <em>Still ahead.</em></td></tr>
+</table>
+
+<h3>The centerpiece: from chatbot to agent</h3>
+
+<p>Today the interviewer is <em>one LLM call per turn</em>: history in, words out. The plan is to make each turn a small <strong>agent loop</strong> — the model chooses structured <em>actions</em>, a hand-rolled harness validates and executes them, and only one action (<code>speak</code>) actually produces voice.</p>
+
+<div class="term">
+  <h4>Tool use / function calling <span class="tag">planned — agent core</span></h4>
+  <p>Instead of free text, the model emits a structured call — <code>{"action": "probe_deeper", "reason": "no metric given"}</code> — chosen from a menu of <em>tools</em> you define with typed schemas. The model proposes; <em>your code</em> validates and executes; the result goes back into the context and the model chooses again. That proposal→validation→execution→feedback cycle <b>is</b> the agent loop — everything else (frameworks, MCP, "agentic AI") is packaging around it.</p>
+  <div class="ex"><b>Planned action menu:</b> <code>note_evidence</code> (log what the answer proved — becomes the debrief's input), <code>probe_deeper</code>, <code>switch_topic</code>, <code>flag_red_flag</code>, <code>end_interview</code>, and <code>speak</code> (the only one the candidate hears). A turn may chain a few: <em>note_evidence → probe_deeper → speak</em>.</div>
+</div>
+
+<div class="term">
+  <h4>Constrained decoding / structured outputs <span class="tag">planned — reliability</span></h4>
+  <p>Rather than <em>asking</em> the model for JSON and repairing what comes back (§17's missing brace), constrained decoding masks the model's token choices during generation so that <em>only</em> schema-valid output is possible. Ollama exposes this as a <code>format</code> parameter carrying a JSON schema.</p>
+  <div class="ex"><b>Why it matters here:</b> an agent loop multiplies structured-output calls (every action, every turn) — so parse failures stop being an occasional debrief nuisance and become a per-turn tax. Making invalid output <em>impossible</em> beats making the parser cleverer. It will also retire §17's brace-repair hack — the right fix for a bug we've already met.</div>
+</div>
+
+<div class="term">
+  <h4>Agent harness <span class="tag">planned — the part you write</span></h4>
+  <p>Everything around the model that makes tool use safe and useful: the loop itself, schema validation, bounded retries on bad output, an iteration cap (so a confused model can't spin forever), and the <b>state that lives outside the model</b> — here, an evidence notebook, topic-coverage tracker, and red-flag list that persist across turns and don't depend on the model's memory.</p>
+  <div class="ex"><b>Why state-outside-the-model is the big idea:</b> today the debrief re-reads the whole raw transcript and judges it in one shot. With the director, the debrief reads the <em>evidence notebook the agent itself maintained</em> — structured, accumulated judgment instead of one giant retrospective glance. Same lesson as §17's metrics: move what can be structured out of the model's head.</div>
+</div>
+
+<figure>
+<svg viewBox="0 0 900 470" role="img" aria-label="Planned interview director architecture: transcript enters an agent loop that proposes validated actions against interview state, and only speak reaches the existing voice pipeline">
+  <defs>
+    <marker id="a19" markerWidth="10" markerHeight="10" refX="8" refY="3.5" orient="auto"><path d="M0,0 L8,3.5 L0,7 Z" fill="#888780"/></marker>
+    <marker id="a19p" markerWidth="10" markerHeight="10" refX="8" refY="3.5" orient="auto"><path d="M0,0 L8,3.5 L0,7 Z" fill="#7f77dd"/></marker>
+  </defs>
+  <text x="20" y="28" class="svg-h">The planned turn: an agent loop between hearing and speaking</text>
+
+  <rect x="20" y="60" width="170" height="56" rx="9" fill="#e6f1fb" stroke="#378add" stroke-width="1.5"/>
+  <text x="105" y="84" text-anchor="middle" class="svg-t" font-weight="600" fill="#0c447c">transcript</text>
+  <text x="105" y="102" text-anchor="middle" class="svg-s">from STT, as today</text>
+
+  <rect x="240" y="48" width="420" height="270" rx="12" fill="#eeedfe" stroke="#7f77dd" stroke-width="2"/>
+  <text x="450" y="76" text-anchor="middle" class="svg-t" font-weight="600" fill="#26215c">the director loop (hand-rolled harness)</text>
+
+  <rect x="252" y="95" width="396" height="46" rx="8" fill="#fdfcfa" stroke="#7f77dd" stroke-width="1.2"/>
+  <text x="450" y="114" text-anchor="middle" class="svg-s" fill="#3c3489">① LLM proposes ONE action — JSON, schema-constrained</text>
+  <text x="450" y="131" text-anchor="middle" class="svg-s" fill="#3c3489">note_evidence · probe_deeper · switch_topic · red_flag · end · speak</text>
+
+  <rect x="265" y="157" width="370" height="40" rx="8" fill="#fdfcfa" stroke="#7f77dd" stroke-width="1.2"/>
+  <text x="450" y="182" text-anchor="middle" class="svg-s" fill="#3c3489">② harness validates — bad output → bounded retry</text>
+
+  <rect x="265" y="213" width="370" height="40" rx="8" fill="#fdfcfa" stroke="#7f77dd" stroke-width="1.2"/>
+  <text x="450" y="238" text-anchor="middle" class="svg-s" fill="#3c3489">③ execute: update state · result appended to context</text>
+
+  <line x1="450" y1="141" x2="450" y2="153" stroke="#7f77dd" stroke-width="2" marker-end="url(#a19p)"/>
+  <line x1="450" y1="197" x2="450" y2="209" stroke="#7f77dd" stroke-width="2" marker-end="url(#a19p)"/>
+  <path d="M 265 233 C 220 233, 220 118, 261 118" fill="none" stroke="#7f77dd" stroke-width="1.8" stroke-dasharray="5 4" marker-end="url(#a19p)"/>
+  <text x="150" y="170" text-anchor="middle" class="svg-s" fill="#534ab7">loop until speak / end</text>
+  <text x="150" y="186" text-anchor="middle" class="svg-s" fill="#534ab7">· max N iterations</text>
+
+  <line x1="192" y1="88" x2="236" y2="88" stroke="#888780" stroke-width="2" marker-end="url(#a19)"/>
+
+  <rect x="700" y="60" width="180" height="200" rx="10" fill="#faeeda" stroke="#ef9f27" stroke-width="1.5"/>
+  <text x="790" y="86" text-anchor="middle" class="svg-t" font-weight="600" fill="#633806">interview state</text>
+  <text x="790" y="112" text-anchor="middle" class="svg-s">evidence notebook</text>
+  <text x="790" y="132" text-anchor="middle" class="svg-s">topics covered / left</text>
+  <text x="790" y="152" text-anchor="middle" class="svg-s">red flags</text>
+  <text x="790" y="172" text-anchor="middle" class="svg-s">rolling summary</text>
+  <text x="790" y="192" text-anchor="middle" class="svg-s">(compaction lives here)</text>
+  <text x="790" y="222" text-anchor="middle" class="svg-s" font-weight="600" fill="#854f0b">outlives the model's</text>
+  <text x="790" y="238" text-anchor="middle" class="svg-s" font-weight="600" fill="#854f0b">context window</text>
+  <line x1="663" y1="233" x2="696" y2="233" stroke="#ef9f27" stroke-width="2" marker-end="url(#a19)"/>
+  <line x1="696" y1="120" x2="663" y2="120" stroke="#ef9f27" stroke-width="2" marker-end="url(#a19)"/>
+
+  <rect x="240" y="360" width="420" height="60" rx="10" fill="#e1f5ee" stroke="#1d9e75" stroke-width="1.5"/>
+  <text x="450" y="386" text-anchor="middle" class="svg-t" font-weight="600" fill="#085041">existing voice pipeline — unchanged</text>
+  <text x="450" y="405" text-anchor="middle" class="svg-s">speakable chunks → TTS → gapless playback → barge-in (Part II)</text>
+  <line x1="450" y1="322" x2="450" y2="356" stroke="#1d9e75" stroke-width="2" marker-end="url(#a19)"/>
+  <text x="565" y="342" text-anchor="middle" class="svg-s" fill="#0f6e56">only speak(text) exits the loop</text>
+
+  <text x="20" y="452" class="svg-s">The agent decides; the pipeline talks. Everything Part II built stays exactly as-is — the loop replaces one thing only: the single LLM call.</text>
+</svg>
+<figcaption>Planned architecture. Note what does <em>not</em> change: VAD, endpointing, streaming, barge-in, TTS — the loop slots in where <code>llm.stream()</code> is called today.</figcaption>
+</figure>
+
+<h3>The supporting cast, briefly</h3>
+
+<div class="www">
+  <div class="what"><b>Semantic turn detection (queue #2)</b>Replace the fixed 700&nbsp;ms silence rule with a small open model (e.g. <em>smart-turn</em>) that reads the transcript-so-far and answers "finished, or mid-thought?" — so "My biggest achievement was…&nbsp;[pause]" waits, while "…and that's why I left." ends promptly.</div>
+  <div class="why"><b>Why it's the right second project</b>It attacks the guide's oldest named problem (§3's endpointing card called it the hardest UX problem in voice) with the current state-of-the-art approach — and because the <code>Endpointer</code> is already an isolated class fed by frames, the swap is a new implementation behind an existing seam. Rule 3, cashing out again.</div>
+  <div class="how"><b>How (planned)</b>Keep the silence timer as the trigger, but before declaring END, ask the turn model "is this utterance complete?" — incomplete extends the patience window. Two-signal endpointing: acoustic (Silero) + semantic (transformer), which is exactly how production stacks do it.</div>
+</div>
+
+<div class="term">
+  <h4>MCP — Model Context Protocol <span class="tag">planned — queue #3</span></h4>
+  <p>An open protocol for connecting tools to AI agents: a server describes its tools (name + JSON schema + docs), and <em>any</em> MCP-capable agent can discover and call them — the "USB port" between agents and software. Wrapping the coach as an MCP server (<code>start_interview</code>, <code>get_debrief</code>, <code>list_sessions</code>) makes it drivable by outside agents.</p>
+  <div class="ex"><b>Why it earns a slot:</b> it's the same lesson as §6's adapter pattern, one level higher — a <em>protocol-level</em> interface instead of a code-level one. And it's the fastest-growing piece of the agent ecosystem, so learning it from the server side (where the schemas live) transfers directly.</div>
+</div>
+
+<div class="www">
+  <div class="what"><b>Evals: agent-vs-agent regression tests (queue #4)</b>A <em>simulated candidate</em> (an LLM playing personas: strong, rambling, evasive, off-topic) interviews against our interviewer; a <em>judge</em> model scores the interviewer's behavior against a checklist (did it probe the vague answer? did it fabricate? one question at a time?).</div>
+  <div class="why"><b>Why</b>Every prompt change so far was judged by vibes — talk to it, feel if it's better. That doesn't scale past two rules. Evals turn "did my change help?" into a number, which is the discipline that separates prompt tinkering from engineering. It also exercises LLM-as-judge (§17) in its second natural habitat.</div>
+  <div class="how"><b>How (planned)</b>Text-only harness (skip audio — we're testing the <em>brain</em>): scripted persona × interviewer over N turns → judge scores → a table per prompt version. Deliberately hand-rolled before touching an eval framework (rule 4).</div>
+</div>
+
+<div class="www">
+  <div class="what"><b>Context compaction + cross-session memory (queue #4)</b>Compaction: when history approaches the context limit, summarize the oldest exchanges into a compact block, keep recent turns verbatim, always pin the system prompt. Memory: persist a candidate profile <em>across</em> interviews — recurring weaknesses, past scores — so session 5 knows about session 1.</div>
+  <div class="why"><b>Why</b>Compaction closes §12's last open item with the same mechanism every production harness (including the one that helped build this project) uses on long conversations. Memory turns the coach from a single-session tool into a longitudinal one — and teaches the real design questions: what to store, when to recall, how to keep it from going stale.</div>
+  <div class="how"><b>How (planned)</b>Compaction as a history-manager class in front of the LLM call (token-count trigger → summarize-oldest). Memory as small structured files per candidate, injected into the system prompt at setup — the same pattern this assistant's own memory uses.</div>
+</div>
+
+<p><strong>And then step 6</strong> — swap the whole cascade for a realtime speech-to-speech model (local-first candidate: Kyutai's Moshi; hosted reference: OpenAI's Realtime API) as a third <code>TurnStrategy</code>. It stays last on purpose: its entire value is <em>contrast</em>, and the contrast only exists because you built — and can now name — everything it hides.</p>
+
+<!-- ============================================================ -->
+<h2 id="resources">22. The bookshelf: the best resource for every concept</h2>
+
+<p>One or two resources per concept — chosen for being the <em>canonical</em> thing, not a random tutorial. Names are the stable part; if a URL has drifted, search the title. <em>(Links reflect early 2026 — per the project's own rule 5, verify versions/licenses live before adopting any model or library.)</em></p>
+
+<h3>Voice agents &amp; the pipeline (Parts I–II)</h3>
+<table>
+  <tr><th>Concept</th><th>Resource</th><th>Why this one</th></tr>
+  <tr><td>The whole domain</td><td><b>"Voice AI &amp; Voice Agents: An Illustrated Primer"</b> — Kwindla Hultman Kramer · <code>voiceaiandvoiceagents.com</code></td><td>The single best end-to-end treatment of cascaded pipelines, latency budgets, turn detection, and interruptions — you'll recognize this project on every page.</td></tr>
+  <tr><td>VAD</td><td><b>Silero VAD</b> repo · <code>github.com/snakers4/silero-vad</code></td><td>The model we run; the README + examples are the documentation of record.</td></tr>
+  <tr><td>Turn detection (semantic)</td><td><b>smart-turn</b> · <code>github.com/pipecat-ai/smart-turn</code></td><td>An open-weights semantic endpointing model with an unusually clear write-up of the problem — queue #2's starting point.</td></tr>
+  <tr><td>STT</td><td>The <b>Whisper paper</b> ("Robust Speech Recognition via Large-Scale Weak Supervision", arXiv 2212.04356) + <code>github.com/SYSTRAN/faster-whisper</code></td><td>The paper explains why Whisper is robust; the repo is what we actually run (and where int8/beam options are documented).</td></tr>
+  <tr><td>TTS</td><td><b>piper</b> · <code>github.com/rhasspy/piper</code> · and <b>Kokoro-82M</b> on Hugging Face</td><td>Current engine and its likely successor; comparing them by ear is a planned quick win.</td></tr>
+  <tr><td>Pipeline frameworks</td><td><b>Pipecat docs</b> · <code>docs.pipecat.ai</code></td><td>Read <em>after</em> building by hand — you'll recognize every abstraction (frames, VAD, transports) and instantly understand what the framework is doing for you. That recognition is the payoff of rule 4.</td></tr>
+</table>
+
+<h3>Browser audio &amp; transport</h3>
+<table>
+  <tr><th>Concept</th><th>Resource</th><th>Why this one</th></tr>
+  <tr><td>Web Audio (playback, clocks)</td><td><b>MDN Web Audio API</b> guide</td><td>The reference. "A Tale of Two Clocks" (linked from it) is the classic piece on scheduling — §14's gapless playback in essay form.</td></tr>
+  <tr><td>AudioWorklet</td><td><b>"Enter Audio Worklet"</b> · Chrome Developers blog</td><td>By the API's authors; explains <em>why</em> mic processing must leave the main thread — §13's capture path.</td></tr>
+  <tr><td>WebSockets</td><td><b>MDN WebSockets API</b></td><td>Short, complete, and covers the text-vs-binary frame distinction our protocol is built on.</td></tr>
+  <tr><td>getUserMedia / echo cancellation</td><td><b>MDN MediaDevices.getUserMedia</b></td><td>The constraints dictionary (echoCancellation, noiseSuppression) that step 4's barge-in silently depends on.</td></tr>
+</table>
+
+<h3>Python &amp; the backend</h3>
+<table>
+  <tr><th>Concept</th><th>Resource</th><th>Why this one</th></tr>
+  <tr><td>asyncio (loop, tasks, cancellation)</td><td><b>Python docs: Coroutines and Tasks</b> + Real Python's <b>"Async IO in Python"</b></td><td>The docs' cancellation section explains exactly the CancelledError semantics behind war story #2; Real Python supplies the intuition the docs assume.</td></tr>
+  <tr><td>FastAPI + WebSockets</td><td><b>FastAPI docs</b> (WebSockets + Lifespan pages) · <code>fastapi.tiangolo.com</code></td><td>Our server in two short pages — including the lifespan hook that hosts §16's warmup.</td></tr>
+</table>
+
+<h3>LLMs, prompting, and the fused experiment</h3>
+<table>
+  <tr><th>Concept</th><th>Resource</th><th>Why this one</th></tr>
+  <tr><td>How LLMs work at all</td><td>Andrej Karpathy — <b>"Intro to Large Language Models"</b> (YouTube) · then <b>"Let's build GPT"</b> if you want to go deep</td><td>The best first-principles explanations in existence; tokens, context windows, and statelessness (§3) all click.</td></tr>
+  <tr><td>Transformers, visually</td><td><b>3Blue1Brown — "But what is a GPT?"</b> series</td><td>The visual intuition for attention that text explanations can't give.</td></tr>
+  <tr><td>Prompt engineering</td><td><b>Anthropic's prompt engineering guide</b> (docs.anthropic.com)</td><td>Systematic and honest about what works; our interviewer + judge prompts follow its patterns (role, rules, explicit output shape).</td></tr>
+  <tr><td>Running local models</td><td><b>Ollama docs</b> · <code>github.com/ollama/ollama/tree/main/docs</code></td><td>The API we call — including the <code>format</code>/structured-outputs feature queue #1 will use, and the context-length behavior behind §12's open item.</td></tr>
+  <tr><td>Multimodal local models</td><td>The <b>Gemma model card</b> on Hugging Face (google/gemma-4-E4B-it)</td><td>Ground truth for §16 — capabilities, license, and processor details. (And a reminder: read the card, don't assume — that lesson cost us a wrong class name once.)</td></tr>
+</table>
+
+<h3>Agents &amp; the road ahead (Part III)</h3>
+<table>
+  <tr><th>Concept</th><th>Resource</th><th>Why this one</th></tr>
+  <tr><td>Agent design</td><td><b>"Building Effective Agents"</b> — Anthropic</td><td>THE essay for queue #1: workflows vs agents, when a loop beats a chain, and why simple hand-rolled beats framework-first. The director's design is straight from its playbook.</td></tr>
+  <tr><td>Context engineering</td><td><b>"Effective context engineering for AI agents"</b> — Anthropic engineering blog</td><td>Compaction, memory, and state-outside-the-model — the conceptual grounding for queue #4.</td></tr>
+  <tr><td>MCP</td><td><b>modelcontextprotocol.io</b></td><td>Spec + quickstarts; building one server teaches the whole protocol.</td></tr>
+  <tr><td>Evals / LLM-as-judge</td><td><b>"Your AI Product Needs Evals"</b> — Hamel Husain · <code>hamel.dev</code></td><td>The canonical practitioner's essay: why vibes don't scale and how to build the eval loop queue #4 plans.</td></tr>
+  <tr><td>Constrained decoding</td><td><b>Outlines</b> · <code>github.com/dottxt-ai/outlines</code> (+ Ollama's structured-outputs docs)</td><td>The clearest explanation of <em>how</em> token masking makes invalid JSON impossible — the theory behind retiring §17's brace repair.</td></tr>
+  <tr><td>Realtime S2S</td><td><b>Moshi</b> · <code>github.com/kyutai-labs/moshi</code> · and OpenAI's <b>Realtime API</b> docs</td><td>The local capstone candidate (paper + code + demo) and the hosted reference point to compare it against.</td></tr>
+  <tr><td>Staying current</td><td><b>simonwillison.net</b></td><td>The most reliable ongoing tracker of the agent/LLM ecosystem; low-noise, engineering-minded.</td></tr>
+</table>
+
+<h3>The interview domain itself (§19's packs)</h3>
+<table>
+  <tr><th>Concept</th><th>Resource</th><th>Why this one</th></tr>
+  <tr><td>What each round actually screens for</td><td><b>Tech Interview Handbook</b> — Yangshun Tay · <code>techinterviewhandbook.org</code></td><td>The canonical free guide to how real behavioral/coding/system-design rounds are run and judged — §19's personas and rubrics are a distillation of exactly this material into prompt form.</td></tr>
+  <tr><td>System design rounds</td><td><b>The System Design Primer</b> · <code>github.com/donnemartin/system-design-primer</code></td><td>The most-starred open treatment of scoping → high-level design → trade-offs — the same three-beat arc the system_design pack walks a candidate through.</td></tr>
+</table>
+
+<p style="margin-top:3rem; color: var(--muted); font-size:.9rem; border-top:1px solid var(--line); padding-top:1rem;">
+Voice Interview Coach · learning guide · Part I: step 1 foundations (§1–12) · Part II: steps 2–5, fused pipeline, platform UI, interview packs, architecture map (§13–20) · Part III: the plan ahead + resources (§21–22) · July 2026.<br/>
+To run the app: <code>cd interview-coach/backend &amp;&amp; ./.venv/bin/uvicorn main:app --reload</code> then open <code>http://localhost:8000</code> — from the server, not as a file (see §5 for why).
+</p>
+
+</main>
+</body>
+</html>
