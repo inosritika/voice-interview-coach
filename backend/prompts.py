@@ -14,6 +14,13 @@ from __future__ import annotations
 from companies import get_company
 from packs import get_pack
 
+# Spoken verbatim when STT returns an empty/unintelligible transcript. Without
+# this the interviewer said NOTHING and just went back to listening (dead air) —
+# the persona promises to "say you didn't catch that and ask them to repeat", but
+# an empty transcript short-circuits the turn before the LLM ever runs, so that
+# recovery could never fire. Deterministic so a mis-heard turn always gets a reply.
+DIDNT_CATCH = "Sorry, I didn't quite catch that — could you say it again?"
+
 # The shared spoken-delivery discipline, identical for every topic: this is
 # what keeps the interviewer sounding like a person on a call instead of a
 # chatbot, regardless of whether the round is behavioral or technical.
@@ -53,7 +60,27 @@ LISTEN AND ADAPT — this matters more than any other rule:
   about, not things they told you.
 - Start broad and human. Go deeper only once the candidate has given you real substance
   to probe. Don't open with hyper-specific technical minutiae.
-- One sharp follow-up when a real answer is vague; otherwise move to a fresh, relevant area."""
+- One sharp follow-up when a real answer is vague; otherwise move to a fresh, relevant area.
+
+THE CANDIDATE MAY STEER — respect it:
+- If they ask to go back to, revisit, or stay on a particular problem or topic, DO THAT.
+  Re-pose the exact problem they mean and work it with them — do NOT deflect with
+  "we'll get there" or insist on your own running order. Their request wins.
+- If they're stuck and ask for a hint or a simpler version, GIVE one — a small nudge or a
+  concrete example — instead of refusing or immediately jumping to a different question.
+- Don't abandon a problem after one stumble. Give them a real chance to work it through
+  before moving on, especially when they're actively engaging with it.
+
+THIS IS A LEARNING TOOL, NOT A REAL INTERVIEW — teach when asked:
+- If the candidate genuinely gives up and asks you to EXPLAIN the answer, the solution, or
+  how something works ("I can't get it, just tell me", "explain the solution", "what's the
+  answer"), then TEACH IT. Walk them through the full solution clearly, in plain, simple
+  language, step by step — the whole point is that they learn it. Do NOT keep withholding it
+  or bounce it back as another question once they've asked you to just explain.
+- One gentle nudge is fine if they've barely tried ("want to take one more guess first?"),
+  but if they say they're stuck or ask again, drop the Socratic act and simply teach the
+  answer. A real interviewer wouldn't, but you are a coach — leaving them without the answer
+  helps no one."""
 
 # Difficulty calibration: how warm/easy vs. sharp/deep the round should feel.
 # Same three tiers the lobby already exposes (frontend/index.html #difficulty).
@@ -69,9 +96,98 @@ _DIFFICULTY_BLOCKS = {
     "little hand-holding. The moment they clear something easily, raise the bar.",
 }
 
+# Generic tone alone was not enough: local models still opened every technical
+# round at roughly the same level. These contracts make the first question
+# visibly different for each area and difficulty.
+_AREA_DIFFICULTY_BLOCKS = {
+    "behavioral": {
+        "warmup": "OPENING CALIBRATION: ask for one familiar, low-pressure STAR story, such as a project they are proud of. Do not introduce conflict or failure yet.",
+        "standard": "OPENING CALIBRATION: ask for a concrete ownership or collaboration story with a clear result.",
+        "senior": "OPENING CALIBRATION: ask for a high-stakes leadership story involving ambiguous scope, cross-functional influence, or a consequential technical decision. Require the candidate's personal judgment and measurable impact.",
+    },
+    "dsa": {
+        "warmup": "OPENING CALIBRATION: use an elementary array, string, or hash-map problem with a tiny example. Do not use a dynamic-programming, graph, or optimal-subarray problem.",
+        "standard": "OPENING CALIBRATION: use a medium-level problem where the candidate must choose and justify a data structure; include constraints that distinguish a brute-force approach from a better one.",
+        "senior": "OPENING CALIBRATION: use a genuinely hard problem involving competing constraints, such as streaming data, intervals, graphs, concurrency, or an algorithmic trade-off. State the constraints that rule out the naive solution. Never call the problem simple.",
+    },
+    "ml": {
+        "warmup": "OPENING CALIBRATION: give a small concrete ML scenario and ask first how to frame the prediction target and success metric. Do not open by asking about a generic software or data-service project.",
+        "standard": "OPENING CALIBRATION: give a concrete ML scenario and ask for model, feature, and metric reasoning. Use a resume project only when it explicitly involved ML.",
+        "senior": "OPENING CALIBRATION: give a production ML scenario with an explicit constraint such as class imbalance, drift, latency, limited labels, or ranking quality. Start with the most consequential modelling/evaluation trade-off. Never re-label a generic data-service project as ML experience.",
+    },
+    "system_design": {
+        "warmup": "OPENING CALIBRATION: use a bounded, familiar service at modest scale, for example tens of thousands of daily users. Give the purpose and scale, then ask one requirements question.",
+        "standard": "OPENING CALIBRATION: use a realistic service with clear read/write scale and one likely bottleneck. Give the purpose and scale, then ask one requirements question.",
+        "senior": "OPENING CALIBRATION: use a high-scale, failure-sensitive system with explicit throughput, latency, and consistency constraints. Start by asking which requirement or trade-off they would clarify first; do not repeat that question in another form.",
+    },
+}
+
 
 def _difficulty_block(difficulty: str) -> str:
     return _DIFFICULTY_BLOCKS.get((difficulty or "").strip(), _DIFFICULTY_BLOCKS["standard"])
+
+
+def _area_difficulty_block(interview_type: str, difficulty: str) -> str:
+    area = (interview_type or "behavioral").strip()
+    tier = (difficulty or "standard").strip()
+    levels = _AREA_DIFFICULTY_BLOCKS.get(area, _AREA_DIFFICULTY_BLOCKS["behavioral"])
+    return levels.get(tier, levels["standard"])
+
+
+# ---- Coding round: a specific problem + a shared code editor ------------------
+# When the candidate picked (or pasted) a problem, we hand the interviewer THAT
+# problem plus a private brief, and tell it the candidate's editor is visible.
+_FMT_GUIDANCE = {
+    "solve": "This is a SOLVE task. Get them to explain their approach before or while coding, "
+    "then push on time AND space complexity and edge cases. If they stall, give a small nudge — "
+    "never just hand them the solution.",
+    "debug": "This is a DEBUG task — the starter code contains a planted bug. Let them find it by "
+    "reasoning about the code (trace a concrete input, check the boundaries) rather than pointing "
+    "at the line. Once it's fixed, ask WHY it broke and how they'd prevent it.",
+    "design": "This is a DESIGN task — the scratchpad is for notes and boxes, not runnable code. "
+    "Drive the usual arc: clarify requirements and scale first, then a high-level design, then "
+    "drill into one bottleneck or trade-off.",
+}
+
+_PROBLEM_BLOCK = """--- CODING ROUND (hands-on) ---
+The candidate works in a shared code editor you can BOTH see; its current contents are included \
+with each of their turns (as "CURRENT EDITOR CONTENTS"). React to the ACTUAL code they've \
+written — their approach, its complexity, bugs, and missing edge cases — like an interviewer \
+reading over their shoulder. Still voice-first: they talk it through; never ask them to run it \
+or to type faster. Work THIS problem — do not invent a different one:
+
+PROBLEM — {title} ({difficulty}):
+{prompt}
+
+{fmt_guidance}{brief}"""
+
+
+def _problem_block(problem) -> str:
+    if problem is None:
+        return ""
+    brief = ""
+    if getattr(problem, "interviewer_brief", "").strip():
+        brief = (
+            "\n\nINTERVIEWER NOTES (the intended solution — don't VOLUNTEER it or read it out "
+            "unprompted; use it to guide, hint, and catch mistakes. BUT if the candidate gives "
+            "up and asks you to explain the answer, use these notes to teach them the solution "
+            "clearly and simply):\n" + problem.interviewer_brief
+        )
+    return "\n" + _PROBLEM_BLOCK.format(
+        title=problem.title,
+        difficulty=problem.difficulty,
+        prompt=problem.prompt,
+        fmt_guidance=_FMT_GUIDANCE.get(problem.fmt, _FMT_GUIDANCE["solve"]),
+        brief=brief,
+    )
+
+
+def coding_block(problem) -> str:
+    """The coding context (problem + private brief) as a standalone block, so the
+    session can inject the CURRENT problem into the system prompt each turn. That's
+    what lets a mid-interview problem switch take effect without rebuilding the
+    whole prompt — the block just reflects whatever problem is now on screen."""
+    return _problem_block(problem)
 
 
 INTERVIEWER_SYSTEM = """{shared_rules}
@@ -79,6 +195,8 @@ INTERVIEWER_SYSTEM = """{shared_rules}
 {persona}
 {signal_block}
 {difficulty_block}
+{area_difficulty_block}
+{problem_block}
 
 Use the job description and resume below only to choose relevant TOPICS — not to
 manufacture details about the candidate's experience.
@@ -99,6 +217,7 @@ def build_system_prompt(
     interview_type: str = "behavioral",
     company: str = "generic",
     difficulty: str = "standard",
+    problem=None,
 ) -> str:
     jd = (jd or "").strip() or "(none provided)"
     resume = (resume or "").strip() or "(none provided)"
@@ -112,6 +231,8 @@ def build_system_prompt(
         persona=pack.persona,
         signal_block=signal_block,
         difficulty_block=_difficulty_block(difficulty),
+        area_difficulty_block=_area_difficulty_block(interview_type, difficulty),
+        problem_block=_problem_block(problem),
         opening=pack.opening,
         jd=jd,
         resume=resume,
