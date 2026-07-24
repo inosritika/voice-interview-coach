@@ -86,6 +86,95 @@ def test_gap_counter_resets_on_resumed_speech():
     assert s._bargein_gap == 0 and s._bargein_run == 2
 
 
+# ---- barge-in / re-capture is armed the whole time a turn is in flight --------
+# SPEAKING  -> interrupt the audible reply.
+# PROCESSING -> the user is continuing their answer; re-capture it instead of
+#               dropping it (reported: a sentence spoken during the think phase
+#               never made it into the chat).
+
+class _ActiveTask:
+    def done(self):
+        return False
+
+
+def _frame_session(floor):
+    s = Session.__new__(Session)
+    s._turn_task = _ActiveTask()  # a turn is in flight
+    s.floor = floor
+    s.detected = False
+
+    class _VAD:
+        def speech_prob(self, samples):
+            return LOUD  # unmistakable speech every frame
+
+    s.vad = _VAD()
+
+    async def spy(prob, frame):
+        s.detected = True
+
+    s._detect_bargein = spy
+    return s
+
+
+def test_recapture_while_processing():
+    s = _frame_session(main.Floor.PROCESSING)
+    asyncio.run(Session._process_frame(s, FRAME))
+    assert s.detected is True, "a sentence spoken while thinking must be re-captured, not dropped"
+
+
+def test_bargein_active_while_speaking():
+    s = _frame_session(main.Floor.SPEAKING)
+    asyncio.run(Session._process_frame(s, FRAME))
+    assert s.detected is True, "must interrupt while the reply is playing"
+
+
+# ---- continuation merge: a paused answer resumed while thinking is glued back --
+
+def test_start_turn_prepends_pending_audio():
+    """The core of the first-sentence fix: when a continuation is pending, the new
+    capture is glued onto the earlier audio so STT sees one combined utterance."""
+    s = Session.__new__(Session)
+    s._pending_prepend = b"SENTENCE_ONE"
+    s._pending_replace = False
+    s._bargein_run = 0
+    captured = {}
+
+    async def fake_wrapper(pcm, opening_text=None):
+        captured["pcm"] = pcm
+
+    s._turn_wrapper = fake_wrapper
+
+    async def run():
+        s._start_turn(b"SENTENCE_TWO")
+        await asyncio.sleep(0)  # let the spawned task run
+
+    asyncio.run(run())
+    assert captured["pcm"] == b"SENTENCE_ONESENTENCE_TWO"
+    assert s._pending_prepend is None
+    assert s._inflight_pcm == b"SENTENCE_ONESENTENCE_TWO"
+    assert s._turn_sent_transcript is False
+
+
+def test_start_turn_without_pending_is_unchanged():
+    s = Session.__new__(Session)
+    s._pending_prepend = None
+    s._pending_replace = False
+    s._bargein_run = 0
+    captured = {}
+
+    async def fake_wrapper(pcm, opening_text=None):
+        captured["pcm"] = pcm
+
+    s._turn_wrapper = fake_wrapper
+
+    async def run():
+        s._start_turn(b"ONLY")
+        await asyncio.sleep(0)
+
+    asyncio.run(run())
+    assert captured["pcm"] == b"ONLY"
+
+
 if __name__ == "__main__":
     tests = [v for k, v in sorted(globals().items()) if k.startswith("test_")]
     passed = 0

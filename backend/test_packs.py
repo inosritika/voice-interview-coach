@@ -10,7 +10,7 @@ from __future__ import annotations
 
 from companies import COMPANY_PROFILES, get_company
 from debrief import SCORING_SYSTEM
-from packs import PACKS, get_pack
+from packs import PACKS, get_pack, opening_question
 from prompts import SHARED_SPOKEN_RULES, build_director_prompt, build_system_prompt
 
 
@@ -112,6 +112,29 @@ def test_build_director_prompt_default_is_behavioral():
     prompt = build_director_prompt("EVIDENCE NOTES SO FAR:\n- (none yet)")
     behavioral = get_pack("behavioral")
     assert behavioral.director_guidance in prompt
+
+
+def test_each_area_and_difficulty_gets_a_distinct_opening_contract():
+    expected = {
+        ("behavioral", "warmup"): "low-pressure STAR story",
+        ("behavioral", "senior"): "high-stakes leadership story",
+        ("dsa", "warmup"): "elementary array, string, or hash-map",
+        ("dsa", "senior"): "genuinely hard problem",
+        ("ml", "warmup"): "small concrete ML scenario",
+        ("ml", "senior"): "production ML scenario",
+        ("system_design", "warmup"): "modest scale",
+        ("system_design", "senior"): "high-scale, failure-sensitive system",
+    }
+    for (area, difficulty), phrase in expected.items():
+        prompt = build_system_prompt("JD", "Resume", area, "generic", difficulty)
+        assert phrase in prompt, f"{area}/{difficulty} has no distinct opening contract"
+
+
+def test_opening_questions_match_all_areas_and_difficulties():
+    for area in PACKS:
+        questions = [opening_question(area, difficulty) for difficulty in ("warmup", "standard", "senior")]
+        assert len(set(questions)) == 3
+        assert all(question.endswith("?") for question in questions)
 
 
 def test_ml_rubric_drives_debrief_scoring_prompt():

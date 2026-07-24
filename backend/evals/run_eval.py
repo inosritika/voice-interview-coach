@@ -123,7 +123,7 @@ async def candidate_turn(persona_prompt: str, history: list[dict]) -> str:
             flipped.append({"role": "user", "content": m["content"]})
         elif m["role"] == "user":
             flipped.append({"role": "assistant", "content": m["content"]})
-    return (await engines.get_llm().reply(flipped, max_tokens=220)).strip()
+    return (await engines.get_llm().reply(flipped, max_tokens=512)).strip()
 
 
 async def judge(transcript: str) -> dict:
@@ -132,7 +132,7 @@ async def judge(transcript: str) -> dict:
             {"role": "system", "content": JUDGE_SYSTEM},
             {"role": "user", "content": f"TRANSCRIPT:\n{transcript}\n\nReturn the JSON scores."},
         ],
-        max_tokens=400,
+        max_tokens=768,
         format_schema=JUDGE_SCHEMA,
     )
     return json.loads(raw)
