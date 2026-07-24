@@ -104,5 +104,6 @@ class Compactor:
                 {"role": "system", "content": _SUMMARIZE_SYSTEM},
                 {"role": "user", "content": prompt},
             ],
-            max_tokens=250,
+            # Responses caps include reasoning as well as visible output.
+            max_tokens=512,
         )

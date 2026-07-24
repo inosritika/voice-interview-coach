@@ -28,10 +28,17 @@ log = logging.getLogger("interview-coach")
 
 # Words we count as fillers. Multi-word phrases are matched first so "you know"
 # isn't double-counted as "you" + "know".
+#
+# Deliberately excludes "right", "actually", "literally", "honestly": these are
+# far more often legitimate content ("the RIGHT approach", "it ACTUALLY failed")
+# than verbal filler, and counting them inflated the debrief's filler verdict on
+# perfectly clean answers. We keep the high-signal ones — the true hesitation
+# sounds plus the classic discourse fillers. "like"/"basically" still over-count
+# a little (they have real uses too), but they're genuinely the most common
+# interview fillers, so the trade favors keeping them.
 _FILLERS = [
     "you know", "kind of", "sort of", "i mean",
-    "um", "uh", "erm", "hmm", "like", "basically",
-    "actually", "literally", "honestly", "right",
+    "um", "uh", "erm", "uhm", "hmm", "like", "basically",
 ]
 
 # The rubric is now pack-driven (packs.py `rubric`) rather than hardcoded here —
@@ -297,7 +304,9 @@ async def generate_debrief(
     ]
 
     try:
-        raw = await engines.get_llm().reply(scoring_messages, max_tokens=700)
+        # This JSON report needs room for both model reasoning and the visible
+        # dimensions/feedback when the hosted Responses engine is selected.
+        raw = await engines.get_llm().reply(scoring_messages, max_tokens=1500)
         scored = _extract_json(raw)
     except Exception:  # noqa: BLE001 — the debrief must never crash the session
         log.exception("debrief scoring failed")

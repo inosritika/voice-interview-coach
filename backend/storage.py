@@ -140,6 +140,65 @@ def update_profile(candidate: str, debrief: dict) -> None:
         log.exception("failed to update profile")
 
 
+def load_profile(candidate: str) -> dict | None:
+    """The raw cross-session profile for a candidate, or None."""
+    if not candidate:
+        return None
+    path = PROFILES_DIR / f"{_slug(candidate)}.json"
+    if not path.exists():
+        return None
+    try:
+        return json.loads(path.read_text())
+    except Exception:  # noqa: BLE001
+        return None
+
+
+# Coaching notes are free text and worded differently every time, so matching on
+# the words themselves clusters nothing ("quantify the metrics" vs "provide
+# specific numbers" are the same weak point). Instead we bucket each note into a
+# THEME by keyword — deterministic, no NLP dependency, and it's the grouping a
+# candidate actually wants ("you keep getting told to quantify your impact").
+_THEMES: tuple[tuple[str, str], ...] = (
+    ("Quantify your impact", r"quantif|number|metric|figure|measurab|percentage|how much|magnitude|scale of"),
+    ("Use a clear STAR structure", r"\bstar\b|structur|situation|rambl|organiz|hard to follow"),
+    ("Be concrete, not generic", r"specific|concrete|example|vague|generic|detail"),
+    ("Show personal ownership", r"ownership|your role|personally|took the lead|what you did|credit"),
+    ("Explain trade-offs and reasoning", r"trade[- ]?off|justif|reasoning|why you|complexity|defend"),
+    ("Engage with the question", r"deflect|skip|avoid|refus|non-?answer|did ?n.t answer|engage|abandon"),
+    ("Cover edge cases", r"edge case|boundary|corner case|empty|null|duplicat"),
+    ("Prepare stories in advance", r"prepare|rehears|ahead of time|before any interview|practice"),
+)
+
+
+def _theme_of(text: str) -> str:
+    low = (text or "").lower()
+    for name, pattern in _THEMES:
+        if re.search(pattern, low):
+            return name
+    return "Other feedback"
+
+
+def recurring_improvements(profile: dict, top: int = 8) -> list[dict]:
+    """The weak points that keep coming back, most-repeated first. Counted once
+    per session, so a single wordy debrief can't inflate a theme."""
+    counts: dict[str, dict] = {}
+    for s in profile.get("sessions", []):
+        seen: set[str] = set()
+        for imp in s.get("improvements", []):
+            theme = _theme_of(imp)
+            if theme in seen:
+                continue
+            seen.add(theme)
+            entry = counts.setdefault(
+                theme, {"theme": theme, "count": 0, "last": "", "examples": []}
+            )
+            entry["count"] += 1
+            entry["last"] = max(entry["last"], s.get("date", ""))
+            if len(entry["examples"]) < 2 and imp:
+                entry["examples"].append(imp)
+    return sorted(counts.values(), key=lambda d: (-d["count"], d["last"]), reverse=False)[:top]
+
+
 def profile_prompt_block(candidate: str) -> str:
     """The recall side: past sessions rendered for the system prompt, or ""
     if this candidate has no history. Presented as coaching CONTEXT — topics
