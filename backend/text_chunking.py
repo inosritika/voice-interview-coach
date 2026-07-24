@@ -26,19 +26,36 @@ def _is_boundary(buf: str, i: int) -> bool:
     return i + 1 < len(buf) and buf[i + 1].isspace()
 
 
+def _depths(buf: str) -> list[int]:
+    """Square-bracket nesting depth *before* each index. A DSA interviewer shows
+    example arrays like `[2, 7, 11, 15]`; splitting on a comma INSIDE one hands
+    TTS a fragment ("…array two" <pause> "seven, eleven…"), so punctuation inside
+    brackets is never a chunk boundary. Parentheses are left alone."""
+    depths = []
+    d = 0
+    for ch in buf:
+        depths.append(d)
+        if ch == "[":
+            d += 1
+        elif ch == "]" and d:
+            d -= 1
+    return depths
+
+
 def _find_split(buf: str, first: bool, first_clause_min: int) -> int | None:
     """Index of the character to split *after*, or None if no good split yet."""
-    # Earliest sentence ender always wins.
+    depth = _depths(buf)
+    # Earliest sentence ender always wins (but not one inside an example array).
     best: int | None = None
     for i, ch in enumerate(buf):
-        if ch in _SENTENCE_ENDERS and _is_boundary(buf, i):
+        if depth[i] == 0 and ch in _SENTENCE_ENDERS and _is_boundary(buf, i):
             best = i
             break
     # For the first chunk only, a comma past a minimum length is good enough —
     # it gets audio playing sooner. Take it if it comes before any sentence ender.
     if first:
         for i, ch in enumerate(buf):
-            if ch in _CLAUSE_ENDERS and i >= first_clause_min and _is_boundary(buf, i):
+            if depth[i] == 0 and ch in _CLAUSE_ENDERS and i >= first_clause_min and _is_boundary(buf, i):
                 if best is None or i < best:
                     best = i
                 break

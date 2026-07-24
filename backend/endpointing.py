@@ -14,21 +14,25 @@ you can *feel* its failure modes:
   - too short  -> it guillotines you mid-thought ("My biggest win was… <pause>")
   - too long   -> every reply feels laggy
 
-SEMANTIC (two-stage, ENDPOINT_MODE=semantic): the fixed threshold is replaced
-by two, with a model consulted between them —
+SMART (two-stage, ENDPOINT_MODE=semantic): the fixed threshold is replaced by
+two, with a `checker` consulted between them —
 
     silence reaches MIN (450ms)
-        -> ask the turn checker: does the utterance SOUND finished?
-           (prosody: trailing intonation, phrase-final lengthening)
+        -> ask the checker: is the utterance-so-far a FINISHED turn?
         complete   -> END now (snappier than the old 700ms)
         incomplete -> keep waiting…
     silence reaches MAX (1400ms) -> END regardless (nobody pauses forever)
     speech resumes at any point  -> pause state resets, checker re-arms
 
-This is exactly how production stacks do it: an acoustic signal (Silero) plus a
-semantic one (smart-turn), each answering the question it's actually good at.
-The checker is injected as an async callable rather than imported here, so this
-state machine stays testable with a fake — and knows nothing about ONNX.
+The `checker` itself can fuse up to THREE signals, each good at a different
+input (see main.py `_utterance_completeness`):
+  - silence  (Silero VAD)        — the timing this machine already tracks
+  - prosody  (smart-turn, audio) — trailing intonation / phrase-final lengthening
+  - semantic (LLM, transcript)   — does the sentence GRAMMATICALLY complete?
+That's how production turn-taking is built: an acoustic and a linguistic signal
+covering each other's blind spots. The checker is injected as an async callable
+rather than imported here, so this state machine stays testable with a fake —
+and knows nothing about ONNX, STT, or LLMs.
 """
 
 from collections.abc import Awaitable, Callable
