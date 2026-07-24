@@ -2,6 +2,9 @@ fastapi
 uvicorn[standard]
 python-dotenv
 httpx
+# Default LLM engine (LLM_ENGINE=claude): drives the local `claude` CLI via your
+# Claude Code subscription — no API key. Also needs the CLI installed + signed in.
+claude-agent-sdk>=0.2.119
 # Local STT
 faster-whisper
 # Local TTS (pinned: piper's Python API has churned across versions).

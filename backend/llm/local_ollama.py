@@ -23,7 +23,11 @@ class LocalOllamaLLM(LLMEngine):
         messages: list[dict],
         max_tokens: int | None = None,
         format_schema: dict | None = None,
+        reasoning_effort: str | None = None,
     ) -> str:
+        # Kept for interface parity with hosted reasoning models; Ollama's
+        # current adapter has no equivalent per-call reasoning knob.
+        del reasoning_effort
         options = _OPTIONS if max_tokens is None else {**_OPTIONS, "num_predict": max_tokens}
         payload = {"model": OLLAMA_MODEL, "messages": messages,
                    "stream": False, "options": options}

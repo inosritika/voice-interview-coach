@@ -17,6 +17,7 @@ class LLMEngine(ABC):
         messages: list[dict],
         max_tokens: int | None = None,
         format_schema: dict | None = None,
+        reasoning_effort: str | None = None,
     ) -> str:
         """messages is a list of {"role": "system"|"user"|"assistant", "content": str}.
         Returns the assistant's full reply text.

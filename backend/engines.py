@@ -83,8 +83,8 @@ _turn_checker_failed = False
 
 
 def get_turn_checker():
-    """The semantic turn-completeness model (turndetect/), or None when
-    ENDPOINT_MODE=silence or the model can't load — the caller falls back to
+    """The PROSODY turn-completeness model (turndetect/smart_turn.py), or None
+    when ENDPOINT_MODE=silence or the model can't load — the caller falls back to
     plain silence endpointing, so a missing 8MB file never breaks the app."""
     global _turn_checker, _turn_checker_failed
     if config.ENDPOINT_MODE != "semantic" or _turn_checker_failed:
@@ -99,22 +99,66 @@ def get_turn_checker():
             import logging
 
             logging.getLogger("interview-coach").warning(
-                "semantic endpointing unavailable (%s) — using silence mode", exc
+                "prosody endpointing unavailable (%s) — using silence mode", exc
             )
     return _turn_checker
 
 
+_semantic_checker = None
+
+
+def get_semantic_checker():
+    """The TEXT semantic turn checker (turndetect/semantic.py), or None unless
+    ENDPOINT_MODE=semantic AND ENDPOINT_SEMANTIC_TEXT is on. It reuses the STT +
+    LLM engines, so it has nothing of its own to fail loading."""
+    global _semantic_checker
+    if config.ENDPOINT_MODE != "semantic" or not config.ENDPOINT_SEMANTIC_TEXT:
+        return None
+    if _semantic_checker is None:
+        from turndetect.semantic import SemanticTurnChecker
+
+        _semantic_checker = SemanticTurnChecker()
+    return _semantic_checker
+
+
+def _build_llm(name: str) -> LLMEngine:
+    if name == "local":
+        from llm.local_ollama import LocalOllamaLLM
+
+        return LocalOllamaLLM()
+    if name == "openai":
+        from llm.openai_api import OpenAILLM
+
+        return OpenAILLM()
+    if name == "claude":
+        from llm.claude_code import ClaudeCodeLLM
+
+        return ClaudeCodeLLM()
+    raise ValueError(f"Unknown LLM engine: {name!r}")
+
+
 def get_llm() -> LLMEngine:
+    """The PRIMARY interviewer brain — the spoken reply and the debrief. This is
+    what the user hears and reads, so it's the quality-first engine (LLM_ENGINE)."""
     global _llm
     if _llm is None:
-        if config.LLM_ENGINE == "local":
-            from llm.local_ollama import LocalOllamaLLM
-
-            _llm = LocalOllamaLLM()
-        elif config.LLM_ENGINE == "openai":
-            from llm.openai_api import OpenAILLM
-
-            _llm = OpenAILLM()
-        else:
-            raise ValueError(f"Unknown LLM_ENGINE: {config.LLM_ENGINE!r}")
+        _llm = _build_llm(config.LLM_ENGINE)
     return _llm
+
+
+_utility_llm: LLMEngine | None = None
+
+
+def get_utility_llm() -> LLMEngine:
+    """The UTILITY brain for internal bookkeeping the user never sees: the
+    director's JSON decide-loop and context compaction. These fire several times
+    per turn, so on a high per-call-overhead engine like Claude (~4s/call, mostly
+    CLI-spawn) they dominate latency. UTILITY_LLM_ENGINE lets them run on a fast
+    local model (Ollama, ~0.8s, no spawn) while the SPOKEN reply stays on the
+    quality engine. "main" reuses get_llm() (everything on one engine)."""
+    global _utility_llm
+    if config.UTILITY_LLM_ENGINE == "main":
+        return get_llm()
+    if _utility_llm is None:
+        _utility_llm = _build_llm(config.UTILITY_LLM_ENGINE)
+    return _utility_llm
