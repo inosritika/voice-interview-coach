@@ -38,6 +38,10 @@ class InterviewPack:
     director_guidance: str
     opening: str
     rubric: tuple[tuple[str, str], ...]
+    # A short list of this domain's jargon, fed to Whisper as an initial_prompt so
+    # it transcribes technical terms correctly ("priority queue", not "priority
+    # cube"; "hash map", not "hatch map"). Empty falls back to config's generic hint.
+    stt_hint: str = ""
 
 
 _BEHAVIORAL = InterviewPack(
@@ -70,11 +74,21 @@ _DSA = InterviewPack(
     key="dsa",
     label="DSA",
     description="Algorithms, data structures, complexity",
+    stt_hint="A data structures and algorithms interview. Likely terms: array, string, "
+    "hash map, hash set, priority queue, heap, stack, queue, linked list, binary tree, "
+    "binary search, two pointers, sliding window, dynamic programming, recursion, "
+    "backtracking, graph, BFS, DFS, time complexity, space complexity, big O.",
     persona="""You are running a DATA STRUCTURES & ALGORITHMS round — SPOKEN ONLY, there is \
 no editor and the candidate will never write or run code. Pose ONE concrete problem at a time \
 (start simple — array/string/hash-map level). State the problem clearly and ALWAYS ground it \
 with a tiny worked example: one sample input and its expected output, so there is zero \
-ambiguity about what's being asked. Invite the candidate to think out loud, state assumptions, \
+ambiguity about what's being asked. Write examples using ACTUAL DIGITS AND SIGNS, not spelled-out \
+words — say "the array 2, 1, -3, 4 gives output 4, 4, 4, -1", NOT "two, one, negative three". \
+The candidate READS these in the live transcript, so numeric form is what they need; a request \
+for "the example in numbers" or "in mathematical form" is easily satisfied — just restate it with \
+digits (e.g. -3, not "negative three"). Never refuse with "it's a voice interview so I can't \
+write" — you are only stating numbers aloud, which is fine; what you avoid is asking THEM to write \
+or draw. Invite the candidate to think out loud, state assumptions, \
 or ask clarifying questions — treat a clarifying question as a GOOD sign and answer it directly \
 with a concrete example; never respond to a request for clarification by just repeating the \
 same question. Guide them toward the approach, the data structure and why, then time and space \
@@ -103,6 +117,10 @@ _ML = InterviewPack(
     key="ml",
     label="Machine Learning",
     description="Modeling, evaluation, trade-offs",
+    stt_hint="A machine learning interview. Likely terms: model, dataset, features, "
+    "training, fine-tuning, LoRA, gradient descent, overfitting, regularization, "
+    "precision, recall, F1 score, ROC AUC, cross-validation, embeddings, transformer, "
+    "neural network, hyperparameters, class imbalance, data drift, inference.",
     persona="""You are running a MACHINE LEARNING round — spoken and conceptual, not a coding \
 exercise. YOU set the scenario: anchor on a concrete project from their resume if there's a \
 clear one, otherwise propose a specific, realistic ML problem yourself — e.g. "predict which \
@@ -136,6 +154,10 @@ _SYSTEM_DESIGN = InterviewPack(
     key="system_design",
     label="System Design",
     description="Scoping, architecture, trade-offs",
+    stt_hint="A system design interview. Likely terms: load balancer, cache, Redis, "
+    "database, SQL, NoSQL, sharding, replication, consistency, availability, latency, "
+    "throughput, message queue, Kafka, API, microservices, CDN, rate limiting, "
+    "horizontal scaling, partitioning, indexing.",
     persona="""You are running a SYSTEM DESIGN round — spoken only, no whiteboard. YOU own the \
 problem and the scenario; the candidate never has to invent it. Present ONE concrete, real \
 system to design — e.g. a URL shortener like bit.ly, a ride-hailing dispatch backend, a news \
@@ -172,7 +194,40 @@ PACKS: dict[str, InterviewPack] = {
     p.key: p for p in (_BEHAVIORAL, _DSA, _ML, _SYSTEM_DESIGN)
 }
 
+# Deterministic first questions establish the promised topic and level. The
+# LLM takes over after the candidate answers, so later turns remain adaptive.
+OPENING_QUESTIONS: dict[str, dict[str, str]] = {
+    "behavioral": {
+        "warmup": "Hi, thanks for joining. To start us off, could you tell me about a project or piece of work you are especially proud of?",
+        "standard": "Hi, thanks for joining. Tell me about a time you took ownership of an important problem and what changed because of your work?",
+        "senior": "Hi, thanks for joining. Tell me about a high-stakes decision you led through ambiguity, including how you aligned people and measured the outcome?",
+    },
+    "dsa": {
+        "warmup": "Let’s start with a small problem. Given a list of integers, how would you tell whether any value appears more than once, and what time and space would your approach use?",
+        "standard": "Let’s work through a medium problem. Given a stream of user IDs, return the first ID that has appeared exactly once so far; how would you avoid re-scanning the whole stream after every event?",
+        "senior": "Let’s work through a streaming problem. Events can arrive up to 30 seconds out of order, and you must count each user’s events in the previous five minutes; what data structures would you use, and which accuracy-versus-memory trade-off would you make?",
+    },
+    "ml": {
+        "warmup": "Let’s consider a subscription app that wants to predict which trial users will convert this week. What would you define as the prediction target, and how would you decide whether the model is useful?",
+        "standard": "Consider a fraud classifier where only one transaction in a thousand is fraudulent. What features and evaluation metric would you start with, and why would accuracy be misleading here?",
+        "senior": "Consider a ranking model whose click-through rate is stable but whose conversion rate has fallen after a product change. How would you distinguish data drift from a product effect, and which offline and online metrics would drive your decision?",
+    },
+    "system_design": {
+        "warmup": "Let’s design a URL shortener for about ten thousand daily users. Before proposing components, which functional requirement would you clarify first?",
+        "standard": "Let’s design a notification service handling ten million sends per day across email and push. Which delivery guarantee or failure mode would you clarify before choosing the architecture?",
+        "senior": "Let’s design a real-time trading-data cache serving millions of reads per second with sub-20-millisecond latency. Which consistency or failure-recovery requirement would you clarify first?",
+    },
+}
+
 
 def get_pack(key: str | None) -> InterviewPack:
     """Fall back to behavioral for an unknown or empty key — never raises."""
     return PACKS.get((key or "").strip(), _BEHAVIORAL)
+
+
+def opening_question(interview_type: str | None, difficulty: str | None) -> str:
+    """Return a calibrated first spoken question for the selected round."""
+    area = (interview_type or "behavioral").strip()
+    tier = (difficulty or "standard").strip()
+    questions = OPENING_QUESTIONS.get(area, OPENING_QUESTIONS["behavioral"])
+    return questions.get(tier, questions["standard"])

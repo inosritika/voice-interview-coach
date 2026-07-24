@@ -15,7 +15,10 @@ class DeepgramSTT(STTEngine):
         if not DEEPGRAM_API_KEY:
             raise RuntimeError("STT_ENGINE=deepgram but DEEPGRAM_API_KEY is not set")
 
-    async def transcribe(self, audio_bytes: bytes) -> str:
+    async def transcribe(
+        self, audio_bytes: bytes, initial_prompt: str | None = None, fast: bool = False
+    ) -> str:
+        del fast  # Deepgram is fast enough that partials use the same request
         headers = {
             "Authorization": f"Token {DEEPGRAM_API_KEY}",
             "Content-Type": "audio/raw",
@@ -28,6 +31,10 @@ class DeepgramSTT(STTEngine):
             "sample_rate": "16000",
             "channels": "1",
         }
+        # Deepgram's equivalent of Whisper's initial_prompt is per-term keyword
+        # boosting; pass the topic jargon so technical words are favored.
+        if initial_prompt:
+            params["keywords"] = [w.strip(" .,") for w in initial_prompt.split() if len(w) > 3][:40]
         async with httpx.AsyncClient(timeout=30) as client:
             resp = await client.post(
                 DEEPGRAM_URL, headers=headers, params=params, content=audio_bytes

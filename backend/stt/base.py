@@ -11,7 +11,16 @@ class STTEngine(ABC):
     """
 
     @abstractmethod
-    async def transcribe(self, audio_bytes: bytes) -> str:
+    async def transcribe(
+        self, audio_bytes: bytes, initial_prompt: str | None = None, fast: bool = False
+    ) -> str:
         """audio_bytes is raw PCM: 16 kHz, mono, 16-bit signed little-endian —
-        the utterance the VAD/endpointer captured. Returns the recognized text."""
+        the utterance the VAD/endpointer captured. Returns the recognized text.
+
+        `initial_prompt` is an optional domain-vocabulary hint (the current topic
+        pack's jargon) so technical terms transcribe correctly. Engines that can't
+        use it may ignore it.
+
+        `fast` favors speed over accuracy (used for live PARTIAL transcripts while
+        the user is still talking) — the accurate pass runs on the final utterance."""
         ...
