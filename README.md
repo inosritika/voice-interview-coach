@@ -35,11 +35,15 @@ landed in one pass — each hand-rolled, each teaching one concept:
   against a checklist (one question per turn, probes vague answers, no fabrication…) as
   structured JSON. `python -m evals.run_eval --personas evasive --turns 3` → scores table
   saved to `data/evals/`. Prompt changes are now measured, not vibed.
-- **Semantic turn detection** (`ENDPOINT_MODE=semantic`): two-stage endpointing. At
-  450 ms of silence, the open ~8 MB smart-turn model (BSD-2-Clause, runs in ~40 ms on
-  CPU) judges from *prosody* whether you sound finished: yes → the turn ends early
-  (snappier than the fixed 700 ms), no → patience extends to 1.4 s, so thinking pauses
-  stop getting guillotined. Off by default; one-line model download in
+- **Smart turn detection** (`ENDPOINT_MODE=semantic`): three-signal endpointing. At
+  450 ms of silence, the utterance-so-far is scored instead of blindly waiting out a
+  fixed pause. Signal 1 is **prosody** — the open ~8 MB smart-turn model (BSD-2-Clause,
+  ~40 ms on CPU) judges from intonation whether you *sound* finished. Signal 2 (opt-in,
+  `ENDPOINT_SEMANTIC_TEXT=on`) is **semantic** — the utterance is transcribed and the LLM
+  judges whether the words form a *complete thought*; the two fuse via a **cascade** that
+  only pays for the LLM check when prosody is uncertain. Finished → the turn ends early
+  (snappier than the fixed 700 ms); unfinished → patience extends to 1.4 s, so thinking
+  pauses stop getting guillotined. Off by default; prosody model download in
   `backend/turndetect/smart_turn.py`.
 
 **The interview director — the interviewer is now an agent.** With `DIRECTOR=on`
@@ -115,25 +119,31 @@ interview-coach/
 The pipeline in `main.py` only ever calls `engines.get_stt()/get_tts()/get_llm()`.
 It never knows which concrete engine is active — that's the whole adapter point.
 
-## Setup (all-local)
+## Setup
 
-Prereqs: **ffmpeg** (for whisper audio decode) and **Ollama** (local LLM).
+STT (whisper) and TTS (piper) run locally. The **LLM defaults to Claude via your
+local Claude Code subscription** — no API key, but a small local model just isn't
+a good enough interviewer/director. Prereqs: **ffmpeg** (whisper audio decode) and
+the **`claude` CLI**, signed in (`claude`, then `/login`). Prefer fully offline?
+Set `LLM_ENGINE=local` and use Ollama instead.
 
 ```bash
-brew install ffmpeg ollama       # macOS
-ollama serve &                   # start the local LLM server
-ollama pull llama3.2             # pull a model
+brew install ffmpeg              # macOS
+npm i -g @anthropic-ai/claude-code   # the `claude` CLI (then run `claude` once to sign in)
 
 cd interview-coach/backend
 python3 -m venv .venv && source .venv/bin/activate
-pip install -r requirements.txt
+pip install -r requirements.txt   # includes claude-agent-sdk
 
 # Download a piper voice into backend/voices/ and point PIPER_VOICE at it:
 #   https://github.com/rhasspy/piper/blob/master/VOICES.md
 # e.g. en_US-lessac-medium.onnx  (+ its .onnx.json alongside it)
 
-cp ../.env.example ../.env       # defaults are all-local; edit if needed
+cp ../.env.example ../.env       # LLM defaults to claude; set LLM_ENGINE=local for all-local
 uvicorn main:app --reload
+
+# All-local alternative (no Claude): set LLM_ENGINE=local, then
+#   brew install ollama && ollama serve & && ollama pull qwen2.5:7b
 ```
 
 Open http://localhost:8000 → paste a JD + resume → **Start interview** → hold **Hold
@@ -163,11 +173,20 @@ explicitly instead of trusting `"auto"`.
 
 Flip a flag in `.env` and add the matching key — no code changes:
 
-| Flag | local (default) | hosted |
+| Flag | default | alternatives |
 |---|---|---|
-| `STT_ENGINE` | faster-whisper | `deepgram` (`DEEPGRAM_API_KEY`) |
-| `TTS_ENGINE` | piper | `cartesia` (`CARTESIA_API_KEY`, `CARTESIA_VOICE_ID`) |
-| `LLM_ENGINE` | ollama | `openai` (`OPENAI_API_KEY`) |
+| `STT_ENGINE` | faster-whisper (local) | `deepgram` (`DEEPGRAM_API_KEY`) |
+| `TTS_ENGINE` | piper (local) | `cartesia` (`CARTESIA_API_KEY`, `CARTESIA_VOICE_ID`) |
+| `LLM_ENGINE` | `claude` (Claude Code subscription) | `local` (Ollama) · `openai` (`OPENAI_API_KEY`) |
+
+The default `LLM_ENGINE=claude` uses the local `claude` CLI through the Claude
+Agent SDK, authenticated by your **Pro/Max subscription — no API key**. Pick the
+model with `CLAUDE_MODEL` (`claude-sonnet-4-6` by default; `haiku` for speed,
+`opus` for max quality). It keeps local STT/TTS and uses Claude for the director,
+spoken follow-ups, and debrief. Each turn spawns the CLI, so expect ~8s/turn —
+smarter, less snappy than a local model. For a fully offline run use
+`LLM_ENGINE=local` (Ollama, e.g. `OLLAMA_MODEL=qwen2.5:7b`); for the hosted
+OpenAI Responses API use `LLM_ENGINE=openai` with `OPENAI_MODEL=gpt-5.6-terra`.
 
 ## WebSocket protocol
 
