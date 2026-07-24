@@ -31,6 +31,7 @@ import numpy as np
 
 import config
 from pipeline.base import ReplyToken, Transcript, TurnEvent, TurnStrategy
+from prompts import DIDNT_CATCH
 
 log = logging.getLogger("interview-coach")
 
@@ -110,8 +111,12 @@ class FusedStrategy(TurnStrategy):
         utterance_pcm: bytes | None,
         history: list[dict],
         director_state=None,  # the agentic director is cascaded-only for now
+        opening_text: str | None = None,
     ) -> AsyncIterator[TurnEvent]:
         if utterance_pcm is None:
+            if opening_text is not None:
+                yield ReplyToken(opening_text)
+                return
             # Opening greeting: text-only reply, no transcript.
             async for tok in self._generate(history, audio=None):
                 yield ReplyToken(tok)
@@ -123,7 +128,9 @@ class FusedStrategy(TurnStrategy):
         transcript = await self._transcribe(audio)
         yield Transcript(transcript)
         if not transcript.strip():
-            return  # nothing intelligible — no reply this turn
+            # Nothing intelligible — ask them to repeat rather than go silent.
+            yield ReplyToken(DIDNT_CATCH)
+            return
 
         # Call 2 — Gemma as the interviewer. Clean text history + this turn's
         # transcript. No audio here, so it's the faster of the two calls.

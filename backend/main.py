@@ -54,8 +54,10 @@ import storage
 from director import DirectorState
 from endpointing import Endpointer, Event
 from history import Compactor
+from packs import get_pack, opening_question
+import problems
 from pipeline.base import DirectorAction, ReplyToken, Transcript
-from prompts import build_system_prompt
+from prompts import build_system_prompt, coding_block
 from speech_filter import spoken_only
 from text_chunking import speakable_chunks
 
@@ -97,6 +99,7 @@ _FRAME_BYTES = config.VAD_FRAME_SAMPLES * 2  # 2 bytes per int16 sample
 _PREROLL_FRAMES = max(1, round(config.SPEECH_PREROLL_MS / 32))  # 32 ms per frame
 _BARGEIN_FRAMES = max(1, round(config.BARGEIN_MIN_SPEECH_MS / 32))  # sustained speech to interrupt
 _BARGEIN_GAP_FRAMES = max(1, round(config.BARGEIN_GAP_MS / 32))     # quiet frames tolerated mid-run
+_PARTIAL_INTERVAL_FRAMES = max(1, round(config.PARTIAL_INTERVAL_MS / 32))  # how often to re-transcribe live
 
 
 class Floor(Enum):
@@ -111,6 +114,30 @@ class Floor(Enum):
 @app.get("/")
 async def index() -> FileResponse:
     return FileResponse(FRONTEND_DIR / "index.html")
+
+
+@app.get("/api/progress")
+async def api_progress(candidate: str = "") -> dict:
+    """A candidate's coaching history: score trajectory plus the weak points that
+    keep recurring. Reads the small cross-session profile (storage.py) — the last
+    10 debriefs, a few KB — not the full transcripts."""
+    profile = storage.load_profile(candidate)
+    if not profile:
+        return {"found": False, "candidate": candidate}
+    sessions = profile.get("sessions", [])
+    return {
+        "found": True,
+        "candidate": profile.get("candidate", candidate),
+        "sessions": sessions,
+        "recurring": storage.recurring_improvements(profile),
+    }
+
+
+@app.get("/api/problems")
+async def api_problems(fmt: str | None = None, topic: str | None = None) -> dict:
+    """The lobby's problem picker. Returns PUBLIC fields only — the interviewer's
+    private brief (intended solution / planted bug) never leaves the server."""
+    return {"problems": [p.public() for p in problems.list_problems(fmt, topic)]}
 
 
 _EXTRACT_MAX_BYTES = 10 * 1024 * 1024  # a resume is never 10 MB of text
@@ -184,22 +211,31 @@ class Session:
         self.interview_type = "behavioral"
         self.company = "generic"
 
+        # Coding round (problems.py): the chosen problem and the LIVE contents of
+        # the shared editor. `code` is streamed from the client as they type and
+        # injected into the interviewer's context each turn (code-awareness).
+        self.problem = None
+        self.code = ""
+
         # The director's memory: evidence notebook, red flags, topics covered.
         # Lives on the session (NOT in the cached strategy singleton), so every
         # interview starts with a clean notebook.
         self.director_state = DirectorState()
 
         # Context compaction: self.messages stays the FULL record (debrief and
-        # saved transcripts need everything); the LLM gets a budgeted view.
-        self.compactor = Compactor(engines.get_llm())
+        # saved transcripts need everything); the LLM gets a budgeted view. Runs
+        # on the fast utility engine — it's an internal summary, not spoken.
+        self.compactor = Compactor(engines.get_utility_llm())
 
         self.vad = engines.get_vad()
-        # Semantic endpointing (ENDPOINT_MODE=semantic): inject a checker that
-        # scores the utterance captured SO FAR; falls back to plain silence
-        # mode automatically if the model isn't available.
-        checker = None
-        if engines.get_turn_checker() is not None:
-            checker = self._utterance_completeness
+        # Smart endpointing (ENDPOINT_MODE=semantic): at a mid-pause checkpoint,
+        # score the utterance-so-far with up to two signals — prosody (smart-turn
+        # audio model) and, optionally, a true text-semantic check (LLM). Both
+        # are fused in _utterance_completeness. Falls back to plain silence mode
+        # if neither signal is available.
+        self._prosody = engines.get_turn_checker()
+        self._semantic = engines.get_semantic_checker()
+        checker = self._utterance_completeness if (self._prosody or self._semantic) else None
         self.endpointer = Endpointer(checker=checker)
 
         # Leftover bytes that didn't fill a whole 512-sample frame yet.
@@ -220,6 +256,26 @@ class Session:
         self._bargein_run = 0
         self._bargein_gap = 0
         self._bargein_buf: list[bytes] = []
+
+        # Continuation-merge state. If the user pauses mid-answer, we start
+        # processing, and they resume BEFORE the reply is audible, that resumed
+        # speech isn't an interruption — it's the rest of their answer. We stash
+        # the in-flight utterance's audio and glue it in front of the resumed
+        # capture so the whole thing is transcribed as ONE turn (fixes: "my first
+        # sentence didn't get saved, only the second showed up").
+        self._inflight_pcm: bytes | None = None   # audio of the turn being processed
+        self._pending_prepend: bytes | None = None  # audio to glue onto the next capture
+        self._continuation = False                # set while a continuation-cancel is in flight
+        self._turn_sent_transcript = False        # did this turn already show a transcript?
+        self._pending_replace = False             # should the next transcript REPLACE the last one?
+        self._replace_next_transcript = False     # armed for the merged turn's on_transcript
+
+        # Live partial transcripts: while the user talks, re-transcribe the audio
+        # so far every few hundred ms and stream it as an interim result, so their
+        # words appear in real time instead of only after they pause.
+        self._partial_task: asyncio.Task | None = None
+        self._last_partial_frames = 0             # utterance length at the last partial
+        self._utterance_gen = 0                   # bumped when an utterance ends — stales in-flight partials
 
     def _turn_active(self) -> bool:
         return self._turn_task is not None and not self._turn_task.done()
@@ -251,10 +307,21 @@ class Session:
             self.role = (msg.get("role") or "").strip()
             self.interview_type = (msg.get("interviewType") or "behavioral").strip()
             self.company = (msg.get("company") or "generic").strip()
+            difficulty = msg.get("difficulty", "standard")
+            # Coding round: the lobby either picked a problem from the bank
+            # (problemId) or pasted their own (customProblem). Resolve it here; the
+            # editor pre-fills with its starter code (client-side, from /api/problems).
+            self.problem = self._resolve_problem(msg)
+            self.code = self.problem.starter_code if self.problem else ""
+            # The problem is injected PER TURN (see _run_turn), not baked in here,
+            # so a mid-interview switch changes what the interviewer sees.
             system = build_system_prompt(
                 msg.get("jd", ""), msg.get("resume", ""),
-                self.interview_type, self.company, msg.get("difficulty", "standard"),
+                self.interview_type, self.company, difficulty,
             )
+            self.director_state.problem = self.problem
+            # The opening problem counts as shown, so "next question" moves past it.
+            self.director_state.shown_problems = {self.problem.id} if self.problem else set()
             # Cross-session memory: if we've coached this candidate before, give
             # the interviewer their history (weak spots to revisit) — recalled at
             # setup, stored at debrief (storage.py).
@@ -265,11 +332,32 @@ class Session:
             # (prompts.build_director_prompt) without changing its call site.
             self.director_state.interview_type = self.interview_type
             self.director_state.company = self.company
-            # Let the interviewer open with a greeting + first question.
-            self._start_turn(None)
+            # Open by presenting the specific problem if there is one; otherwise
+            # the calibrated area/difficulty opening.
+            opening = (
+                problems.coding_opening(self.problem) if self.problem
+                else opening_question(self.interview_type, difficulty)
+            )
+            self._start_turn(None, opening_text=opening)
+        elif msg.get("type") == "code":
+            # Live editor contents — just stash them; the next spoken turn folds
+            # them into the interviewer's context. Capped so a paste can't blow up
+            # the prompt.
+            self.code = (msg.get("text") or "")[:8000]
         elif msg.get("type") == "debrief":
             # The interview ended — score it and send the review back.
             await self._send_debrief()
+
+    def _resolve_problem(self, msg: dict):
+        """Turn the lobby's selection into a Problem, or None for a plain
+        conversational round."""
+        custom = msg.get("customProblem")
+        if custom and (custom.get("prompt") or "").strip():
+            return problems.custom_problem(
+                title=custom.get("title", ""), prompt=custom.get("prompt", ""),
+                starter_code=custom.get("starterCode", ""), fmt=custom.get("fmt", "solve"),
+            )
+        return problems.get_problem(msg.get("problemId"))
 
     async def _on_audio(self, chunk: bytes) -> None:
         # We ALWAYS process incoming audio now — even while the AI is speaking —
@@ -285,8 +373,17 @@ class Session:
         samples = np.frombuffer(frame_bytes, dtype=np.int16).astype(np.float32) / 32768.0
         prob = self.vad.speech_prob(samples)
 
-        # While the AI holds the floor, we're not endpointing a user turn — we're
-        # watching for an interruption.
+        # While the AI holds the floor, incoming speech goes through the barge-in
+        # path — and it's active in BOTH phases, because its meaning differs:
+        #   SPEAKING   the reply is playing  -> a real interruption; cut it off.
+        #   PROCESSING still thinking, nothing played yet -> the user is CONTINUING
+        #              their answer (adding a sentence); cancel the premature turn
+        #              and re-capture so those words aren't silently dropped
+        #              (reported: "I said something 2s later and it wasn't written").
+        # Same mechanism either way (cancel + replay the buffered speech). A
+        # sustained run (BARGEIN_MIN_SPEECH_MS) is required so stray noise doesn't
+        # trigger it, and the fast utility engine keeps PROCESSING short enough that
+        # this can't live-lock the way a 40s local model once did.
         if self._turn_active():
             await self._detect_bargein(prob, frame_bytes)
             return
@@ -310,17 +407,79 @@ class Session:
             # Too short to be a real turn — throw it away, keep listening.
             await self._send("vad", "silence")
             self._utterance = []
+            self._end_capture()
         elif event is Event.END:
             await self._send("vad", "silence")
             utterance = b"".join(self._utterance)
             self._utterance = []
+            self._end_capture()
             self._start_turn(utterance)
 
+        # Stream a live partial transcript of the audio so far, so the user's words
+        # show up as they speak instead of only once they pause.
+        if self._utterance and config.PARTIAL_TRANSCRIPTS:
+            self._maybe_partial()
+
+    def _end_capture(self) -> None:
+        """An utterance just ended or was cancelled: bump the generation so any
+        in-flight partial transcription is recognized as stale and dropped, and
+        reset the partial throttle for the next utterance."""
+        self._utterance_gen += 1
+        self._last_partial_frames = 0
+
+    def _maybe_partial(self) -> None:
+        """Throttle + spawn a live partial transcription of the audio so far. At
+        most one runs at a time (transcription is slower than the frame rate), and
+        only every _PARTIAL_INTERVAL_FRAMES so we don't re-transcribe every frame."""
+        if self._partial_task is not None and not self._partial_task.done():
+            return
+        if len(self._utterance) - self._last_partial_frames < _PARTIAL_INTERVAL_FRAMES:
+            return
+        self._last_partial_frames = len(self._utterance)
+        # Include any paused-answer prefix so the partial shows the whole answer.
+        snapshot = (self._pending_prepend or b"") + b"".join(self._utterance)
+        self._partial_task = asyncio.create_task(
+            self._emit_partial(snapshot, self._utterance_gen)
+        )
+
+    async def _emit_partial(self, snapshot: bytes, gen: int) -> None:
+        """Transcribe the snapshot (fast/greedy) and stream it as an interim result
+        — unless the utterance ended while we were working (gen changed) or we've
+        left the listening floor. A failed partial must never disrupt capture."""
+        try:
+            hint = get_pack(self.interview_type).stt_hint
+            text = await engines.get_stt().transcribe(snapshot, initial_prompt=hint, fast=True)
+        except Exception:  # noqa: BLE001
+            return
+        if text and gen == self._utterance_gen and self.floor is Floor.LISTENING:
+            await self.sock.send_json({"type": "partial", "text": text})
+
     async def _utterance_completeness(self) -> float:
-        """Semantic endpointing hook: P(the utterance captured so far is a
-        finished turn), from the smart-turn model. Called by the Endpointer at
-        the mid-pause checkpoint."""
-        return await engines.get_turn_checker().completeness(b"".join(self._utterance))
+        """Endpointing hook: P(the utterance captured so far is a finished turn),
+        fusing up to two signals with a CASCADE. Prosody (smart-turn, ~40ms) runs
+        first; the expensive text-semantic check (STT + LLM, ~1s) only runs when
+        prosody is genuinely uncertain — when prosody is confident either way we
+        trust it and skip the slow call. Called once per pause by the Endpointer."""
+        pcm = b"".join(self._utterance)
+
+        # Prosody-only (no text signal configured): the original fast path.
+        if self._semantic is None:
+            return await self._prosody.completeness(pcm)
+
+        # Text-only (prosody model missing but semantic enabled).
+        if self._prosody is None:
+            return await self._semantic.completeness(pcm)
+
+        # Both available: cascade. Trust a confident prosody verdict; only pay for
+        # the semantic check inside the uncertain band, then fuse the two.
+        p = await self._prosody.completeness(pcm)
+        if p <= config.SEMANTIC_CASCADE_LOW or p >= config.SEMANTIC_CASCADE_HIGH:
+            return p
+        s = await self._semantic.completeness(pcm)
+        w = config.SEMANTIC_PROSODY_WEIGHT
+        fused = w * p + (1 - w) * s
+        log.info("endpoint fuse: prosody %.2f + semantic %.2f -> %.2f", p, s, fused)
+        return fused
 
     async def _detect_bargein(self, prob: float, frame_bytes: bytes) -> None:
         """The AI is speaking; has the user started talking over it? Require a run
@@ -353,15 +512,28 @@ class Session:
 
     # ---- turn lifecycle ------------------------------------------------------
 
-    def _start_turn(self, pcm: bytes | None) -> None:
+    def _start_turn(self, pcm: bytes | None, opening_text: str | None = None) -> None:
         """Spawn the turn as a background task and return immediately, so the
         receive loop keeps running and can interrupt it."""
+        merged = pcm is not None and self._pending_prepend is not None
+        if merged:
+            # This capture is the continuation of a paused answer — prepend the
+            # earlier audio so STT sees the whole answer as one utterance.
+            pcm = self._pending_prepend + pcm
+        self._pending_prepend = None
+        # The merged turn's transcript REPLACES the partial one we already showed
+        # (in place), so the user sees one growing bubble instead of a duplicate.
+        # Only replace if a partial was actually on screen (_pending_replace).
+        self._replace_next_transcript = merged and self._pending_replace
+        self._pending_replace = False
+        self._inflight_pcm = pcm
+        self._turn_sent_transcript = False
         self._bargein_run = 0
-        self._turn_task = asyncio.create_task(self._turn_wrapper(pcm))
+        self._turn_task = asyncio.create_task(self._turn_wrapper(pcm, opening_text))
 
-    async def _turn_wrapper(self, pcm: bytes | None) -> None:
+    async def _turn_wrapper(self, pcm: bytes | None, opening_text: str | None = None) -> None:
         try:
-            await self._run_turn(pcm)
+            await self._run_turn(pcm, opening_text)
         except asyncio.CancelledError:
             # Barge-in cancelled us mid-reply; the barge-in handler does cleanup.
             pass
@@ -369,9 +541,25 @@ class Session:
             self._turn_task = None
 
     async def _trigger_bargein(self) -> None:
-        """The user cut in. Cancel the reply, tell the client to stop playing
-        instantly, and hand the floor back so we capture their new utterance."""
-        log.info("barge-in: user interrupted the reply")
+        """The user started talking while a turn was in flight. What that MEANS
+        depends on the floor:
+
+          SPEAKING   the reply is audible  -> a real interruption; stop playback.
+          otherwise  still thinking, nothing played -> the user is CONTINUING their
+                     answer; merge the in-flight audio into this new capture so
+                     nothing they said is lost.
+
+        Either way we cancel the turn and hand the floor back, replaying the
+        frames that triggered the detection so the first word survives."""
+        continuation = self.floor is not Floor.SPEAKING
+        inflight = self._inflight_pcm
+        already_shown = self._turn_sent_transcript
+        self._continuation = continuation  # read by _run_turn's cancel handler
+        log.info(
+            "barge-in: %s",
+            "continuation — user resumed while thinking" if continuation
+            else "user interrupted the reply",
+        )
         task = self._turn_task
         self._turn_task = None
         if task is not None and not task.done():
@@ -380,21 +568,32 @@ class Session:
                 await task
             except asyncio.CancelledError:
                 pass
-        await self._send("interrupt", "")  # client flushes queued/playing audio
+        self._continuation = False
+
+        if continuation and inflight:
+            # Glue the earlier audio onto the resumed capture (see _start_turn).
+            self._pending_prepend = inflight
+            # If we already showed the earlier partial, the merged transcript will
+            # UPDATE that same bubble in place (no duplicate). If we hadn't shown it
+            # yet, the merged one is the first the user sees — a fresh bubble.
+            self._pending_replace = already_shown
+        else:
+            await self._send("interrupt", "")  # client flushes queued/playing audio
+
         self._bargein_run = 0
         self._bargein_gap = 0
         replay = self._bargein_buf
         self._bargein_buf = []
         await self._resume_listening()
-        # Replay the frames that fired the barge-in into the fresh listening
+        # Replay the frames that fired the detection into the fresh listening
         # state: VAD sees them as speech, START fires, and the new utterance is
-        # seeded with them — so the first word of the interruption survives.
+        # seeded with them — so the first word survives.
         for frame in replay:
             await self._process_frame(frame)
 
     # ---- turn processing -----------------------------------------------------
 
-    async def _run_turn(self, pcm: bytes | None) -> None:
+    async def _run_turn(self, pcm: bytes | None, opening_text: str | None = None) -> None:
         """Produce one interviewer turn — the opening greeting (pcm=None) or a
         reply to a captured user utterance.
 
@@ -426,7 +625,12 @@ class Session:
             self._user_text = text
             m_transcript_ms = elapsed()
             if text:
-                await self._send("transcript", text)
+                self._turn_sent_transcript = True
+                await self.sock.send_json({
+                    "type": "transcript", "text": text,
+                    "replace": self._replace_next_transcript,
+                })
+                self._replace_next_transcript = False
 
         recorded = False
 
@@ -470,8 +674,20 @@ class Session:
             # The pipeline reads a budget-compacted view; self.messages (which
             # record_turn appends to) remains the full, lossless record.
             llm_view = await self.compactor.view(self.messages)
+            # Code-awareness: append the CURRENT editor contents to the (pinned)
+            # system prompt for this turn, so the interviewer reacts to what the
+            # candidate has actually written. Appending to index 0 keeps it out of
+            # the compaction-summary slot and the director's transcript view.
+            if self.problem is not None:
+                head = dict(llm_view[0])
+                head["content"] += (
+                    coding_block(self.problem)
+                    + "\n\n--- CURRENT EDITOR CONTENTS (the candidate's live scratchpad) ---\n"
+                    + (self.code.strip() or "(empty)")
+                )
+                llm_view = [head] + llm_view[1:]
             events = engines.get_pipeline().run(
-                pcm, llm_view, director_state=self.director_state
+                pcm, llm_view, director_state=self.director_state, opening_text=opening_text
             )
             # spoken_only sits between the model and the chunker: it strips
             # bracketed stage directions the model copies from our own annotations
@@ -500,6 +716,7 @@ class Session:
                 audio_secs += _wav_seconds(audio)
 
             record_turn()
+            await self._maybe_switch_problem()
             log.info(
                 "turn: transcript %s · first-text %s · first-audio %s",
                 _fmt(m_transcript_ms), _fmt(m_first_text_ms), _fmt(m_first_audio_ms),
@@ -532,13 +749,17 @@ class Session:
             # The user heard the whole reply — count all of it toward AI airtime.
             self.ai_speak_secs += audio_secs
         except asyncio.CancelledError:
-            # Barge-in cancelled us. Commit what we have first — without this, an
-            # interrupt during generation erased the user's answer (and partial
-            # reply) from history, so the next question ignored what they said.
-            record_turn(interrupted=True)
-            if first_audio_at is not None:
-                # Count only the audio that actually played before the cut-off.
-                self.ai_speak_secs += min(audio_secs, time.perf_counter() - first_audio_at)
+            # Barge-in cancelled us. For a real INTERRUPTION, commit what we have —
+            # without this, an interrupt during generation erased the user's answer
+            # (and partial reply) from history, so the next question ignored it.
+            # For a CONTINUATION, do NOT commit: this same audio is being merged
+            # into the next capture and re-processed, so committing it here would
+            # duplicate the user's words in history.
+            if not self._continuation:
+                record_turn(interrupted=True)
+                if first_audio_at is not None:
+                    # Count only the audio that actually played before the cut-off.
+                    self.ai_speak_secs += min(audio_secs, time.perf_counter() - first_audio_at)
             raise
         except Exception as exc:  # noqa: BLE001 — surface, don't crash the session
             log.exception("turn failed")
@@ -569,9 +790,28 @@ class Session:
         self._bargein_run = 0
         self._bargein_gap = 0
         self._bargein_buf = []
+        # Stale any partial still in flight from the turn we just finished, and
+        # reset the throttle for the next utterance.
+        self._utterance_gen += 1
+        self._last_partial_frames = 0
         await self._set_floor(Floor.LISTENING)
 
     # ---- debrief -------------------------------------------------------------
+
+    async def _maybe_switch_problem(self) -> None:
+        """If the reply just presented a NEW problem (the candidate asked to switch,
+        detected deterministically in cascaded.reply_events), load it into the
+        editor and reset the per-question clock so the screen matches the words."""
+        nxt = getattr(self.director_state, "pending_problem", None)
+        if nxt is None:
+            return
+        self.director_state.pending_problem = None
+        self.problem = nxt
+        self.code = nxt.starter_code
+        try:
+            await self.sock.send_json({"type": "problem", **nxt.public()})
+        except Exception:  # noqa: BLE001 — a UI push must not break the turn
+            log.exception("failed to push switched problem")
 
     async def _send_debrief(self) -> None:
         """Score the finished interview and send the review. Cancel any in-flight

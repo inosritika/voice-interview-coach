@@ -61,6 +61,7 @@ class TurnStrategy(ABC):
         utterance_pcm: bytes | None,
         history: list[dict],
         director_state=None,
+        opening_text: str | None = None,
     ) -> AsyncIterator[TurnEvent]:
         """Stream one turn as events.
 
@@ -72,5 +73,8 @@ class TurnStrategy(ABC):
         `director_state` is the session's DirectorState when the agentic
         director is enabled (cascaded only, for now). Strategies that don't use
         it just ignore it.
+
+        `opening_text`, when present for the greeting turn, is a calibrated
+        first question from the local question bank.
         """
         ...
