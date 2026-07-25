@@ -1,204 +1,255 @@
-# Voice Interview Coach
+# Interview Studio — Voice Interview Coach
 
-A hands-free mock-interview partner, built to **learn the voice-AI stack by hand**.
-We build the cascaded pipeline (VAD → Endpoint → STT → LLM → TTS) piece by piece,
-then swap in an end-to-end realtime model at the end.
+A hands-free, real-time **AI mock-interview partner** you run on your own machine.
+You talk; it listens, asks follow-ups, and talks back — like a real interviewer.
+Practice **behavioral, DSA, machine-learning, and system-design** rounds, work
+real coding problems in a live editor, step aside to **read up on any topic**
+mid-interview, and get a **scored debrief** at the end.
 
-Everything runs **locally by default** — no API keys needed. Every stage is behind
-an adapter interface, so you can flip a flag to use a hosted engine instead.
+It runs **locally by default** — speech-to-text and text-to-speech are on-device,
+and you choose the "brain": your **Claude Code subscription** (no API key), a
+**local Ollama model** (fully offline), or a **hosted API**. Every stage sits
+behind an adapter, so switching is a one-line change in `.env`.
 
-**New to the concepts?** Open [docs/learning-guide.html](docs/learning-guide.html) in a browser —
-a full glossary with examples, architecture diagrams, and a what/why/how walkthrough of every component.
+> Built as a hands-on way to learn the voice-AI + agent stack from scratch. If you
+> want the *why* behind each component, open
+> [docs/learning-guide.html](docs/learning-guide.html) in a browser — a full
+> what/why/how walkthrough with diagrams and a glossary.
 
-## Where we are
+---
 
-**The agent-harness layer is built.** On top of the director (below), five features
-landed in one pass — each hand-rolled, each teaching one concept:
+## ✨ What you can do
 
-- **Context compaction** (`backend/history.py`, `COMPACTION=on`): long interviews no
-  longer overflow llama3's 8K window. The LLM reads a budgeted view — system prompt
-  pinned, oldest exchanges rolled into an *incremental* summary, recent turns verbatim —
-  while the session keeps the full lossless record for the debrief. Closes the project's
-  oldest known issue.
-- **Session persistence + candidate memory** (`backend/storage.py`): every finished
-  interview is saved to `backend/data/sessions/` (transcript, metrics, debrief, the
-  director's notes), and a per-candidate profile accumulates across sessions — enter the
-  same name in the lobby and the interviewer quietly knows what needed work last time.
-- **MCP server** (`backend/mcp_server.py`): the coach as a tool for *other* agents.
-  `list_interviews` / `get_transcript` / `get_debrief` / `get_progress` over the saved
-  sessions, speaking the Model Context Protocol over stdio. Register with
-  `claude mcp add interview-coach -- ./.venv/bin/python mcp_server.py` and ask an agent
-  "what keeps going wrong in my mock interviews?".
-- **Eval harness** (`backend/evals/run_eval.py`): regression tests for interviewer
-  *behavior*. Simulated candidates (strong / rambler / evasive personas) interview the
-  real stack — same prompts, same director — and a judge model scores the interviewer
-  against a checklist (one question per turn, probes vague answers, no fabrication…) as
-  structured JSON. `python -m evals.run_eval --personas evasive --turns 3` → scores table
-  saved to `data/evals/`. Prompt changes are now measured, not vibed.
-- **Smart turn detection** (`ENDPOINT_MODE=semantic`): three-signal endpointing. At
-  450 ms of silence, the utterance-so-far is scored instead of blindly waiting out a
-  fixed pause. Signal 1 is **prosody** — the open ~8 MB smart-turn model (BSD-2-Clause,
-  ~40 ms on CPU) judges from intonation whether you *sound* finished. Signal 2 (opt-in,
-  `ENDPOINT_SEMANTIC_TEXT=on`) is **semantic** — the utterance is transcribed and the LLM
-  judges whether the words form a *complete thought*; the two fuse via a **cascade** that
-  only pays for the LLM check when prosody is uncertain. Finished → the turn ends early
-  (snappier than the fixed 700 ms); unfinished → patience extends to 1.4 s, so thinking
-  pauses stop getting guillotined. Off by default; prosody model download in
-  `backend/turndetect/smart_turn.py`.
+- **🎙️ Just talk.** Hands-free voice in, voice out. No push-to-talk — the app
+  detects when you start and stop speaking. **Interrupt any time** (barge-in),
+  even mid-sentence, just like a real conversation.
+- **🧠 An interviewer that adapts.** An agentic "director" decides each turn —
+  probe deeper, move on, or wrap up — based on what you actually said. It asks
+  **one question at a time** and doesn't read from a script.
+- **📚 Four kinds of round:** Behavioral · DSA · Machine Learning · System Design.
+  Each opens with a different question every time.
+- **Two formats per round:**
+  - **💬 Discussion** — talk through concepts, reasoning, and trade-offs (voice only).
+  - **⌨️ Hands-on** — a **live code editor** the interviewer can see as you type,
+    paired with a real problem from a built-in bank of **88 problems**
+    (easy / medium / hard across DSA, ML, and system design) and a per-question timer.
+- **🗣️ Steer it like a real interview.** Say *"give me a harder one"*, *"next
+  problem"*, *"can I get a hint"*, or *"I give up — walk me through the answer"*,
+  and it responds. Ask for a **debug-this-code** problem and you get buggy code to fix.
+- **📖 "Learn this" — learn without leaving the app.** During any interview, hit
+  **📖 Learn this** to open a side panel with a **written** explanation of the
+  current topic (approach, complexity, worked example) — no voice, just a doc you
+  can study. Ask follow-up questions in the panel, then jump back into the interview.
+- **📝 Live transcript** of the whole conversation, written as you speak.
+- **📊 Scored debrief.** At the end you get an overall score, per-dimension bars
+  (structure, specificity, ownership, communication), strengths/improvements, and
+  delivery metrics computed from your own speech (words-per-minute, filler rate,
+  talk-time ratio). Export the transcript.
+- **📈 Progress across sessions.** A lightweight local profile tracks your recurring
+  weak points so you can see what keeps coming up.
 
-**The interview director — the interviewer is now an agent.** With `DIRECTOR=on`
-(default), each turn runs a hand-rolled tool-use loop before speaking: the LLM picks
-structured actions as **schema-constrained JSON** (Ollama structured outputs — invalid
-JSON is impossible, not just unlikely): `note_evidence`, `note_red_flag`, `probe_deeper`,
-`switch_topic`, `end_interview`. Notes accumulate in an evidence notebook that lives
-*outside* the model (per session), feeds the debrief judge, and streams to the UI's
-developer panel so you can watch the agent think. The terminal move then guides the
-normal streamed spoken reply, so step 3's token streaming is preserved. The harness does
-validation, one bounded retry on bad output, an iteration cap, and a safe fallback move —
-a broken director can never break the interview. **Honest cost:** ~2 extra small LLM
-calls per turn (~3–4s on llama3:8b) before speech starts; `DIRECTOR=off` restores the
-single-call speed. (Found live: a conversation ending in a `system` message breaks
-llama3's chat template — the directive is folded into the user message instead.)
+---
 
-**Step 5 — scored debrief.** When the interview ends, the whole transcript is scored
-against a behavioral rubric (structure / specificity / ownership / communication) by the
-LLM acting as an *evaluator*, and combined with **delivery metrics we compute ourselves**
-(words-per-minute, filler rate, average answer length, talk-time ratio — no model, just
-arithmetic on the captured speech). The frontend shows a debrief screen with an overall
-score, per-dimension bars, strengths/improvements, and a transcript export.
+## 🚀 Quick start
 
-**Step 4 — barge-in.** You can interrupt the interviewer mid-sentence. Each turn runs as
-a cancellable `asyncio` task so the receive loop stays free to hear you; the mic stays
-live during playback (browser echo cancellation stops the AI hearing itself), and sustained
-user speech (stricter VAD bar + ~240ms, tunable via `BARGEIN_*`) cancels the reply, tells
-the browser to flush its audio queue, and hands the floor back.
+### 1. Prerequisites
 
-The UI is now a proper interview platform: a pre-interview lobby (candidate details,
-interview-type picker, live mic check), a live stage (timer, question counter, interviewer
-presence, mic meter, mute/end), and the debrief screen — with honest "Coming Soon" badges
-on features not built yet (recording/export, video, technical/coding/system-design rounds).
+| Need | Why | Install |
+|---|---|---|
+| **Python 3.10+** | runs the backend | python.org / your package manager |
+| **ffmpeg** | whisper decodes your mic audio | macOS `brew install ffmpeg` · Debian/Ubuntu `sudo apt install ffmpeg` |
+| **A piper voice** | the interviewer's voice (local TTS) | see step 3 |
+| **An LLM engine** | the interviewer's brain | **Claude CLI** (default) *or* **Ollama** (offline) — see step 4 |
 
-Build progression: 1) push-to-talk · 2) VAD + endpointing · 3) streaming + latency HUD
-· 4) barge-in · 5) debrief/scoring ← _here_ · 6) realtime S2S swap.
+> **Windows:** run it under **WSL2** (Ubuntu). The audio pipeline and shell steps
+> assume a Unix-like environment.
 
-**Tip:** use headphones for the most reliable barge-in — on speakers, the browser's echo
-cancellation does the heavy lifting but residual leak can occasionally mis-trigger.
+### 2. Install
 
-Step 1 (push-to-talk) is documented in [docs/learning-guide.html](docs/learning-guide.html);
-the code has since evolved to the streaming input + streaming output paths above.
+```bash
+git clone https://github.com/inosritika/voice-interview-coach.git
+cd voice-interview-coach/backend
 
-## Layout
+python3 -m venv .venv && source .venv/bin/activate
+pip install -r requirements.txt
+```
+
+### 3. Download a voice for the interviewer
+
+Piper voices are two files (`.onnx` + `.onnx.json`). Grab one from the
+[piper voices list](https://github.com/rhasspy/piper/blob/master/VOICES.md) and
+drop both into `backend/voices/`. A good default is `en_US-lessac-medium`:
+
+```bash
+mkdir -p voices && cd voices
+curl -LO https://huggingface.co/rhasspy/piper-voices/resolve/main/en/en_US/lessac/medium/en_US-lessac-medium.onnx
+curl -LO https://huggingface.co/rhasspy/piper-voices/resolve/main/en/en_US/lessac/medium/en_US-lessac-medium.onnx.json
+cd ..
+```
+
+`.env` already points `PIPER_VOICE` at this file. (The first whisper run also
+auto-downloads its small STT model — no manual step.)
+
+### 4. Pick the interviewer's brain
+
+Copy the config, then choose **one** of the two easy paths:
+
+```bash
+cp ../.env.example ../.env
+```
+
+**Path A — Claude via your Claude Code subscription (default, best quality, no API key):**
+
+```bash
+npm install -g @anthropic-ai/claude-code   # the `claude` CLI
+claude                                      # run once, then /login to sign in
+```
+
+`.env` already has `LLM_ENGINE=claude`. That's it.
+
+**Path B — Fully offline with Ollama (no subscription, no internet):**
+
+```bash
+# install Ollama from https://ollama.com, then:
+ollama pull qwen2.5:7b
+```
+
+Then set `LLM_ENGINE=local` in `.env`.
+
+### 5. Run
+
+```bash
+# from backend/, with the venv active
+uvicorn main:app --reload
+```
+
+Open **http://localhost:8000** and click **Start interview**. Allow microphone
+access when the browser asks. 🎧 **Headphones are recommended** — they make
+interrupting the interviewer more reliable.
+
+---
+
+## 🧭 Using the interviewer
+
+1. **In the lobby**, pick a **round type** (Behavioral / DSA / ML / System Design)
+   and a difficulty. Optionally paste or upload a **job description** and **resume**
+   so questions are tailored — nothing is uploaded anywhere; it stays on your machine.
+2. **Choose a format:**
+   - **💬 Discussion** for a talk-it-through round, or
+   - **⌨️ Hands-on** to get a live editor and a real problem. Pick one from the
+     bank or paste your own.
+3. **Start**, then **just talk** to answer. The interviewer speaks; start speaking
+   any time to **interrupt** it.
+4. **Steer the session by voice** — for coding rounds especially:
+   - *"Can we move on to the next problem?"* / *"next question"*
+   - *"Give me something harder"* / *"an easier one"* / *"increase the difficulty"*
+   - *"Give me a **medium graph** problem"* (topic + difficulty)
+   - *"Can I get a hint?"*
+   - *"I give up — can you explain the solution?"* → it teaches you the answer
+   - *"Give me a **debug** problem"* → you get buggy code to fix
+5. **📖 Learn this** (top of the transcript) opens the written-explanation panel for
+   the current topic. Type follow-up questions there, then **Back to interview**.
+6. **End interview** → you get the **scored debrief**. Export the transcript if you like.
+7. **Progress** (from the lobby) shows your recurring weak points across sessions.
+
+---
+
+## ⚙️ Configuration
+
+Everything is a flag in `.env` (copied from
+[`.env.example`](.env.example), which documents each one). The most useful:
+
+| Flag | Default | Options |
+|---|---|---|
+| `LLM_ENGINE` | `claude` | `claude` (subscription, no key) · `local` (Ollama) · `openai` (`OPENAI_API_KEY`) |
+| `CLAUDE_MODEL` | `claude-sonnet-4-6` | any alias (`sonnet`/`opus`/`haiku`) or full model id |
+| `OLLAMA_MODEL` | `qwen2.5:7b` | any model you've `ollama pull`ed |
+| `STT_ENGINE` | `local` (faster-whisper) | `deepgram` (`DEEPGRAM_API_KEY`) |
+| `TTS_ENGINE` | `local` (piper) | `cartesia` (`CARTESIA_API_KEY`, `CARTESIA_VOICE_ID`) |
+| `WHISPER_MODEL` | `small` | `tiny`→`large-v3` (accuracy vs. speed) |
+| `DIRECTOR` | `on` | `off` for a simpler, faster single-call interviewer |
+
+**Which LLM should I use?** `claude` gives the smartest interviewer and needs no
+API key (just the signed-in CLI), at ~8s per turn since it spawns the CLI each
+turn. `local` (Ollama) is fully offline and snappier but a smaller model is a
+weaker interviewer. `openai` uses the hosted Responses API if you have a key.
+
+---
+
+## 🏗️ How it works (in brief)
+
+Each turn flows through a **cascaded pipeline**:
+
+```
+your voice ─▶ VAD (Silero) ─▶ endpointing ─▶ STT (whisper)
+                                                  │
+                                                  ▼
+                              director (agentic decide-loop) ─▶ LLM reply
+                                                  │
+                                                  ▼
+your speakers ◀── TTS (piper) ◀── sentence chunking ◀── streamed tokens
+```
+
+The core design idea: `main.py` only ever calls `engines.get_stt()`,
+`get_llm()`, `get_tts()` — it never knows which concrete engine is behind them.
+That adapter boundary is what lets you swap Claude for Ollama, or piper for
+Cartesia, without touching the pipeline. The **"Learn this"** feature is separate
+from the voice loop entirely: a plain streaming HTTP endpoint (`/api/learn`) that
+returns text only — no TTS, and it never touches the live session.
+
+For the full component-by-component explanation, open
+[docs/learning-guide.html](docs/learning-guide.html).
+
+---
+
+## 📁 Project layout
 
 ```
 interview-coach/
 ├── backend/
-│   ├── main.py            FastAPI app + /ws WebSocket loop (floor, barge-in, turns)
+│   ├── main.py            FastAPI app + /ws WebSocket loop + /api/learn tutor
 │   ├── config.py          all flags (read from .env)
 │   ├── engines.py         factory: picks each engine per flag, caches it
-│   ├── prompts.py         interviewer persona + director brain + directives
-│   ├── director.py        the agentic tool-use loop (actions, state, harness)
-│   ├── history.py         context compaction (incremental rolling summary)
-│   ├── storage.py         saved sessions + cross-session candidate profiles
-│   ├── mcp_server.py      MCP server over saved interviews (stdio)
+│   ├── prompts.py         interviewer persona · director brain · "Learn this" tutor
+│   ├── packs.py           per-round persona, rubric, and random opening questions
+│   ├── problems.py        the 88-problem coding bank + spoken-request matching
+│   ├── director.py        the agentic tool-use loop (actions, state, guards)
 │   ├── debrief.py         rubric scoring + delivery metrics
-│   ├── endpointing.py     silence + two-stage semantic endpointing
-│   ├── text_chunking.py   token stream -> speakable clauses
+│   ├── storage.py         saved sessions + cross-session progress profiles
+│   ├── history.py         context compaction for long interviews
+│   ├── endpointing.py     silence + semantic turn detection
+│   ├── mcp_server.py      expose saved interviews to other agents (MCP, stdio)
 │   ├── evals/run_eval.py  agent-vs-agent behavior evals
-│   ├── pipeline/  base.py · cascaded.py · fused.py   (turn strategies)
-│   ├── stt/  base.py · local_whisper.py · deepgram.py
-│   ├── tts/  base.py · local_piper.py   · cartesia.py
-│   ├── llm/  base.py · local_ollama.py  · openai_api.py
-│   ├── vad/  base.py · silero.py
-│   ├── turndetect/  base.py · smart_turn.py   (semantic endpointing model)
-│   └── data/  sessions/ · profiles/ · evals/  (created at runtime)
-├── frontend/index.html    lobby + live stage + debrief (AudioWorklet, Web Audio)
+│   ├── pipeline/          turn strategies (cascaded · fused)
+│   ├── stt/ · tts/ · llm/ · vad/ · turndetect/   swappable engine adapters
+│   └── data/              sessions · profiles · evals   (created at runtime, git-ignored)
+├── frontend/index.html    lobby · live stage · code editor · Learn panel · debrief
 ├── docs/learning-guide.html   the full what/why/how guide
-└── .env.example           copy to .env
+├── .env.example           copy to .env
+└── LICENSE                MIT
 ```
 
-The pipeline in `main.py` only ever calls `engines.get_stt()/get_tts()/get_llm()`.
-It never knows which concrete engine is active — that's the whole adapter point.
+---
 
-## Setup
+## 🧪 Development
 
-STT (whisper) and TTS (piper) run locally. The **LLM defaults to Claude via your
-local Claude Code subscription** — no API key, but a small local model just isn't
-a good enough interviewer/director. Prereqs: **ffmpeg** (whisper audio decode) and
-the **`claude` CLI**, signed in (`claude`, then `/login`). Prefer fully offline?
-Set `LLM_ENGINE=local` and use Ollama instead.
+Run the test suite (from `backend/`, venv active):
 
 ```bash
-brew install ffmpeg              # macOS
-npm i -g @anthropic-ai/claude-code   # the `claude` CLI (then run `claude` once to sign in)
-
-cd interview-coach/backend
-python3 -m venv .venv && source .venv/bin/activate
-pip install -r requirements.txt   # includes claude-agent-sdk
-
-# Download a piper voice into backend/voices/ and point PIPER_VOICE at it:
-#   https://github.com/rhasspy/piper/blob/master/VOICES.md
-# e.g. en_US-lessac-medium.onnx  (+ its .onnx.json alongside it)
-
-cp ../.env.example ../.env       # LLM defaults to claude; set LLM_ENGINE=local for all-local
-uvicorn main:app --reload
-
-# All-local alternative (no Claude): set LLM_ENGINE=local, then
-#   brew install ollama && ollama serve & && ollama pull qwen2.5:7b
+for t in test_*.py; do python "$t"; done
 ```
 
-Open http://localhost:8000 → paste a JD + resume → **Start interview** → hold **Hold
-to talk** (or the spacebar) to answer.
+Behavior evals (simulated candidates interview the real stack, a judge model scores it):
 
-## Pipeline: cascaded vs. fused (Gemma 4)
-
-`PIPELINE` in `.env` swaps the whole turn strategy, not just one stage:
-
-- `cascaded` (default) — whisper STT → Ollama LLM, two models. **Faster on this
-  project's hardware** (M3 Pro): ~2.7s to first reply, measured.
-- `fused` — Gemma 4 (`google/gemma-4-E4B-it`) does speech-understanding and the
-  reply in one call. Genuinely works (verified: accurate transcript, relevant
-  follow-up questions) but **measured ~1.8x slower** (~4.8s) than cascaded here —
-  Transformers-on-MPS isn't as optimized as Ollama's llama.cpp backend for raw
-  token generation, so removing the STT→LLM handoff doesn't overcome that gap.
-  Needs `pip install "transformers>=4.55" accelerate pillow torchvision` (not
-  gated, Apache-2.0, but a multi-GB download on first run).
-
-One fixed bug worth knowing if you use `fused` on Apple Silicon: transformers'
-`device_map="auto"` silently offloaded some layers to *disk* even with plenty of
-RAM free (logged as "Some parameters are on the meta device…"), which alone
-accounted for over half the latency. `pipeline/fused.py` now detects `mps`
-explicitly instead of trusting `"auto"`.
-
-## Swapping to a hosted engine
-
-Flip a flag in `.env` and add the matching key — no code changes:
-
-| Flag | default | alternatives |
-|---|---|---|
-| `STT_ENGINE` | faster-whisper (local) | `deepgram` (`DEEPGRAM_API_KEY`) |
-| `TTS_ENGINE` | piper (local) | `cartesia` (`CARTESIA_API_KEY`, `CARTESIA_VOICE_ID`) |
-| `LLM_ENGINE` | `claude` (Claude Code subscription) | `local` (Ollama) · `openai` (`OPENAI_API_KEY`) |
-
-The default `LLM_ENGINE=claude` uses the local `claude` CLI through the Claude
-Agent SDK, authenticated by your **Pro/Max subscription — no API key**. Pick the
-model with `CLAUDE_MODEL` (`claude-sonnet-4-6` by default; `haiku` for speed,
-`opus` for max quality). It keeps local STT/TTS and uses Claude for the director,
-spoken follow-ups, and debrief. Each turn spawns the CLI, so expect ~8s/turn —
-smarter, less snappy than a local model. For a fully offline run use
-`LLM_ENGINE=local` (Ollama, e.g. `OLLAMA_MODEL=qwen2.5:7b`); for the hosted
-OpenAI Responses API use `LLM_ENGINE=openai` with `OPENAI_MODEL=gpt-5.6-terra`.
-
-## WebSocket protocol
-
+```bash
+python -m evals.run_eval --personas evasive --turns 3
 ```
-client → server:  {"type":"setup","jd":"…","resume":"…"}   (text)
-                  <binary audio clip>                       (one turn)
-                  {"type":"debrief"}                         (end of interview → score it)
-server → client:  {"type":"status","text":"thinking"}       (UI hints)
-                  {"type":"transcript","text":"…"}           (what STT heard)
-                  {"type":"reply","text":"…"}                (interviewer words)
-                  <binary WAV>                               (reply audio)
-                  {"type":"debrief", "overall":.., "dimensions":[…],
-                   "strengths":[…], "improvements":[…], "metrics":{…}}
-                  {"type":"error","text":"…"}
-```
+
+---
+
+## 📄 License
+
+[MIT](LICENSE) © 2026 Ritika Soni. Free to use, fork, and modify.
+
+The built-in coding problems are original write-ups of canonical, widely-known
+interview questions, written for this project.
