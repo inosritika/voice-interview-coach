@@ -45,7 +45,7 @@ from enum import Enum, auto
 
 import numpy as np
 from fastapi import FastAPI, UploadFile, WebSocket, WebSocketDisconnect
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, StreamingResponse
 import pathlib
 
 import config
@@ -57,7 +57,7 @@ from history import Compactor
 from packs import get_pack, opening_question
 import problems
 from pipeline.base import DirectorAction, ReplyToken, Transcript
-from prompts import build_system_prompt, coding_block
+from prompts import build_learn_messages, build_system_prompt, coding_block
 from speech_filter import spoken_only
 from text_chunking import speakable_chunks
 
@@ -138,6 +138,37 @@ async def api_problems(fmt: str | None = None, topic: str | None = None) -> dict
     """The lobby's problem picker. Returns PUBLIC fields only — the interviewer's
     private brief (intended solution / planted bug) never leaves the server."""
     return {"problems": [p.public() for p in problems.list_problems(fmt, topic)]}
+
+
+@app.post("/api/learn")
+async def api_learn(payload: dict) -> StreamingResponse:
+    """The "Learn this" side panel: a text-only tutor, OUTSIDE the interview.
+
+    The candidate pauses the mock interview to actually understand a topic. We
+    take the recent transcript (+ the hands-on problem, if any) as CONTEXT, ask
+    the LLM to teach it in Markdown, and STREAM the answer straight back — no
+    TTS, no director, no touch to the live voice session (this is a plain HTTP
+    call; the WebSocket keeps running underneath). Follow-up questions carry the
+    panel's own thread so it's a real conversation, not one-shot.
+
+    The whole point: learn while practicing, without leaving for another app."""
+    messages = build_learn_messages(payload)
+
+    async def gen():
+        try:
+            async for token in engines.get_llm().stream(messages):
+                yield token
+        except Exception as exc:  # noqa: BLE001 — a teaching miss must not 500
+            log.exception("learn stream failed")
+            yield f"\n\n_Sorry — the explanation failed to generate ({exc})._"
+
+    # text/plain, not SSE: the client reads the raw byte stream and renders
+    # Markdown as it grows. no-transform/no-buffering so proxies don't hold it.
+    return StreamingResponse(
+        gen(),
+        media_type="text/plain; charset=utf-8",
+        headers={"Cache-Control": "no-cache, no-transform", "X-Accel-Buffering": "no"},
+    )
 
 
 _EXTRACT_MAX_BYTES = 10 * 1024 * 1024  # a resume is never 10 MB of text

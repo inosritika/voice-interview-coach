@@ -337,6 +337,68 @@
       .turn.interim > div:last-child { opacity: 0.55; font-style: italic; }
       .who { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.06em; opacity: 0.6; margin-bottom: 0.2rem; }
 
+      /* ---- "Learn this" tutor: open button + slide-over panel ---- */
+      .learn-open { padding: 0.3rem 0.7rem; font-size: 0.75rem; border-radius: 999px;
+        border-color: var(--accent); color: var(--accent); font-weight: 600; }
+      .learn-open:hover { background: rgba(91,140,255,0.12); }
+      /* The `hidden` attribute must win over the display rules below — otherwise
+         `.learn-panel { display:flex }` (equal specificity) keeps the panel on
+         screen and "Back to interview" can't close it. */
+      .learn-scrim[hidden], .learn-panel[hidden] { display: none !important; }
+      .learn-scrim { position: fixed; inset: 0; background: rgba(6,9,15,0.55);
+        z-index: 40; animation: learnfade 0.18s ease; }
+      @keyframes learnfade { from { opacity: 0; } to { opacity: 1; } }
+      .learn-panel { position: fixed; top: 0; right: 0; height: 100vh; z-index: 41;
+        width: min(560px, 94vw); background: var(--card); border-left: 1px solid var(--border);
+        box-shadow: -18px 0 50px rgba(0,0,0,0.35); display: flex; flex-direction: column;
+        animation: learnslide 0.22s cubic-bezier(0.22,0.61,0.36,1); }
+      @keyframes learnslide { from { transform: translateX(100%); } to { transform: translateX(0); } }
+      .learn-head { display: flex; align-items: flex-start; justify-content: space-between;
+        gap: 1rem; padding: 1.1rem 1.3rem 0.9rem; border-bottom: 1px solid var(--border-soft); }
+      .learn-title { font-weight: 700; font-size: 1.05rem; }
+      .learn-sub { font-size: 0.76rem; color: var(--muted); margin-top: 0.15rem; }
+      .learn-head .ghost { padding: 0.35rem 0.7rem; font-size: 0.76rem; white-space: nowrap; }
+      .learn-body { flex: 1; min-height: 0; overflow-y: auto; padding: 1.1rem 1.3rem;
+        display: flex; flex-direction: column; gap: 1.1rem; }
+      .learn-empty { color: var(--faint); font-size: 0.9rem; text-align: center; margin: auto;
+        padding: 1.5rem; line-height: 1.6; }
+      .learn-q { align-self: flex-end; max-width: 92%; background: var(--card-2);
+        border: 1px solid var(--border); border-radius: 12px; padding: 0.5rem 0.8rem;
+        font-size: 0.88rem; }
+      .learn-q .who, .learn-a .who { font-size: 0.64rem; text-transform: uppercase;
+        letter-spacing: 0.06em; opacity: 0.55; margin-bottom: 0.2rem; }
+      .learn-a { align-self: stretch; }
+      /* rendered markdown */
+      .md { font-size: 0.92rem; line-height: 1.62; color: var(--text); word-wrap: break-word; }
+      .md > *:first-child { margin-top: 0; }
+      .md > *:last-child { margin-bottom: 0; }
+      .md h1, .md h2, .md h3 { line-height: 1.3; margin: 1.1rem 0 0.5rem; font-weight: 700; }
+      .md h1 { font-size: 1.15rem; } .md h2 { font-size: 1.05rem; } .md h3 { font-size: 0.96rem; }
+      .md p { margin: 0.55rem 0; } .md ul, .md ol { margin: 0.55rem 0; padding-left: 1.4rem; }
+      .md li { margin: 0.25rem 0; }
+      .md strong { font-weight: 700; } .md em { font-style: italic; }
+      .md code { font-family: ui-monospace, Menlo, monospace; font-size: 0.85em;
+        background: rgba(128,140,170,0.16); padding: 0.08em 0.36em; border-radius: 5px; }
+      .md pre { background: rgba(128,140,170,0.12); border: 1px solid var(--border-soft);
+        border-radius: 10px; padding: 0.8rem 0.9rem; overflow-x: auto; margin: 0.7rem 0; }
+      .md pre code { background: none; padding: 0; font-size: 0.83rem; line-height: 1.5; }
+      .md blockquote { border-left: 3px solid var(--border); margin: 0.7rem 0; padding: 0.1rem 0 0.1rem 0.9rem;
+        color: var(--muted); }
+      .md blockquote p { margin: 0.3rem 0; }
+      .md a { color: var(--accent); }
+      .md .cursor { display: inline-block; width: 0.5em; animation: blink 1s steps(2) infinite; }
+      @keyframes blink { 50% { opacity: 0; } }
+      .learn-foot { display: flex; gap: 0.6rem; padding: 0.9rem 1.3rem 1.1rem;
+        border-top: 1px solid var(--border-soft); align-items: flex-end; }
+      .learn-foot textarea { flex: 1; resize: none; max-height: 120px; border: 1px solid var(--border);
+        border-radius: 10px; background: var(--bg); color: var(--text); padding: 0.6rem 0.7rem;
+        font: inherit; font-size: 0.9rem; line-height: 1.4; }
+      .learn-foot textarea:focus { outline: none; border-color: var(--accent); }
+      .learn-send { width: auto; margin: 0; padding: 0.6rem 1.1rem; font-size: 0.9rem;
+        border-radius: 10px; white-space: nowrap; }
+      .learn-send[disabled] { opacity: 0.5; cursor: default; }
+      @media (max-width: 560px) { .learn-panel { width: 100vw; } }
+
       .stage-soon { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 0.9rem; }
       .stage-soon .s {
         font-size: 0.72rem; color: var(--faint); border: 1px dashed var(--border); border-radius: 8px;
@@ -772,7 +834,10 @@
           <div class="card transcript-card">
             <div class="transcript-head">
               <h2>Live transcript</h2>
-              <span class="chip" style="font-size:0.72rem;">auto-scrolling</span>
+              <div style="display:flex; gap:0.5rem; align-items:center;">
+                <button class="ghost learn-open" id="learnBtn" type="button" title="Step aside and read up on the current topic — no voice, just a written explanation you can study">📖 Learn this</button>
+                <span class="chip" style="font-size:0.72rem;">auto-scrolling</span>
+              </div>
             </div>
             <div id="log">
               <div class="empty-note" id="emptyNote">The interviewer will greet you in a moment. Your conversation will appear here.</div>
@@ -807,6 +872,23 @@
             </p>
           </div>
         </details>
+
+        <!-- ===== "Learn this" slide-over: a written tutor, no voice ===== -->
+        <div id="learnScrim" class="learn-scrim" hidden></div>
+        <aside id="learnPanel" class="learn-panel" hidden aria-label="Learn this topic">
+          <div class="learn-head">
+            <div>
+              <div class="learn-title">📖 Learn this</div>
+              <div class="learn-sub" id="learnSub">A written explanation — the interview is paused while you read.</div>
+            </div>
+            <button class="ghost" id="learnClose" type="button" title="Back to the interview">Back to interview ✕</button>
+          </div>
+          <div class="learn-body" id="learnThread"></div>
+          <div class="learn-foot">
+            <textarea id="learnInput" rows="1" placeholder="Ask a follow-up about this topic…" spellcheck="true"></textarea>
+            <button class="cta learn-send" id="learnSend" type="button">Ask</button>
+          </div>
+        </aside>
       </div>
 
       <!-- ==================== DEBRIEF ==================== -->
@@ -1202,6 +1284,170 @@
         }
       }
 
+      // ================= "Learn this" tutor side panel =================
+      // A text-only teacher that reads the recent transcript for CONTEXT and
+      // streams a written explanation you can study — no voice, and it never
+      // touches the live WebSocket. Its own follow-up thread lives here so it's
+      // a real conversation. The point: learn a topic without leaving the app.
+      const learnPanel = $("learnPanel"), learnScrim = $("learnScrim");
+      const learnThreadEl = $("learnThread"), learnInput = $("learnInput"), learnSend = $("learnSend");
+      let learnThread = [];        // [{role:'user'|'assistant', content}]
+      let learnBusy = false;
+
+      // Escape untrusted text before it ever touches innerHTML.
+      function esc(s) {
+        return s.replace(/[&<>"']/g, (c) => (
+          { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+      }
+      // A small, safe Markdown -> HTML renderer: fenced code, inline code, headings,
+      // bold/italic, links, and ordered/unordered lists. Everything is escaped first,
+      // so no raw HTML from the model can execute.
+      function md(src) {
+        const blocks = [];
+        // pull out ``` fenced code first so its contents aren't further formatted
+        src = src.replace(/```[\w-]*\n?([\s\S]*?)```/g, (_, code) => {
+          blocks.push("<pre><code>" + esc(code.replace(/\n$/, "")) + "</code></pre>");
+          return " " + (blocks.length - 1) + " ";
+        });
+        const inline = (t) => esc(t)
+          .replace(/`([^`]+)`/g, (_, c) => "<code>" + c + "</code>")
+          .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
+          .replace(/(^|[^*])\*([^*\n]+)\*/g, "$1<em>$2</em>")
+          .replace(/\[([^\]]+)\]\((https?:[^)\s]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
+        const out = [];
+        let list = null;  // 'ul' | 'ol' | null
+        let quote = false;  // inside a > blockquote
+        const closeList = () => { if (list) { out.push("</" + list + ">"); list = null; } };
+        const closeQuote = () => { if (quote) { out.push("</blockquote>"); quote = false; } };
+        const close = () => { closeList(); closeQuote(); };
+        for (const raw of src.split("\n")) {
+          const line = raw.replace(/ (\d+) /g, (_, i) => blocks[+i]);
+          if (line.startsWith(" ") || /^<pre>/.test(line)) { close(); out.push(line); continue; }
+          let m;
+          if ((m = line.match(/^(#{1,6})\s+(.*)$/))) {
+            close(); const h = Math.min(m[1].length, 3); out.push(`<h${h}>${inline(m[2])}</h${h}>`);
+          } else if ((m = line.match(/^\s*>\s?(.*)$/))) {
+            closeList(); if (!quote) { out.push("<blockquote>"); quote = true; }
+            if (m[1].trim()) out.push("<p>" + inline(m[1]) + "</p>");
+          } else if ((m = line.match(/^\s*[-*]\s+(.*)$/))) {
+            closeQuote(); if (list !== "ul") { closeList(); out.push("<ul>"); list = "ul"; }
+            out.push("<li>" + inline(m[1]) + "</li>");
+          } else if ((m = line.match(/^\s*\d+[.)]\s+(.*)$/))) {
+            closeQuote(); if (list !== "ol") { closeList(); out.push("<ol>"); list = "ol"; }
+            out.push("<li>" + inline(m[1]) + "</li>");
+          } else if (line.trim() === "") {
+            close();
+          } else {
+            close(); out.push("<p>" + inline(line) + "</p>");
+          }
+        }
+        close();
+        return out.join("\n");
+      }
+
+      // Recent interview turns, read straight from the transcript DOM so context
+      // is always current (no parallel array to keep in sync).
+      function transcriptContext() {
+        return [...logEl.querySelectorAll(".turn")].slice(-8).map((t) => ({
+          role: t.classList.contains("you") ? "user" : "assistant",
+          content: (t.querySelector("div:last-child") || {}).textContent || "",
+        })).filter((m) => m.content.trim());
+      }
+
+      function openLearn() {
+        learnPanel.hidden = false; learnScrim.hidden = false;
+        // First open of a fresh topic: auto-explain what we're on right now.
+        if (!learnThread.length) askLearn("");
+        setTimeout(() => learnInput.focus(), 60);
+      }
+      function closeLearn() { learnPanel.hidden = true; learnScrim.hidden = true; }
+
+      function addLearnBubble(cls, who) {
+        if (learnThreadEl.querySelector(".learn-empty")) learnThreadEl.innerHTML = "";
+        const wrap = document.createElement("div");
+        wrap.className = cls;
+        wrap.innerHTML = `<div class="who">${who}</div>`;
+        const body = document.createElement("div");
+        if (cls === "learn-a") body.className = "md";
+        wrap.appendChild(body); learnThreadEl.appendChild(wrap);
+        learnThreadEl.scrollTop = learnThreadEl.scrollHeight;
+        return body;
+      }
+
+      // Stream one tutor turn. question === "" means "explain the current topic".
+      async function askLearn(question) {
+        if (learnBusy) return;
+        learnBusy = true; learnSend.disabled = true;
+        if (question) {
+          addLearnBubble("learn-q", "You asked").textContent = question;
+          learnThread.push({ role: "user", content: question });
+        } else {
+          addLearnBubble("learn-q", "Topic").textContent = "Explain what we're working on right now.";
+        }
+        const answerEl = addLearnBubble("learn-a", "Explanation");
+        answerEl.innerHTML = '<span class="cursor">▍</span>';
+        let raw = "", frame = 0;
+        try {
+          const res = await fetch("/api/learn", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              interview_type: interviewType,
+              problem: activeProblem ? { title: activeProblem.title, prompt: activeProblem.prompt } : null,
+              context: transcriptContext(),
+              thread: learnThread.slice(0, question ? -1 : undefined),
+              question,
+            }),
+          });
+          if (!res.ok || !res.body) throw new Error("HTTP " + res.status);
+          const reader = res.body.getReader(), dec = new TextDecoder();
+          for (;;) {
+            const { value, done } = await reader.read();
+            if (done) break;
+            raw += dec.decode(value, { stream: true });
+            // throttle re-render to animation frames so long answers stay smooth
+            cancelAnimationFrame(frame);
+            frame = requestAnimationFrame(() => {
+              answerEl.innerHTML = md(raw) + '<span class="cursor">▍</span>';
+              learnThreadEl.scrollTop = learnThreadEl.scrollHeight;
+            });
+          }
+          cancelAnimationFrame(frame);
+          answerEl.innerHTML = md(raw) || "<p><em>No explanation came back — try asking directly.</em></p>";
+          learnThread.push({ role: "assistant", content: raw });
+        } catch (err) {
+          answerEl.innerHTML = "<p><em>Couldn't load the explanation (" + esc(String(err.message || err)) + "). Is the server running?</em></p>";
+        } finally {
+          learnBusy = false; learnSend.disabled = false;
+          learnThreadEl.scrollTop = learnThreadEl.scrollHeight;
+        }
+      }
+
+      $("learnBtn").onclick = openLearn;
+      $("learnClose").onclick = closeLearn;
+      learnScrim.onclick = closeLearn;
+      learnSend.onclick = () => {
+        const q = learnInput.value.trim();
+        if (!q || learnBusy) return;
+        learnInput.value = ""; learnInput.style.height = "auto";
+        askLearn(q);
+      };
+      // Enter sends, Shift+Enter newlines; grow the box with content; Esc closes.
+      learnInput.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); learnSend.onclick(); }
+        else if (e.key === "Escape") closeLearn();
+      });
+      learnInput.addEventListener("input", () => {
+        learnInput.style.height = "auto";
+        learnInput.style.height = Math.min(learnInput.scrollHeight, 120) + "px";
+      });
+      // Reset the thread for each new interview so old topics don't leak in.
+      function resetLearn() {
+        learnThread = []; learnBusy = false; closeLearn();
+        learnThreadEl.innerHTML = '<div class="learn-empty">Ask about anything from the interview — the approach, the time complexity, a concept you want to nail down. You get a written explanation to study, then jump back in.</div>';
+      }
+      resetLearn();
+
       // ---- audio capture helpers ----
       function downsample(input, inRate, outRate) {
         if (inRate === outRate) return input;
@@ -1487,6 +1733,7 @@
           if (role) { $("metaRole").style.display = ""; $("metaRoleVal").textContent = role; }
           activeProblem = resolveProblem();   // null for a conversational round
           setupCodingWorkspace();             // shows the editor iff there's a problem
+          resetLearn();                       // fresh tutor thread per interview
           connect();
           running = true;
           setupView.style.display = "none"; liveView.style.display = "block";
@@ -1635,6 +1882,7 @@
         $("directorLog").innerHTML = '<span class="dd-empty">no actions yet</span>';
         emptyCleared = false; framesSent = 0; turnCount = 0; answeredCount = 0; muted = false;
         aiBubble = null; liveBubble = null;
+        resetLearn();   // close the tutor panel and clear its thread
         muteBtn.classList.remove("muted"); muteBtn.textContent = "Mute"; $("micIco").textContent = "🎤";
         // tear down the coding workspace so the next round starts clean
         clearTimeout(codeSendTimer); stopQuestionTimer(); activeProblem = null;

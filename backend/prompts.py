@@ -294,3 +294,91 @@ DIRECTIVE_INSTRUCTIONS = {
     "switch_topic": 'Direction for this turn: move to a new topic — {detail}. Briefly acknowledge their last answer, then ask ONE opening question on it.',
     "end_interview": 'Direction for this turn: wrap up the interview now ({detail}). Thank the candidate warmly in one or two sentences and close. Do NOT ask another question.',
 }
+
+
+# --- "Learn this" side panel: a written tutor, OUTSIDE the interview ----------
+# When the candidate steps aside to understand a topic, this is a text-only
+# teacher — no spoken persona, no TTS, no director. It reads the recent interview
+# turns purely as context for WHAT to explain, then teaches in Markdown (headings,
+# code fences, Big-O) the way a good reference article would. Its whole reason to
+# exist is so the candidate never has to leave the app for ChatGPT mid-practice.
+TUTOR_SYSTEM = """You are an expert, patient teacher embedded in an interview-practice app. \
+The candidate has PAUSED their mock interview to understand a topic more deeply, and is READING \
+your answer — you are not speaking, and you are not the interviewer.
+
+How to teach:
+- Write for the eye, not the ear. Use Markdown freely: `##` headings, **bold**, bullet and \
+numbered lists, and fenced ```code``` blocks for any code or pseudocode.
+- Build intuition first (the WHY and the mental model), then the precise mechanics.
+- For anything algorithmic, always state time AND space complexity as Big-O, and name the \
+approach (e.g. "sliding window", "two-pointer").
+- Prefer one concrete worked example over three vague paragraphs.
+- Be thorough but skimmable. The interview clock is paused, so depth is welcome — but no filler, \
+no "great question", no restating the question back. Just teach.
+- Ground every answer in the specific thing the candidate was just asked (given as BACKGROUND). \
+Teach the concept behind it, not their exact answer — this is learning, not grading.
+- If they haven't asked a specific question yet, explain the core concept behind the CURRENT \
+topic end to end: what it is, the standard approach step by step, its complexity, common \
+pitfalls, and a short worked example."""
+
+# The synthetic first turn when the panel is opened without a typed question —
+# "just explain what we're on right now".
+_LEARN_AUTO = (
+    "Explain the concept behind what we're currently discussing — what it is, the standard "
+    "approach step by step, the time and space complexity, common pitfalls, and a short worked "
+    "example. Teach it clearly."
+)
+
+
+def build_learn_messages(payload: dict) -> list[dict]:
+    """Turn a /api/learn request into an LLM message list for the tutor.
+
+    payload = {
+      interview_type: str,
+      problem: {title, prompt} | None,      # the hands-on problem, if any
+      context: [{role, content}, ...],      # recent interview transcript (read-only)
+      thread:  [{role, content}, ...],      # the panel's own prior Q&A (memory)
+      question: str,                        # the new question ("" => auto-explain)
+    }
+
+    The interview transcript goes into the SYSTEM prompt as BACKGROUND (it is
+    reference material, not part of the tutoring dialogue), while the panel's own
+    thread is passed as real user/assistant turns so follow-ups have memory.
+    """
+    interview_type = (payload.get("interview_type") or "").strip() or "a technical"
+    problem = payload.get("problem") or None
+    context = payload.get("context") or []
+    thread = payload.get("thread") or []
+    question = (payload.get("question") or "").strip()
+
+    bg = [
+        f"The candidate is in a {interview_type} mock interview and has stepped aside to learn."
+    ]
+    if problem and (problem.get("title") or problem.get("prompt")):
+        bg.append(
+            "CURRENT PROBLEM — "
+            + (problem.get("title") or "(untitled)")
+            + ":\n"
+            + (problem.get("prompt") or "").strip()
+        )
+    turns = [
+        f"{'Interviewer' if m.get('role') == 'assistant' else 'Candidate'}: {m.get('content','').strip()}"
+        for m in context[-8:]
+        if m.get("content")
+    ]
+    if turns:
+        bg.append(
+            "RECENT INTERVIEW CONVERSATION (context for what they want to understand — "
+            "teach the underlying concept, do not grade their answer):\n" + "\n".join(turns)
+        )
+    system = TUTOR_SYSTEM + "\n\n--- BACKGROUND ---\n" + "\n\n".join(bg)
+
+    messages = [{"role": "system", "content": system}]
+    for m in thread:
+        if m.get("role") in ("user", "assistant") and m.get("content"):
+            messages.append({"role": m["role"], "content": m["content"]})
+    if question:
+        messages.append({"role": "user", "content": question})
+    elif not thread:
+        messages.append({"role": "user", "content": _LEARN_AUTO})
+    return messages
