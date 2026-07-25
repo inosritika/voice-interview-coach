@@ -115,6 +115,37 @@ def test_debug_snippets_are_actually_buggy():
     assert ns["factorial"](5) == 24  # off by a factor of n
 
 
+def test_company_favourites_all_exist():
+    """A typo'd id in the company map would silently give a company fewer real
+    favourites — catch it here."""
+    ids = {p.id for p in problems.PROBLEMS}
+    for company, favs in problems._COMPANY_FAVORITES.items():
+        missing = [i for i in favs if i not in ids]
+        assert not missing, f"{company} lists non-existent problems: {missing}"
+
+
+def test_company_reorders_but_never_hides():
+    """Picking a company floats its favourites to the top of the picker without
+    dropping any problem — you can still choose the others."""
+    plain = problems.list_problems(topic="dsa")
+    google = problems.list_problems(topic="dsa", company="google")
+    assert len(plain) == len(google)                       # nothing hidden
+    assert "google" in google[0].companies                 # a favourite is first
+    # generic is neutral — same order as no company at all
+    assert [p.id for p in problems.list_problems(topic="dsa", company="generic")] == \
+           [p.id for p in plain]
+
+
+def test_switch_prefers_company_but_explicit_request_wins():
+    cur = problems.get_problem("two-sum-sorted")
+    picks = [problems.match_switch("give me another problem", cur, company="meta").id
+             for _ in range(30)]
+    assert all("meta" in problems.get_problem(i).companies for i in picks)
+    # an explicit difficulty still overrides the soft company bias
+    nxt = problems.match_switch("give me an easy problem", cur, company="google")
+    assert nxt.difficulty == "easy"
+
+
 if __name__ == "__main__":
     tests = [v for k, v in sorted(globals().items()) if k.startswith("test_")]
     passed = 0

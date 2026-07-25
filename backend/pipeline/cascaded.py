@@ -56,6 +56,7 @@ async def reply_events(
             turn_history[-1]["content"],
             director_state.problem,
             exclude=getattr(director_state, "shown_problems", None),
+            company=getattr(director_state, "company", None),
         )
         if nxt is not None:
             director_state.problem = nxt

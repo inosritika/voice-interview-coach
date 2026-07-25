@@ -37,6 +37,7 @@ class Problem:
     interviewer_brief: str  # PRIVATE — intended solution / planted bug / trade-offs
     tags: tuple[str, ...] = ()   # topic tags for filtering: "array", "graph", "heap"…
     minutes: int = 0             # suggested time budget; 0 = derive from difficulty
+    companies: tuple[str, ...] = ()  # companies known to favour this pattern (for biased picks)
 
     # Rough time budgets by difficulty, like a real interview clock.
     _DEFAULT_MIN = {"easy": 15, "medium": 25, "hard": 35, "custom": 25}
@@ -1349,6 +1350,127 @@ _BANK3 = [
     ),
 ]
 
+# ---- BANK 4: canonical patterns that were still missing --------------------
+# Standard, widely-asked problems (Kadane, prefix-sum, etc.) — original write-ups.
+_BANK4 = [
+    Problem(
+        id="max-subarray", fmt="solve", topic="dsa",
+        title="Maximum subarray sum", difficulty="medium",
+        prompt=(
+            "Given an integer array, return the largest sum of any contiguous subarray "
+            "(the subarray must contain at least one number).\n\n"
+            "Example: [-2, 1, -3, 4, -1, 2, 1, -5, 4] -> 6, from the subarray [4, -1, 2, 1].\n\n"
+            "Can you do it in a single pass?"
+        ),
+        starter_code="def max_subarray(nums):\n    # return the largest contiguous subarray sum\n    pass\n",
+        language="python",
+        interviewer_brief=(
+            "Kadane's algorithm: best_here = max(x, best_here + x) as you scan; the answer is the "
+            "max best_here seen. O(n) time, O(1) space. The trap is the all-negative case — seed "
+            "with the first element (or -inf), never 0, or you'll wrongly return 0."
+        ),
+    ),
+    Problem(
+        id="subarray-sum-k", fmt="solve", topic="dsa",
+        title="Subarrays summing to K", difficulty="medium",
+        prompt=(
+            "Given an integer array and an integer k, return how many contiguous subarrays "
+            "sum to exactly k.\n\n"
+            "Example: nums = [1, 1, 1], k = 2 -> 2.   nums = [1, 2, 3], k = 3 -> 2.\n\n"
+            "Brute force is O(n^2). Can you do better?"
+        ),
+        starter_code="def subarray_sum(nums, k):\n    # count contiguous subarrays whose sum is k\n    pass\n",
+        language="python",
+        interviewer_brief=(
+            "Running prefix sum + a hashmap of prefix-sum -> count. For each running sum s, add "
+            "count.get(s - k, 0) to the answer, then bump count[s]. Seed count[0] = 1 so subarrays "
+            "starting at index 0 are counted. O(n) time and space."
+        ),
+    ),
+    Problem(
+        id="add-two-numbers", fmt="solve", topic="dsa",
+        title="Add two numbers as linked lists", difficulty="medium",
+        prompt=(
+            "Two non-empty linked lists represent two non-negative integers, digits stored in "
+            "reverse order (ones digit first). Add them and return the sum as a linked list in "
+            "the same format.\n\n"
+            "Example: (2 -> 4 -> 3) which is 342, plus (5 -> 6 -> 4) which is 465, gives "
+            "7 -> 0 -> 8 which is 807."
+        ),
+        starter_code=(
+            "class ListNode:\n"
+            "    def __init__(self, val=0, next=None):\n"
+            "        self.val = val\n"
+            "        self.next = next\n\n"
+            "def add_two_numbers(l1, l2):\n"
+            "    # return the sum as a reverse-order linked list\n"
+            "    pass\n"
+        ),
+        language="python",
+        interviewer_brief=(
+            "Walk both lists together with a carry: digit = (a + b + carry) % 10, "
+            "carry = (a + b + carry) // 10. Use a dummy head to simplify. After both lists end, "
+            "if carry is still 1 append a final node. O(max(m, n)) time."
+        ),
+    ),
+    Problem(
+        id="move-zeroes", fmt="solve", topic="dsa",
+        title="Move zeroes to the end", difficulty="easy",
+        prompt=(
+            "Given an integer array, move every 0 to the end while keeping the relative order of "
+            "the non-zero elements. Do it in place.\n\n"
+            "Example: [0, 1, 0, 3, 12] -> [1, 3, 12, 0, 0]."
+        ),
+        starter_code="def move_zeroes(nums):\n    # modify nums in place; return nothing\n    pass\n",
+        language="python",
+        interviewer_brief=(
+            "Two pointers: a write index for the next non-zero slot. Scan once, and whenever "
+            "nums[i] is non-zero write it to nums[write] and advance write; then fill the tail "
+            "from write onward with zeros. O(n) time, O(1) space."
+        ),
+    ),
+]
+
+# ---- company associations ---------------------------------------------------
+# Which companies are widely known to favour a given canonical pattern. This is
+# public, unownable knowledge (the patterns themselves, not anyone's problem
+# text), used only to BIAS which of our own problems we surface when a company is
+# picked — a problem can be favoured by several, and untagged problems still show
+# up under "Generic" and as fallbacks.
+_COMPANY_FAVORITES: dict[str, tuple[str, ...]] = {
+    "google": (
+        "number-of-islands", "clone-graph", "course-schedule", "word-ladder", "alien-dictionary",
+        "rotting-oranges", "word-search", "trapping-rain", "merge-intervals", "insert-interval",
+        "non-overlapping", "min-window", "longest-consecutive", "three-sum", "largest-rectangle",
+        "lru-cache", "top-k-frequent", "median-stream", "serialize-tree", "spiral-matrix",
+        "max-subarray", "subarray-sum-k", "design-typeahead", "design-distributed-cache",
+        "design-url-shortener",
+    ),
+    "meta": (
+        "valid-palindrome", "valid-parentheses", "merge-intervals", "min-rooms", "three-sum",
+        "group-anagrams", "top-k-frequent", "kth-largest-stream", "lca-bst", "right-side-view",
+        "level-order", "validate-bst", "subsets", "product-except-self", "min-stack",
+        "remove-nth-node", "add-two-numbers", "subarray-sum-k", "move-zeroes", "number-of-islands",
+        "clone-graph", "design-news-feed", "design-chat", "design-typeahead",
+    ),
+    "openai": (
+        "ml-gradient-step", "ml-logistic-predict", "ml-softmax", "ml-kmeans-step", "ml-kmeans-full",
+        "ml-roc-auc", "ml-knn", "ml-confusion", "lru-cache", "min-window", "median-stream",
+        "design-rate-limiter", "design-distributed-cache", "design-ride-dispatch", "max-subarray",
+        "koko-bananas",
+    ),
+    "anthropic": (
+        "ml-precision-recall", "ml-roc-auc", "ml-confusion", "ml-logistic-predict", "ml-knn",
+        "ml-softmax", "ml-gradient-step", "validate-bst", "design-rate-limiter", "design-notification",
+        "design-distributed-cache", "min-window", "median-stream", "alien-dictionary", "word-ladder",
+    ),
+}
+# invert to per-problem: id -> (company, ...)
+_COMPANIES: dict[str, tuple[str, ...]] = {}
+for _co, _ids in _COMPANY_FAVORITES.items():
+    for _pid in _ids:
+        _COMPANIES[_pid] = _COMPANIES.get(_pid, ()) + (_co,)
+
 # Backfill topic tags on the original entries without editing each one.
 _TAGS = {
     "first-unique": ("array", "hashing"), "pair-sum": ("array", "hashing"),
@@ -1361,8 +1483,8 @@ _TAGS = {
 import dataclasses as _dc  # noqa: E402
 
 PROBLEMS: list[Problem] = [
-    _dc.replace(p, tags=p.tags or _TAGS.get(p.id, ()))
-    for p in (_SOLVE + _DEBUG + _DESIGN + _MORE + _BANK2 + _BANK3)
+    _dc.replace(p, tags=p.tags or _TAGS.get(p.id, ()), companies=_COMPANIES.get(p.id, ()))
+    for p in (_SOLVE + _DEBUG + _DESIGN + _MORE + _BANK2 + _BANK3 + _BANK4)
 ]
 _BY_ID: dict[str, Problem] = {p.id: p for p in PROBLEMS}
 
@@ -1504,7 +1626,8 @@ def _target_topic(text: str) -> str | None:
 
 
 def match_switch(
-    text: str, current: "Problem | None", exclude: "set[str] | None" = None
+    text: str, current: "Problem | None", exclude: "set[str] | None" = None,
+    company: str | None = None,
 ) -> "Problem | None":
     """If the candidate asked for a different problem, return a NEW one that fits
     their format/difficulty/topic hints; else None. Only for coding rounds.
@@ -1537,6 +1660,12 @@ def match_switch(
         pool = [p for p in pool if tag in p.tags] or pool
     if diff:
         pool = [p for p in pool if p.difficulty == diff] or pool
+    # Soft company bias: if a target company was set, prefer the problems it favours,
+    # but only when that doesn't empty the pool — an explicit tag/difficulty request
+    # still wins.
+    company = (company or "").strip()
+    if company and company != "generic":
+        pool = [p for p in pool if company in p.companies] or pool
     # Last: among everything that matches what they asked for, prefer a problem
     # they haven't already been given. Only recycle once the pool is exhausted.
     seen = set(exclude or ())
@@ -1556,12 +1685,19 @@ def get_problem(pid: str | None) -> Problem | None:
     return _BY_ID.get((pid or "").strip())
 
 
-def list_problems(fmt: str | None = None, topic: str | None = None) -> list[Problem]:
-    out = PROBLEMS
+def list_problems(
+    fmt: str | None = None, topic: str | None = None, company: str | None = None
+) -> list[Problem]:
+    out = [p for p in PROBLEMS]
     if fmt:
         out = [p for p in out if p.fmt == fmt]
     if topic:
         out = [p for p in out if p.topic == topic]
+    # A company just re-orders (favourites first) — it never hides problems, so the
+    # picker still offers everything and untagged rounds are unaffected.
+    company = (company or "").strip()
+    if company and company != "generic":
+        out.sort(key=lambda p: company not in p.companies)
     return list(out)
 
 

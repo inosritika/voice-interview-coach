@@ -134,10 +134,13 @@ async def api_progress(candidate: str = "") -> dict:
 
 
 @app.get("/api/problems")
-async def api_problems(fmt: str | None = None, topic: str | None = None) -> dict:
+async def api_problems(
+    fmt: str | None = None, topic: str | None = None, company: str | None = None
+) -> dict:
     """The lobby's problem picker. Returns PUBLIC fields only — the interviewer's
-    private brief (intended solution / planted bug) never leaves the server."""
-    return {"problems": [p.public() for p in problems.list_problems(fmt, topic)]}
+    private brief (intended solution / planted bug) never leaves the server. A
+    `company` just re-orders the list (its favourites first); nothing is hidden."""
+    return {"problems": [p.public() for p in problems.list_problems(fmt, topic, company)]}
 
 
 @app.post("/api/learn")
