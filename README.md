@@ -1,70 +1,54 @@
-# Interview Studio — Voice Interview Coach
+# Interview Studio
 
-A hands-free, real-time **AI mock-interview partner** you run on your own machine.
-You talk; it listens, asks follow-ups, and talks back — like a real interviewer.
-Practice **behavioral, DSA, machine-learning, and system-design** rounds, work
-real coding problems in a live editor, step aside to **read up on any topic**
-mid-interview, and get a **scored debrief** at the end.
+A voice-based mock interview app that runs on your laptop. You talk, it listens
+and talks back, and it behaves like an actual interviewer — asks a question,
+hears you out, follows up on what you actually said, and moves on when it's time.
+It covers behavioral, DSA, machine learning, and system design rounds, and for
+coding rounds there's a live editor it can watch while you type.
 
-It runs **locally by default** — speech-to-text and text-to-speech are on-device,
-and you choose the "brain": your **Claude Code subscription** (no API key), a
-**local Ollama model** (fully offline), or a **hosted API**. Every stage sits
-behind an adapter, so switching is a one-line change in `.env`.
+I built it to learn the voice-AI and agent stack by hand, so it isn't a thin
+wrapper around one "realtime" API. The pipeline — mic → voice detection →
+speech-to-text → LLM → text-to-speech — is wired up stage by stage, and every
+stage is swappable behind an adapter. If you want the long version of how it all
+fits together, there's a walkthrough in
+[docs/learning-guide.html](docs/learning-guide.html).
 
-> Built as a hands-on way to learn the voice-AI + agent stack from scratch. If you
-> want the *why* behind each component, open
-> [docs/learning-guide.html](docs/learning-guide.html) in a browser — a full
-> what/why/how walkthrough with diagrams and a glossary.
+Speech-to-text and text-to-speech run locally. The one real choice you make is
+the brain: your Claude Code subscription (no API key), a local model through
+Ollama (fully offline), or a hosted API.
 
----
+## What it does
 
-## ✨ What you can do
+You pick a round — behavioral, DSA, ML, or system design — and one of two formats.
+Discussion is a talk-it-through round: concepts, reasoning, trade-offs, voice only.
+Hands-on gives you a code editor and a real problem to work; the interviewer sees
+your code as you write it and reacts to it. There's a bank of 88 problems (easy
+through hard, across DSA, ML, and system design) with a per-question timer, and
+you can paste your own instead.
 
-- **🎙️ Just talk.** Hands-free voice in, voice out. No push-to-talk — the app
-  detects when you start and stop speaking. **Interrupt any time** (barge-in),
-  even mid-sentence, just like a real conversation.
-- **🧠 An interviewer that adapts.** An agentic "director" decides each turn —
-  probe deeper, move on, or wrap up — based on what you actually said. It asks
-  **one question at a time** and doesn't read from a script.
-- **📚 Four kinds of round:** Behavioral · DSA · Machine Learning · System Design.
-  Each opens with a different question every time.
-- **Two formats per round:**
-  - **💬 Discussion** — talk through concepts, reasoning, and trade-offs (voice only).
-  - **⌨️ Hands-on** — a **live code editor** the interviewer can see as you type,
-    paired with a real problem from a built-in bank of **88 problems**
-    (easy / medium / hard across DSA, ML, and system design) and a per-question timer.
-- **🗣️ Steer it like a real interview.** Say *"give me a harder one"*, *"next
-  problem"*, *"can I get a hint"*, or *"I give up — walk me through the answer"*,
-  and it responds. Ask for a **debug-this-code** problem and you get buggy code to fix.
-- **📖 "Learn this" — learn without leaving the app.** During any interview, hit
-  **📖 Learn this** to open a side panel with a **written** explanation of the
-  current topic (approach, complexity, worked example) — no voice, just a doc you
-  can study. Ask follow-up questions in the panel, then jump back into the interview.
-- **📝 Live transcript** of the whole conversation, written as you speak.
-- **📊 Scored debrief.** At the end you get an overall score, per-dimension bars
-  (structure, specificity, ownership, communication), strengths/improvements, and
-  delivery metrics computed from your own speech (words-per-minute, filler rate,
-  talk-time ratio). Export the transcript.
-- **📈 Progress across sessions.** A lightweight local profile tracks your recurring
-  weak points so you can see what keeps coming up.
+Once you're in, you just talk. There's no push-to-talk button — it figures out
+when you've started and stopped. You can cut in while it's still speaking, the
+same way you'd interrupt a person. And you can steer it out loud: ask for a harder
+problem, the next question, a hint, or "just show me the answer" and it goes along
+with it.
 
----
+Two things worth calling out. **Learn this** is a button in the transcript that
+opens a side panel and writes you a proper explanation of whatever you're stuck on
+— the approach, the complexity, a worked example — as text you can read, with
+follow-up questions, without the interviewer reading it aloud and without leaving
+the app for ChatGPT. And at the end you get a **debrief**: an overall score, a
+breakdown by dimension, what you did well and what to work on, plus delivery
+numbers pulled from your own speech (pace, filler words, how much you talked).
+A small local profile remembers your recurring weak points between sessions.
 
-## 🚀 Quick start
+## Running it
 
-### 1. Prerequisites
+You'll need Python 3.10 or newer and ffmpeg (whisper uses it to decode your mic).
+On macOS that's `brew install ffmpeg`; on Debian/Ubuntu, `sudo apt install ffmpeg`.
+On Windows, run the whole thing under WSL2 — the audio path assumes a Unix-ish
+environment.
 
-| Need | Why | Install |
-|---|---|---|
-| **Python 3.10+** | runs the backend | python.org / your package manager |
-| **ffmpeg** | whisper decodes your mic audio | macOS `brew install ffmpeg` · Debian/Ubuntu `sudo apt install ffmpeg` |
-| **A piper voice** | the interviewer's voice (local TTS) | see step 3 |
-| **An LLM engine** | the interviewer's brain | **Claude CLI** (default) *or* **Ollama** (offline) — see step 4 |
-
-> **Windows:** run it under **WSL2** (Ubuntu). The audio pipeline and shell steps
-> assume a Unix-like environment.
-
-### 2. Install
+Clone it and install the Python side:
 
 ```bash
 git clone https://github.com/inosritika/voice-interview-coach.git
@@ -74,11 +58,10 @@ python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-### 3. Download a voice for the interviewer
-
-Piper voices are two files (`.onnx` + `.onnx.json`). Grab one from the
-[piper voices list](https://github.com/rhasspy/piper/blob/master/VOICES.md) and
-drop both into `backend/voices/`. A good default is `en_US-lessac-medium`:
+The interviewer needs a voice. Piper voices come as two files (`.onnx` and
+`.onnx.json`); grab one from the [piper voices list](https://github.com/rhasspy/piper/blob/master/VOICES.md)
+and drop both into `backend/voices/`. `en_US-lessac-medium` is a fine default and
+it's what `.env` already points at:
 
 ```bash
 mkdir -p voices && cd voices
@@ -87,169 +70,146 @@ curl -LO https://huggingface.co/rhasspy/piper-voices/resolve/main/en/en_US/lessa
 cd ..
 ```
 
-`.env` already points `PIPER_VOICE` at this file. (The first whisper run also
-auto-downloads its small STT model — no manual step.)
+(The speech-to-text model downloads itself the first time you run — nothing to do
+there.)
 
-### 4. Pick the interviewer's brain
-
-Copy the config, then choose **one** of the two easy paths:
+Now copy the config and pick the brain:
 
 ```bash
 cp ../.env.example ../.env
 ```
 
-**Path A — Claude via your Claude Code subscription (default, best quality, no API key):**
+The default is Claude through your Claude Code subscription, which is the best
+interviewer and needs no API key — just the CLI, signed in:
 
 ```bash
-npm install -g @anthropic-ai/claude-code   # the `claude` CLI
-claude                                      # run once, then /login to sign in
+npm install -g @anthropic-ai/claude-code
+claude          # run it once and use /login to sign in
 ```
 
-`.env` already has `LLM_ENGINE=claude`. That's it.
-
-**Path B — Fully offline with Ollama (no subscription, no internet):**
+If you'd rather stay fully offline, install [Ollama](https://ollama.com), pull a
+model, and switch one line:
 
 ```bash
-# install Ollama from https://ollama.com, then:
 ollama pull qwen2.5:7b
+# then set LLM_ENGINE=local in .env
 ```
 
-Then set `LLM_ENGINE=local` in `.env`.
-
-### 5. Run
+Then start it, from `backend/` with the venv active:
 
 ```bash
-# from backend/, with the venv active
 uvicorn main:app --reload
 ```
 
-Open **http://localhost:8000** and click **Start interview**. Allow microphone
-access when the browser asks. 🎧 **Headphones are recommended** — they make
-interrupting the interviewer more reliable.
+Open http://localhost:8000, hit Start interview, and let the browser use your mic.
+Use headphones if you can — they make interrupting the interviewer a lot more
+reliable, since the app won't hear itself through your speakers.
 
----
+## Using it
 
-## 🧭 Using the interviewer
+The lobby is where you set up the round: the type, the difficulty, and optionally
+a job description and resume so the questions lean toward what you're actually
+interviewing for. That text never leaves your machine. Then choose Discussion or
+Hands-on, and for Hands-on either pick a problem or paste your own.
 
-1. **In the lobby**, pick a **round type** (Behavioral / DSA / ML / System Design)
-   and a difficulty. Optionally paste or upload a **job description** and **resume**
-   so questions are tailored — nothing is uploaded anywhere; it stays on your machine.
-2. **Choose a format:**
-   - **💬 Discussion** for a talk-it-through round, or
-   - **⌨️ Hands-on** to get a live editor and a real problem. Pick one from the
-     bank or paste your own.
-3. **Start**, then **just talk** to answer. The interviewer speaks; start speaking
-   any time to **interrupt** it.
-4. **Steer the session by voice** — for coding rounds especially:
-   - *"Can we move on to the next problem?"* / *"next question"*
-   - *"Give me something harder"* / *"an easier one"* / *"increase the difficulty"*
-   - *"Give me a **medium graph** problem"* (topic + difficulty)
-   - *"Can I get a hint?"*
-   - *"I give up — can you explain the solution?"* → it teaches you the answer
-   - *"Give me a **debug** problem"* → you get buggy code to fix
-5. **📖 Learn this** (top of the transcript) opens the written-explanation panel for
-   the current topic. Type follow-up questions there, then **Back to interview**.
-6. **End interview** → you get the **scored debrief**. Export the transcript if you like.
-7. **Progress** (from the lobby) shows your recurring weak points across sessions.
+During the interview you answer by talking. To steer it, just say what you want —
+these all work, and they're most useful in coding rounds:
 
----
+- "move on to the next problem" / "next question"
+- "give me something harder" / "an easier one" / "increase the difficulty"
+- "give me a medium graph problem" (topic and difficulty together)
+- "can I get a hint?"
+- "I give up — walk me through the answer" (it'll actually teach you)
+- "give me a debug problem" (you get buggy code to fix)
 
-## ⚙️ Configuration
+The Learn this button sits at the top of the transcript. Open it whenever you want
+a written explanation of the current topic, ask follow-ups in the panel, and hit
+Back to interview when you're done. End interview takes you to the debrief, and
+Progress (from the lobby) shows what keeps tripping you up across sessions.
 
-Everything is a flag in `.env` (copied from
-[`.env.example`](.env.example), which documents each one). The most useful:
+## Configuration
 
-| Flag | Default | Options |
+Everything is a flag in `.env`, and [`.env.example`](.env.example) explains each
+one. The ones you're most likely to touch:
+
+| Flag | Default | Other options |
 |---|---|---|
-| `LLM_ENGINE` | `claude` | `claude` (subscription, no key) · `local` (Ollama) · `openai` (`OPENAI_API_KEY`) |
-| `CLAUDE_MODEL` | `claude-sonnet-4-6` | any alias (`sonnet`/`opus`/`haiku`) or full model id |
-| `OLLAMA_MODEL` | `qwen2.5:7b` | any model you've `ollama pull`ed |
-| `STT_ENGINE` | `local` (faster-whisper) | `deepgram` (`DEEPGRAM_API_KEY`) |
-| `TTS_ENGINE` | `local` (piper) | `cartesia` (`CARTESIA_API_KEY`, `CARTESIA_VOICE_ID`) |
-| `WHISPER_MODEL` | `small` | `tiny`→`large-v3` (accuracy vs. speed) |
-| `DIRECTOR` | `on` | `off` for a simpler, faster single-call interviewer |
+| `LLM_ENGINE` | `claude` | `local` (Ollama) · `openai` (needs `OPENAI_API_KEY`) |
+| `CLAUDE_MODEL` | `claude-sonnet-4-6` | an alias like `opus`/`haiku`, or a full model id |
+| `OLLAMA_MODEL` | `qwen2.5:7b` | anything you've pulled |
+| `STT_ENGINE` | `local` (faster-whisper) | `deepgram` |
+| `TTS_ENGINE` | `local` (piper) | `cartesia` |
+| `WHISPER_MODEL` | `small` | `tiny`…`large-v3`, trading speed for accuracy |
+| `DIRECTOR` | `on` | `off` for a simpler, faster, single-call interviewer |
 
-**Which LLM should I use?** `claude` gives the smartest interviewer and needs no
-API key (just the signed-in CLI), at ~8s per turn since it spawns the CLI each
-turn. `local` (Ollama) is fully offline and snappier but a smaller model is a
-weaker interviewer. `openai` uses the hosted Responses API if you have a key.
+On the LLM choice: Claude is the smartest interviewer and needs no key, but it
+spawns the CLI each turn, so expect roughly eight seconds before it speaks. Ollama
+is snappier and works with no internet, at the cost of a smaller model that makes a
+weaker interviewer. OpenAI is there if you have a key and want the hosted route.
 
----
+## How it works
 
-## 🏗️ How it works (in brief)
-
-Each turn flows through a **cascaded pipeline**:
+Every turn runs through the cascaded pipeline:
 
 ```
-your voice ─▶ VAD (Silero) ─▶ endpointing ─▶ STT (whisper)
-                                                  │
-                                                  ▼
-                              director (agentic decide-loop) ─▶ LLM reply
-                                                  │
-                                                  ▼
-your speakers ◀── TTS (piper) ◀── sentence chunking ◀── streamed tokens
+your voice → VAD (Silero) → endpointing → speech-to-text (whisper)
+                                              → director → LLM reply
+                       → sentence chunking → text-to-speech (piper) → your speakers
 ```
 
-The core design idea: `main.py` only ever calls `engines.get_stt()`,
-`get_llm()`, `get_tts()` — it never knows which concrete engine is behind them.
-That adapter boundary is what lets you swap Claude for Ollama, or piper for
-Cartesia, without touching the pipeline. The **"Learn this"** feature is separate
-from the voice loop entirely: a plain streaming HTTP endpoint (`/api/learn`) that
-returns text only — no TTS, and it never touches the live session.
-
-For the full component-by-component explanation, open
+The trick that makes it swappable is that `main.py` only ever calls
+`engines.get_stt()`, `get_llm()`, and `get_tts()` — it never knows which engine is
+behind them. That's what lets you trade Claude for Ollama, or piper for Cartesia,
+without touching the pipeline. Learn this deliberately sits outside all of it: it's
+a plain streaming HTTP endpoint (`/api/learn`) that returns text, so it never goes
+near the voice loop or the text-to-speech. The rest — the agent loop that decides
+each turn, context compaction for long interviews, the scoring — is covered in
 [docs/learning-guide.html](docs/learning-guide.html).
 
----
-
-## 📁 Project layout
+## Layout
 
 ```
 interview-coach/
 ├── backend/
-│   ├── main.py            FastAPI app + /ws WebSocket loop + /api/learn tutor
-│   ├── config.py          all flags (read from .env)
-│   ├── engines.py         factory: picks each engine per flag, caches it
-│   ├── prompts.py         interviewer persona · director brain · "Learn this" tutor
-│   ├── packs.py           per-round persona, rubric, and random opening questions
+│   ├── main.py            FastAPI app, the /ws WebSocket loop, /api/learn
+│   ├── config.py          all the flags (read from .env)
+│   ├── engines.py         factory that picks and caches each engine per flag
+│   ├── prompts.py         interviewer persona, director brain, Learn this tutor
+│   ├── packs.py           per-round persona, rubric, and opening questions
 │   ├── problems.py        the 88-problem coding bank + spoken-request matching
-│   ├── director.py        the agentic tool-use loop (actions, state, guards)
+│   ├── director.py        the agent loop that decides each turn
 │   ├── debrief.py         rubric scoring + delivery metrics
-│   ├── storage.py         saved sessions + cross-session progress profiles
+│   ├── storage.py         saved sessions + cross-session progress
 │   ├── history.py         context compaction for long interviews
 │   ├── endpointing.py     silence + semantic turn detection
-│   ├── mcp_server.py      expose saved interviews to other agents (MCP, stdio)
-│   ├── evals/run_eval.py  agent-vs-agent behavior evals
-│   ├── pipeline/          turn strategies (cascaded · fused)
-│   ├── stt/ · tts/ · llm/ · vad/ · turndetect/   swappable engine adapters
-│   └── data/              sessions · profiles · evals   (created at runtime, git-ignored)
-├── frontend/index.html    lobby · live stage · code editor · Learn panel · debrief
-├── docs/learning-guide.html   the full what/why/how guide
-├── .env.example           copy to .env
-└── LICENSE                MIT
+│   ├── mcp_server.py      saved interviews as a tool for other agents (MCP)
+│   ├── evals/             behavior evals (simulated candidates vs. the real stack)
+│   ├── pipeline/          the turn strategies (cascaded, fused)
+│   ├── stt/ tts/ llm/ vad/ turndetect/   the swappable engine adapters
+│   └── data/              sessions, profiles, evals (made at runtime, git-ignored)
+├── frontend/index.html    lobby, live stage, editor, Learn panel, debrief
+├── docs/learning-guide.html
+├── .env.example
+└── LICENSE
 ```
 
----
+## Tests
 
-## 🧪 Development
-
-Run the test suite (from `backend/`, venv active):
+From `backend/`, with the venv active:
 
 ```bash
 for t in test_*.py; do python "$t"; done
 ```
 
-Behavior evals (simulated candidates interview the real stack, a judge model scores it):
+The behavior evals are separate — simulated candidates interview the real stack and
+a judge model scores it:
 
 ```bash
 python -m evals.run_eval --personas evasive --turns 3
 ```
 
----
+## License
 
-## 📄 License
-
-[MIT](LICENSE) © 2026 Ritika Soni. Free to use, fork, and modify.
-
-The built-in coding problems are original write-ups of canonical, widely-known
-interview questions, written for this project.
+MIT — see [LICENSE](LICENSE). Use it, fork it, change it. The built-in coding
+problems are original write-ups of well-known interview questions, written for this
+project.
