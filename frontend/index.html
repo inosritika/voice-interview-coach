@@ -72,6 +72,20 @@
 
       .grid { display: grid; grid-template-columns: 1.4fr 1fr; gap: 1.2rem; align-items: start; }
       @media (max-width: 860px) { .grid { grid-template-columns: 1fr; } }
+      /* The right column stays in view while the (taller) left form scrolls, so
+         the Start button is always reachable and the space isn't left empty. */
+      .lobby-side { position: sticky; top: 1rem; align-self: start;
+        display: flex; flex-direction: column; gap: 1.2rem; }
+      @media (max-width: 860px) { .lobby-side { position: static; } }
+      /* live summary of the selected round */
+      .summary { list-style: none; padding: 0; margin: 0; }
+      .summary li { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem;
+        padding: 0.55rem 0; border-bottom: 1px solid var(--border-soft); font-size: 0.9rem; }
+      .summary li:last-child { border-bottom: 0; padding-bottom: 0; }
+      .summary li .k { color: var(--muted); }
+      .summary li .v { font-weight: 600; text-align: right; }
+      .summary-note { margin: 0.9rem 0 0; padding-top: 0.9rem; border-top: 1px solid var(--border-soft);
+        font-size: 0.85rem; color: var(--muted); line-height: 1.55; }
 
       .card {
         background: linear-gradient(180deg, var(--card), var(--bg-2));
@@ -731,18 +745,18 @@
             </div>
           </div>
 
-          <!-- right: what to expect -->
-          <div style="display:flex; flex-direction:column; gap:1.2rem;">
+          <!-- right: live summary + what to expect + start (sticky) -->
+          <div class="lobby-side">
             <div class="card">
-              <h2>Your session</h2>
-              <ul class="feat-list">
-                <li class="live"><span class="ic"></span> Natural voice conversation <span class="tag live">Included</span></li>
-                <li class="live"><span class="ic"></span> Speak over a question when you need to <span class="tag live">Included</span></li>
-                <li class="live"><span class="ic"></span> A running transcript to review later <span class="tag live">Included</span></li>
-                <li class="live"><span class="ic"></span> Feedback on substance and delivery <span class="tag live">Included</span></li>
-                <li><span class="ic"></span> Session recording &amp; export <span class="tag soon">Later</span></li>
-                <li><span class="ic"></span> Video presence <span class="tag soon">Later</span></li>
+              <h2>Your interview</h2>
+              <ul class="summary">
+                <li><span class="k">Round</span><span class="v" id="sum-type">Behavioral</span></li>
+                <li><span class="k">Level</span><span class="v" id="sum-level">Standard</span></li>
+                <li><span class="k">Length</span><span class="v" id="sum-length">~20 min</span></li>
+                <li><span class="k">Format</span><span class="v" id="sum-format">Discussion</span></li>
+                <li><span class="k">Company</span><span class="v" id="sum-company">Generic</span></li>
               </ul>
+              <p class="summary-note" id="sum-expect"></p>
             </div>
 
             <div class="card">
@@ -755,6 +769,18 @@
               <button class="cta" id="startBtn" style="margin-top:1.2rem;">Start interview →</button>
               <button class="ghost" id="progressBtn" style="width:100%; margin-top:0.6rem; padding:0.7rem;">📈 Your progress &amp; weak points</button>
               <p class="dev-note" style="text-align:center; margin-top:0.7rem;">Your browser will ask for microphone permission.</p>
+            </div>
+
+            <div class="card">
+              <h2>Your session</h2>
+              <ul class="feat-list">
+                <li class="live"><span class="ic"></span> Natural voice conversation <span class="tag live">Included</span></li>
+                <li class="live"><span class="ic"></span> Speak over a question when you need to <span class="tag live">Included</span></li>
+                <li class="live"><span class="ic"></span> A running transcript to review later <span class="tag live">Included</span></li>
+                <li class="live"><span class="ic"></span> Feedback on substance and delivery <span class="tag live">Included</span></li>
+                <li><span class="ic"></span> Session recording &amp; export <span class="tag soon">Later</span></li>
+                <li><span class="ic"></span> Video presence <span class="tag soon">Later</span></li>
+              </ul>
             </div>
           </div>
         </div>
@@ -1031,6 +1057,7 @@
           el.classList.add("sel");
           interviewType = el.dataset.type;
           refreshProblemCard();
+          updateSummary();
         });
       });
 
@@ -1053,6 +1080,7 @@
           el.classList.add("sel");
           roundFormat = el.dataset.fmt;
           refreshProblemCard();
+          updateSummary();
         });
       });
 
@@ -1062,15 +1090,26 @@
       }).catch(() => {});
 
       const FMT_LABEL = { solve: "Solve", debug: "Debug", design: "Design" };
+      // The company picked in the lobby, or null for the neutral "Generic".
+      function selectedCompany() {
+        const c = $("company").value;
+        return c && c !== "generic" ? c : null;
+      }
+      const favouredBy = (p, co) => co && (p.companies || []).includes(co);
       function problemOptionLabel(p) {
         const diff = p.difficulty && p.difficulty !== "custom" ? ` (${p.difficulty})` : "";
-        return `${FMT_LABEL[p.fmt] || p.fmt} · ${p.title}${diff}`;
+        const star = favouredBy(p, selectedCompany()) ? "★ " : "";
+        return `${star}${FMT_LABEL[p.fmt] || p.fmt} · ${p.title}${diff}`;
       }
 
       function problemsForType() {
         const cfg = TYPE_PROBLEMS[interviewType];
         if (!cfg) return [];
-        return allProblems.filter((p) => p.topic === cfg.topic && cfg.fmts.includes(p.fmt));
+        const list = allProblems.filter((p) => p.topic === cfg.topic && cfg.fmts.includes(p.fmt));
+        // When a company is chosen, float its favourites to the top (nothing hidden).
+        const co = selectedCompany();
+        if (co) list.sort((a, b) => (favouredBy(b, co) ? 1 : 0) - (favouredBy(a, co) ? 1 : 0));
+        return list;
       }
 
       function refreshProblemCard() {
@@ -1098,8 +1137,12 @@
         const sel = $("problemSelect");
         sel.innerHTML = relevant
           .map((p) => `<option value="${p.id}">${problemOptionLabel(p)}</option>`).join("");
-        // default to a RANDOM problem so a fresh interview isn't always the same one
-        sel.value = relevant[Math.floor(Math.random() * relevant.length)].id;
+        // default to a RANDOM problem so a fresh interview isn't always the same one;
+        // when a company is picked, draw that default from its favourites.
+        const co = selectedCompany();
+        const favs = co ? relevant.filter((p) => favouredBy(p, co)) : [];
+        const pickFrom = favs.length ? favs : relevant;
+        sel.value = pickFrom[Math.floor(Math.random() * pickFrom.length)].id;
         updateProblemPreview();
       }
 
@@ -1176,6 +1219,30 @@
         generic: "Generic", openai: "OpenAI", anthropic: "Anthropic",
         google: "Google", meta: "Meta",
       };
+
+      // ---- lobby: live "Your interview" summary (right column) ----
+      // Reflects the current selections so the right column shows something useful
+      // and updates as you change the form, instead of sitting empty.
+      const EXPECT = {
+        behavioral: "Expect STAR-style questions about ownership, conflict, and impact. Answer with specific stories and measurable outcomes.",
+        dsa: "Expect algorithm and data-structure problems. Think out loud about your approach and its complexity before diving into code.",
+        ml: "Expect modelling scenarios — framing the target, choosing features and a metric, and reasoning about trade-offs.",
+        system_design: "Expect an open-ended design. Clarify the requirements first, then sketch components and defend the trade-offs.",
+      };
+      const LEVEL_LABELS = { warmup: "Warm-up", standard: "Standard", senior: "Senior / stretch" };
+      function updateSummary() {
+        $("sum-type").textContent = typeLabel(interviewType);
+        $("sum-level").textContent = LEVEL_LABELS[$("difficulty").value] || "Standard";
+        $("sum-length").textContent = "~" + $("duration").value + " min";
+        $("sum-format").textContent = roundFormat === "handson" ? "Hands-on (live editor)" : "Discussion";
+        $("sum-company").textContent = COMPANY_LABELS[$("company").value] || "Generic";
+        $("sum-expect").textContent = EXPECT[interviewType] || "";
+      }
+      ["difficulty", "duration", "company"].forEach((id) =>
+        $(id).addEventListener("change", updateSummary));
+      // Changing the company re-orders the problem picker toward its favourites.
+      $("company").addEventListener("change", refreshProblemCard);
+      updateSummary();  // reflect the defaults on first load
 
       // ---- lobby: PDF/text upload (JD / resume) ----
       // The extracted text is kept OUT of the textarea (dumping a whole resume in
