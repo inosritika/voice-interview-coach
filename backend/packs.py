@@ -26,6 +26,7 @@ default to asking someone to "write" anything.
 
 from __future__ import annotations
 
+import random
 from dataclasses import dataclass
 
 
@@ -196,28 +197,97 @@ PACKS: dict[str, InterviewPack] = {
 
 # Deterministic first questions establish the promised topic and level. The
 # LLM takes over after the candidate answers, so later turns remain adaptive.
-OPENING_QUESTIONS: dict[str, dict[str, str]] = {
+# Each (area, tier) is a POOL of calibrated openers, not one fixed line — a real
+# interview never opens the same way twice. opening_question() picks one at random
+# and avoids repeating the one it served last for that slot (see _last_opening).
+# Every variant must stay on-tier (a warmup opener must not sneak in a hard graph
+# problem) and end with "?" — test_packs pins both.
+OPENING_QUESTIONS: dict[str, dict[str, list[str]]] = {
     "behavioral": {
-        "warmup": "Hi, thanks for joining. To start us off, could you tell me about a project or piece of work you are especially proud of?",
-        "standard": "Hi, thanks for joining. Tell me about a time you took ownership of an important problem and what changed because of your work?",
-        "senior": "Hi, thanks for joining. Tell me about a high-stakes decision you led through ambiguity, including how you aligned people and measured the outcome?",
+        "warmup": [
+            "Hi, thanks for joining. To start us off, could you tell me about a project or piece of work you are especially proud of?",
+            "Hi, good to have you. To warm up, walk me through something you built or shipped recently that you genuinely enjoyed working on?",
+            "Thanks for making the time. Let’s start easy — what’s a piece of work from the last year that you’d happily show someone?",
+            "Hi there. To get us going, tell me about a project where you feel you did your best work, and what your part in it was?",
+        ],
+        "standard": [
+            "Hi, thanks for joining. Tell me about a time you took ownership of an important problem and what changed because of your work?",
+            "Thanks for joining. Describe a situation where you drove a project end to end — what outcome were you accountable for, and how did it land?",
+            "Good to meet you. Tell me about a time you noticed something was broken or missing and took it on yourself to fix it — what happened?",
+            "Hi. Walk me through a time you disagreed with a decision your team was making, and how you handled it — what was the result?",
+        ],
+        "senior": [
+            "Hi, thanks for joining. Tell me about a high-stakes decision you led through ambiguity, including how you aligned people and measured the outcome?",
+            "Thanks for joining. Tell me about a time you had to set direction with incomplete information — how did you get others behind it, and what was the impact?",
+            "Good to have you. Describe the most consequential technical or organizational call you’ve made — how did you weigh the trade-offs, and how did it turn out?",
+            "Hi. Tell me about a time you led through a serious setback or a conflict across teams — what did you do, and how did you know it worked?",
+        ],
     },
     "dsa": {
-        "warmup": "Let’s start with a small problem. Given a list of integers, how would you tell whether any value appears more than once, and what time and space would your approach use?",
-        "standard": "Let’s work through a medium problem. Given a stream of user IDs, return the first ID that has appeared exactly once so far; how would you avoid re-scanning the whole stream after every event?",
-        "senior": "Let’s work through a streaming problem. Events can arrive up to 30 seconds out of order, and you must count each user’s events in the previous five minutes; what data structures would you use, and which accuracy-versus-memory trade-off would you make?",
+        "warmup": [
+            "Let’s start with a small problem. Given a list of integers, how would you tell whether any value appears more than once, and what time and space would your approach use?",
+            "Let’s warm up. Given a string, how would you check whether it reads the same forwards and backwards, and what does your approach cost?",
+            "Small one to start. Given an array of numbers, how would you return them with the duplicates removed, and what time and space does that take?",
+            "Let’s ease in. Given two short strings, how would you decide whether one is a rearrangement of the other, and at what cost?",
+        ],
+        "standard": [
+            "Let’s work through a medium problem. Given a stream of user IDs, return the first ID that has appeared exactly once so far; how would you avoid re-scanning the whole stream after every event?",
+            "Here’s a medium one. Given an array and a target, return the indices of the two values that sum to it — can you beat the brute-force pair scan, and how?",
+            "Let’s try this. You’re given a list of meetings with start and end times; how would you find the largest number that overlap at once, and what structure would you reach for?",
+            "Medium problem. Given a string, how would you find the length of the longest substring with no repeating characters, and what makes your approach better than checking every substring?",
+        ],
+        "senior": [
+            "Let’s work through a streaming problem. Events can arrive up to 30 seconds out of order, and you must count each user’s events in the previous five minutes; what data structures would you use, and which accuracy-versus-memory trade-off would you make?",
+            "Here’s a harder one. You have a huge log of key events that doesn’t fit in memory; how would you return the top-k most frequent keys, and where would you accept approximation?",
+            "Let’s go deep. Given a directed graph of build targets with dependencies, how would you produce a valid build order and detect a cycle, and what’s the cost at scale?",
+            "Tough problem. You have many sorted streams of numbers arriving at once; how would you merge them into a single sorted output with bounded memory, and where’s your bottleneck?",
+        ],
     },
     "ml": {
-        "warmup": "Let’s consider a subscription app that wants to predict which trial users will convert this week. What would you define as the prediction target, and how would you decide whether the model is useful?",
-        "standard": "Consider a fraud classifier where only one transaction in a thousand is fraudulent. What features and evaluation metric would you start with, and why would accuracy be misleading here?",
-        "senior": "Consider a ranking model whose click-through rate is stable but whose conversion rate has fallen after a product change. How would you distinguish data drift from a product effect, and which offline and online metrics would drive your decision?",
+        "warmup": [
+            "Let’s consider a subscription app that wants to predict which trial users will convert this week. What would you define as the prediction target, and how would you decide whether the model is useful?",
+            "Let’s warm up with a scenario. A news app wants to flag articles that are likely spam. How would you frame the target, and how would you know the model is doing its job?",
+            "Consider a photo app that wants to auto-tag pictures containing a pet. What exactly would you predict, and what would ‘good enough’ look like to you?",
+            "Say a store wants to predict which customers will come back next month. How would you define the label, and what metric would tell you the model is worth shipping?",
+        ],
+        "standard": [
+            "Consider a fraud classifier where only one transaction in a thousand is fraudulent. What features and evaluation metric would you start with, and why would accuracy be misleading here?",
+            "Consider a model that flags support tickets as urgent, where most tickets aren’t. What features and metric would you start with, and why not accuracy?",
+            "You’re building a churn model for a subscription product. Which features would you reach for first, how would you evaluate it, and what leakage would you watch out for?",
+            "Consider recommending products a user might buy next. How would you frame the problem, what would you train on, and how would you measure success before shipping?",
+        ],
+        "senior": [
+            "Consider a ranking model whose click-through rate is stable but whose conversion rate has fallen after a product change. How would you distinguish data drift from a product effect, and which offline and online metrics would drive your decision?",
+            "A production classifier’s precision has quietly dropped over three months while volume grew. How would you separate data drift from a labelling or product change, and what would you monitor?",
+            "You must ship a model under a strict latency budget with limited labelled data. Which trade-offs — model size, features, active learning — would you make first, and how would you validate them?",
+            "A recommender looks strong offline but engagement fell after launch. How would you reconcile the offline and online metrics, and what experiment would you run to find the gap?",
+        ],
     },
     "system_design": {
-        "warmup": "Let’s design a URL shortener for about ten thousand daily users. Before proposing components, which functional requirement would you clarify first?",
-        "standard": "Let’s design a notification service handling ten million sends per day across email and push. Which delivery guarantee or failure mode would you clarify before choosing the architecture?",
-        "senior": "Let’s design a real-time trading-data cache serving millions of reads per second with sub-20-millisecond latency. Which consistency or failure-recovery requirement would you clarify first?",
+        "warmup": [
+            "Let’s design a URL shortener for about ten thousand daily users. Before proposing components, which functional requirement would you clarify first?",
+            "Let’s design a pastebin-style service for a small team. Before we sketch any components, which requirement would you pin down first?",
+            "Let’s design a simple image upload-and-share service at modest scale. What functional requirement would you clarify before choosing an architecture?",
+            "Let’s design a reminders service for a few thousand users. What’s the first requirement you’d want nailed down before designing anything?",
+        ],
+        "standard": [
+            "Let’s design a notification service handling ten million sends per day across email and push. Which delivery guarantee or failure mode would you clarify before choosing the architecture?",
+            "Let’s design a rate limiter for a public API serving millions of requests a day. Which behavior or failure mode would you clarify before picking an approach?",
+            "Let’s design a news feed for a social app with heavy reads. Which read/write pattern or guarantee would you clarify before choosing the architecture?",
+            "Let’s design a file-storage service with sharing and access control at moderate scale. Which requirement or bottleneck would you pin down first?",
+        ],
+        "senior": [
+            "Let’s design a real-time trading-data cache serving millions of reads per second with sub-20-millisecond latency. Which consistency or failure-recovery requirement would you clarify first?",
+            "Let’s design a global rate limiter that stays correct across regions at very high throughput. Which consistency or failure-recovery requirement would you settle first?",
+            "Let’s design an ad-click ingestion pipeline handling hundreds of thousands of events per second with strong dedup guarantees. Which trade-off would you clarify before we start?",
+            "Let’s design a multi-region key-value store with low-latency reads and tight durability needs. Which consistency-versus-availability requirement would you clarify first?",
+        ],
     },
 }
+
+# Remembers the last opener served per (area, tier) so the next interview in the
+# same slot doesn't repeat it. In-memory only — resets on restart, which is fine.
+_last_opening: dict[tuple[str, str], str] = {}
 
 
 def get_pack(key: str | None) -> InterviewPack:
@@ -226,8 +296,17 @@ def get_pack(key: str | None) -> InterviewPack:
 
 
 def opening_question(interview_type: str | None, difficulty: str | None) -> str:
-    """Return a calibrated first spoken question for the selected round."""
+    """Return a calibrated first spoken question, chosen at random from the slot's
+    pool so a new interview doesn't open with the same line every time. Avoids
+    immediately repeating the previous opener for that same area+tier."""
     area = (interview_type or "behavioral").strip()
     tier = (difficulty or "standard").strip()
-    questions = OPENING_QUESTIONS.get(area, OPENING_QUESTIONS["behavioral"])
-    return questions.get(tier, questions["standard"])
+    by_tier = OPENING_QUESTIONS.get(area, OPENING_QUESTIONS["behavioral"])
+    variants = by_tier.get(tier) or by_tier["standard"]
+    if isinstance(variants, str):  # tolerate a legacy single-string slot
+        return variants
+    key = (area, tier)
+    choices = [q for q in variants if q != _last_opening.get(key)] or variants
+    pick = random.choice(choices)
+    _last_opening[key] = pick
+    return pick

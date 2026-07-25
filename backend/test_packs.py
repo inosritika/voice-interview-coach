@@ -137,6 +137,24 @@ def test_opening_questions_match_all_areas_and_difficulties():
         assert all(question.endswith("?") for question in questions)
 
 
+def test_opening_question_varies_across_interviews():
+    """Regression: the opener was one fixed string per slot, so every DSA interview
+    started with the SAME problem. Each slot is now a pool picked at random."""
+    for area in PACKS:
+        for tier in ("warmup", "standard", "senior"):
+            seen = {opening_question(area, tier) for _ in range(60)}
+            assert len(seen) >= 2, f"{area}/{tier} never varies its opening question"
+
+
+def test_opening_question_avoids_immediate_repeat():
+    """A fresh interview must not open with the exact line the last one used."""
+    prev = None
+    for _ in range(200):
+        q = opening_question("dsa", "standard")
+        assert q != prev, "opening question repeated back-to-back"
+        prev = q
+
+
 def test_ml_rubric_drives_debrief_scoring_prompt():
     ml_rubric = get_pack("ml").rubric
     rubric_text = "\n".join(f"- {name}: {desc}" for name, desc in ml_rubric)
