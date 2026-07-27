@@ -1635,7 +1635,19 @@ def match_switch(
     `exclude` is the set of problem ids already shown this session — we prefer
     something they haven't seen, so "next question" genuinely advances instead of
     cycling back through the same two problems."""
-    if not text or current is None or not _SWITCH_RE.search(text):
+    if not text or current is None:
+        return None
+    # A bare noun-phrase answer to "what would you like?" — "a dynamic programming
+    # problem, please" — has no request verb, so _SWITCH_RE misses it. Accept it
+    # only when the WHOLE utterance is just that phrase (anchored), so a sentence
+    # that merely contains "...a graph problem..." mid-answer can never match.
+    bare = re.fullmatch(
+        r"(?i)\s*(?:i(?:'d| would)? like\s+)?(?:maybe\s+)?(?:a|an|another)\s+"
+        rf"(?:{_QUAL}\s+){{0,4}}(?:problem|question|one|challenge)"
+        r"[\s.,!]*(?:please|now|next)?[\s.,!]*",
+        text,
+    )
+    if not bare and not _SWITCH_RE.search(text):
         return None
     # Guard: an inquiry about the flow, with no actual request in it, is a question
     # to answer — not a command. ("...or are we moving back to the next question?")

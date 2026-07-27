@@ -150,9 +150,50 @@ _MOVE_ON_RE = re.compile(
     r"move on to (?:the next|a|another) (?:question|problem|topic))\b",
     re.IGNORECASE,
 )
+# An explicit surrender + request for the answer. The persona prompt already says
+# to teach on give-up, but the model still stalled one extra turn ("what have you
+# tried?") — for a learning tool that stall is exactly what the user complained
+# about, so it's forced deterministically. Kept tight: a surrender phrase or a
+# direct request for the answer/solution — "let me explain my solution" must not
+# trigger it.
+_GIVE_UP_RE = re.compile(
+    r"\b(i give up|"
+    r"(?:can you|could you|please|just)\s+(?:just\s+)?(?:tell|show|give)\s+me\s+the\s+(?:answer|solution)|"
+    r"(?:can you|could you|please)\s+(?:just\s+)?(?:explain|walk me through)\s+the\s+(?:solution|answer)|"
+    r"what(?:'s| is)\s+the\s+(?:correct\s+)?(?:answer|solution)\s*\?|"
+    r"teach me the (?:answer|solution))\b",
+    re.IGNORECASE,
+)
+# A question ABOUT the flow ("are we moving to the next question?") is something
+# to ANSWER, not a command — same guard problems.py uses for problem switching.
+# Without it, the "next question" inside the inquiry force-switched the topic.
+_FLOW_INQUIRY_RE = re.compile(
+    r"\b(?:are|is|was|were|do|does|did)\s+(?:we|you|this|that|it)\b", re.IGNORECASE
+)
+_FLOW_REQUESTY_RE = re.compile(
+    r"\b(?:(?:can|could|shall|should)\s+(?:we|i)|let'?s|let us|please|"
+    r"i\s+(?:want|would like|'?d like))\b",
+    re.IGNORECASE,
+)
+# A request to PAUSE and think — checked BEFORE stop, because "can we stop for a
+# second" contains "can we stop" and must NOT end the interview (observed: a
+# thinking pause would have killed the whole session).
+_PAUSE_RE = re.compile(
+    r"\b((?:stop|pause|wait|hold on|hang on|hold up)\s+(?:for\s+)?(?:a|one|two|just a)\s+"
+    r"(?:sec|second|seconds|moment|minute|bit)|"
+    r"let me think|give me a (?:sec|second|moment|minute)|"
+    r"(?:i )?need a (?:moment|second|minute)|thinking for a (?:moment|second))\b",
+    re.IGNORECASE,
+)
+# Ending must be EXPLICITLY about the interview/session, or a standalone sign-off.
+# Loose forms bit us: "I'm done with this part" and "that's all for my approach"
+# are mid-answer phrases, not requests to leave.
 _STOP_RE = re.compile(
-    r"\b(stop the interview|end the interview|can we stop|let'?s stop|"
-    r"i'?m done|that'?s all|wrap (?:this|it)? ?up|finish the interview)\b",
+    r"\b(stop the interview|end the interview|finish the interview|"
+    r"(?:can we|let'?s) (?:stop|end) (?:here|the interview|the session|for today|now)|"
+    r"i'?m done(?:\s+(?:with\s+(?:the|this)\s+(?:interview|session)|for today|now))?[.!]?$|"
+    r"that'?s all(?:\s+(?:for today|for now|from me))?[.!]?$|"
+    r"wrap (?:this|it) ?up)\b",
     re.IGNORECASE,
 )
 # The candidate wants to go BACK to / revisit a specific earlier problem. The
@@ -167,7 +208,8 @@ _GO_BACK_RE = re.compile(
 # The candidate wants to STAY on the current problem (don't switch away).
 _STAY_RE = re.compile(
     r"\b(stay on|keep going|keep (?:this|working)|don'?t (?:move on|switch|change)|"
-    r"not (?:that|another) one|listen to me|hold on)\b",
+    r"not (?:that|another) one|listen to me|hold on|"
+    r"(?:dig|go|dive) deeper (?:into|on) (?:this|that|it))\b",
     re.IGNORECASE,
 )
 
@@ -178,6 +220,23 @@ def _meta_request_action(text: str) -> dict | None:
     point is that the candidate's stated wishes beat the model's own agenda."""
     if not text:
         return None
+    # Pause beats stop: "can we stop for a second" is a request to THINK, and
+    # must never end the session.
+    if _PAUSE_RE.search(text):
+        return {
+            "action": "wait",
+            "detail": "the candidate asked for a moment to think — acknowledge in a "
+            "few words (e.g. 'of course, take your time') and WAIT; do NOT ask a new "
+            "question, add hints they didn't ask for, or switch topics",
+        }
+    # Give-up beats everything below: an explicit "just tell me the answer" gets
+    # the answer taught NOW, with no "what have you tried?" stall first.
+    if _GIVE_UP_RE.search(text):
+        return {
+            "action": "teach",
+            "detail": "the candidate has given up and explicitly asked for the "
+            "solution — teach it to them now",
+        }
     if _STOP_RE.search(text):
         return {"action": "end_interview", "detail": "the candidate asked to stop"}
     # "go back" is checked before "move on"/"stay": it's the most specific intent
@@ -196,6 +255,10 @@ def _meta_request_action(text: str) -> dict | None:
             "working it with them (a hint if they're stuck); do NOT switch topics",
         }
     if _MOVE_ON_RE.search(text):
+        # "are we moving to the next question?" is an inquiry to answer, not a
+        # command — only force the switch when there's an actual request in it.
+        if _FLOW_INQUIRY_RE.search(text) and not _FLOW_REQUESTY_RE.search(text):
+            return None
         return {
             "action": "switch_topic",
             "detail": "the candidate asked to move on — switch to a fresh, relevant "

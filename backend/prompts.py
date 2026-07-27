@@ -293,6 +293,10 @@ DIRECTIVE_INSTRUCTIONS = {
     "probe_deeper": 'Direction for this turn: probe deeper — {detail}. Ask ONE follow-up question about exactly that.',
     "switch_topic": 'Direction for this turn: move to a new topic — {detail}. Briefly acknowledge their last answer, then ask ONE opening question on it.',
     "end_interview": 'Direction for this turn: wrap up the interview now ({detail}). Thank the candidate warmly in one or two sentences and close. Do NOT ask another question.',
+    # Forced by the deterministic give-up detector: no more Socratic stalling.
+    "teach": 'Direction for this turn: {detail}. Give the key insight first, then walk through the approach step by step in plain spoken language, ending with the time and space complexity. Do NOT ask what they have tried, do NOT hold the answer back, and ask NO questions until one short check-in at the very end.',
+    # Forced by the pause detector: the candidate asked for thinking room.
+    "wait": 'Direction for this turn: {detail}.',
 }
 
 

@@ -115,6 +115,21 @@ def test_debug_snippets_are_actually_buggy():
     assert ns["factorial"](5) == 24  # off by a factor of n
 
 
+def test_bare_noun_phrase_requests_switch_but_only_alone():
+    """Regression: "a dynamic programming problem please" (no request verb — a
+    natural answer to "what would you like?") didn't switch, so the LLM improvised
+    a problem that didn't match the editor. Anchored to the WHOLE utterance so a
+    mid-answer mention ("I'd model this as a graph problem") still never matches."""
+    cur = problems.get_problem("merge-k-lists")
+    for t in ["a dynamic programming problem please", "An easy string problem.",
+              "maybe a graph question", "I'd like a medium tree problem"]:
+        assert problems.match_switch(t, cur) is not None, f"missed bare request: {t!r}"
+    for t in ["I would model this as a graph problem and run BFS",
+              "this reduces to a two pointer problem essentially",
+              "it's basically a sliding window question about counts"]:
+        assert problems.match_switch(t, cur) is None, f"false switch on: {t!r}"
+
+
 def test_company_favourites_all_exist():
     """A typo'd id in the company map would silently give a company fewer real
     favourites — catch it here."""

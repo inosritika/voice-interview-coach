@@ -73,6 +73,73 @@ def test_stop_request_forces_end_without_calling_model():
     assert state.ended is True
 
 
+def test_pause_to_think_never_ends_the_interview():
+    """Regression: "can we stop for a second and think" contains "can we stop" and
+    ended the whole session. A thinking pause must yield a wait, not an end."""
+    import director as director_mod
+
+    for phrase in [
+        "can we stop for a second and think about this",
+        "wait a moment, let me think",
+        "give me a second",
+        "I need a minute here",
+    ]:
+        act = director_mod._meta_request_action(phrase)
+        assert act is not None and act["action"] == "wait", (phrase, act)
+    # while explicit endings still end
+    for phrase in ["can we stop here for today", "let's stop the interview", "I'm done"]:
+        act = director_mod._meta_request_action(phrase)
+        assert act is not None and act["action"] == "end_interview", (phrase, act)
+
+
+def test_give_up_forces_teaching_not_stalling():
+    """Regression: "please just explain the solution" got one more "what have you
+    tried?" stall. An explicit give-up now forces a teach directive."""
+    import director as director_mod
+
+    for phrase in [
+        "I give up, what's the solution?",
+        "please just explain the solution to me so I can learn it",
+        "can you just tell me the answer",
+    ]:
+        act = director_mod._meta_request_action(phrase)
+        assert act is not None and act["action"] == "teach", (phrase, act)
+    # describing YOUR OWN solution must not trigger it
+    for phrase in ["let me explain the solution I have in mind",
+                   "I'll walk you through my solution now"]:
+        act = director_mod._meta_request_action(phrase)
+        assert act is None or act["action"] != "teach", (phrase, act)
+
+
+def test_flow_inquiry_is_not_a_move_on_command():
+    """Regression: "are we moving to the next question?" contains "next question"
+    and force-switched the topic instead of being answered."""
+    import director as director_mod
+
+    for phrase in [
+        "are we moving to the next question after this or staying on this one?",
+        "is this the last question of the round?",
+    ]:
+        act = director_mod._meta_request_action(phrase)
+        assert act is None, (phrase, act)
+    # but an actual request with the same words still switches
+    act = director_mod._meta_request_action("can we move on to the next question please")
+    assert act is not None and act["action"] == "switch_topic"
+
+
+def test_mid_answer_done_phrases_do_not_end():
+    """Regression: "I'm done with this part" and "that's all for my approach" are
+    answer phrases, not requests to leave — they ended the interview."""
+    import director as director_mod
+
+    for phrase in [
+        "I'm done with this part, moving to the complexity",
+        "that's all for my approach, should I code it now?",
+        "once the loop is done we return the result",
+    ]:
+        assert director_mod._meta_request_action(phrase) is None, phrase
+
+
 def test_ordinary_answer_is_not_a_meta_request():
     llm = FakeLLM([_act("probe_deeper")])
     state = DirectorState()
